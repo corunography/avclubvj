@@ -427,27 +427,24 @@
         const since = triviaLastId || 'all';
         const res   = await fetch(`https://ntfy.sh/${qTopic}/json?poll=1&since=${since}`);
         const text  = await res.text();
-        let latestData = null;
         text.trim().split('\n').filter(Boolean).forEach(line => {
           try {
             const ev = JSON.parse(line);
             if (ev.id) triviaLastId = ev.id;
             if (ev.event !== 'message' || !ev.message) return;
-            latestData = JSON.parse(ev.message);
+            const data = JSON.parse(ev.message);
+            if (data.type === 'teams' && Array.isArray(data.teams)) {
+              knownTeams = data.teams;
+              renderKnownTeams();
+            } else if (data.type === 'reveal') {
+              showReveal(data.correctIndex);
+            } else if (data.active === false) {
+              showMessageMode();
+            } else if (data.question && (!currentQ || currentQ.id !== data.id)) {
+              showTriviaMode(data);
+            }
           } catch(e) {}
         });
-        if (latestData) {
-          if (latestData.type === 'teams' && Array.isArray(latestData.teams)) {
-            knownTeams = latestData.teams;
-            renderKnownTeams();
-          } else if (latestData.type === 'reveal') {
-            showReveal(latestData.correctIndex);
-          } else if (latestData.active === false) {
-            showMessageMode();
-          } else if (latestData.question && (!currentQ || currentQ.id !== latestData.id)) {
-            showTriviaMode(latestData);
-          }
-        }
       } catch(e) {}
       setTimeout(pollTrivia, 3000);
     }
