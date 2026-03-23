@@ -437,11 +437,15 @@
     }
 
     // Poll for questions topic
+    // Fast (3s) when a question is active — need quick reveal feedback
+    // Slower (6s) when waiting to conserve rate limit headroom
     async function pollTrivia() {
       if (!qTopic) return;
+      let nextInterval = currentQ && !triviaAnswered ? 3000 : 6000;
       try {
         const since = triviaLastId || 'all';
         const res   = await fetch(ntfyPollUrl(qTopic, since));
+        if (!res.ok) { setTimeout(pollTrivia, nextInterval); return; }
         const text  = await res.text();
         text.trim().split('\n').filter(Boolean).forEach(line => {
           try {
@@ -454,15 +458,17 @@
               renderKnownTeams();
             } else if (data.type === 'reveal') {
               showReveal(data.correctIndex);
+              nextInterval = 6000; // slow down after reveal
             } else if (data.active === false) {
               showMessageMode();
             } else if (data.question && (!currentQ || currentQ.id !== data.id)) {
               showTriviaMode(data);
+              nextInterval = 3000; // speed up — question just arrived
             }
           } catch(e) {}
         });
       } catch(e) {}
-      setTimeout(pollTrivia, 8000);
+      setTimeout(pollTrivia, nextInterval);
     }
 
     if (topic) {
