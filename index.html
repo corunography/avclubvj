@@ -132,22 +132,18 @@
     const qTopic    = topic ? topic + '-q' : null;
     const aTopic    = topic ? topic + '-a' : null;
 
-    // Auth headers — only added when token is present
-    function authHeaders(extra) {
-      const h = { 'Content-Type': 'text/plain', ...extra };
-      if (ntfyAk) h['Authorization'] = 'Bearer ' + ntfyAk;
-      return h;
-    }
+    // URL-based auth avoids CORS preflight (no custom headers needed)
+    const ntfyAuthParam = ntfyAk ? '&auth=' + btoa(':' + ntfyAk) : '';
 
     // Build ntfy POST URL — use Worker proxy when available
     function ntfyPostUrl(t) {
-      return workerUrl ? `${workerUrl}/${t}` : `https://ntfy.sh/${t}`;
+      const base = workerUrl ? `${workerUrl}/${t}` : `https://ntfy.sh/${t}`;
+      return ntfyAuthParam ? base + '?' + ntfyAuthParam.slice(1) : base;
     }
 
     // Build ntfy poll URL
     function ntfyPollUrl(t, since) {
-      const base = `https://ntfy.sh/${t}/json?poll=1&since=${since}`;
-      return base;
+      return `https://ntfy.sh/${t}/json?poll=1&since=${since}${ntfyAuthParam}`;
     }
 
     // Team identity (persisted across sessions)
@@ -222,7 +218,7 @@
       try {
         const res = await fetchWithTimeout(ntfyPostUrl(topic), {
           method: 'POST', body: text,
-          headers: authHeaders(),
+          headers: { 'Content-Type': 'text/plain' },
         });
         if (!res.ok) {
           const body = await res.text().catch(() => '');
@@ -345,7 +341,7 @@
         const res = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST',
           body: `TEAM-REG|${name}|${token}`,
-          headers: authHeaders(),
+          headers: { 'Content-Type': 'text/plain' },
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         myTeam = name; myToken = token;
@@ -421,7 +417,7 @@
         const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
         const res  = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST', body,
-          headers: authHeaders(),
+          headers: { 'Content-Type': 'text/plain' },
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         triviaAnswered = true;
@@ -439,9 +435,7 @@
       if (!qTopic) return;
       try {
         const since = triviaLastId || 'all';
-        const res   = await fetch(ntfyPollUrl(qTopic, since), {
-          headers: ntfyAk ? { 'Authorization': 'Bearer ' + ntfyAk } : {},
-        });
+        const res   = await fetch(ntfyPollUrl(qTopic, since));
         const text  = await res.text();
         text.trim().split('\n').filter(Boolean).forEach(line => {
           try {
