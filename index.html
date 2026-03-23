@@ -135,15 +135,21 @@
     // URL-based auth avoids CORS preflight (no custom headers needed)
     const ntfyAuthParam = ntfyAk ? '&auth=' + btoa(':' + ntfyAk) : '';
 
+    // Normalise worker URL — ensure it has a protocol
+    const workerBase = workerUrl
+      ? (workerUrl.startsWith('http') ? workerUrl : 'https://' + workerUrl).replace(/\/$/, '')
+      : '';
+
     // Build ntfy POST URL — use Worker proxy when available
     function ntfyPostUrl(t) {
-      const base = workerUrl ? `${workerUrl}/${t}` : `https://ntfy.sh/${t}`;
-      return ntfyAuthParam ? base + '?' + ntfyAuthParam.slice(1) : base;
+      return workerBase ? `${workerBase}/${t}` : `https://ntfy.sh/${t}`;
     }
 
     // Build ntfy poll URL
     function ntfyPollUrl(t, since) {
-      return `https://ntfy.sh/${t}/json?poll=1&since=${since}${ntfyAuthParam}`;
+      return workerBase
+        ? `${workerBase}/${t}/json?poll=1&since=${since}`
+        : `https://ntfy.sh/${t}/json?poll=1&since=${since}`;
     }
 
     // Team identity (persisted across sessions)
@@ -456,7 +462,7 @@
           } catch(e) {}
         });
       } catch(e) {}
-      setTimeout(pollTrivia, 3000);
+      setTimeout(pollTrivia, 8000);
     }
 
     if (topic) {
