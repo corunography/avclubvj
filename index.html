@@ -143,6 +143,14 @@
       });
     }
 
+    // Fetch with a hard timeout so requests never hang indefinitely
+    function fetchWithTimeout(url, options, ms = 10000) {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal })
+        .finally(() => clearTimeout(tid));
+    }
+
     function renderKnownTeams() {
       const el = document.getElementById('known-teams-list');
       if (!el || knownTeams.length === 0) return;
@@ -192,7 +200,7 @@
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
-        const res = await fetch('https://ntfy.sh/' + topic, {
+        const res = await fetchWithTimeout('https://ntfy.sh/' + topic, {
           method: 'POST', body: text,
           headers: { 'Content-Type': 'text/plain' },
         });
@@ -207,9 +215,12 @@
         startCooldown();
       } catch(e) {
         const m = e.message || '';
-        status.textContent = (m.includes('429') || m.includes('too many'))
-          ? '✗ Too many messages at once — just tap Send It again!'
-          : '✗ Failed to send — check your connection and try again.';
+        const isTimeout = e.name === 'AbortError';
+        status.textContent = isTimeout
+          ? '✗ Request timed out — check your connection and try again.'
+          : (m.includes('429') || m.includes('too many'))
+            ? '✗ Too many messages at once — just tap Send It again!'
+            : '✗ Failed to send — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
@@ -311,7 +322,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
       const token = generateToken();
       try {
-        const res = await fetch('https://ntfy.sh/' + aTopic, {
+        const res = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
           method: 'POST',
           body: `TEAM-REG|${name}|${token}`,
           headers: { 'Content-Type': 'text/plain' },
@@ -322,7 +333,8 @@
         localStorage.setItem('trivia-token', token);
         showWaiting();
       } catch(e) {
-        if (statusEl) statusEl.textContent = '✗ Failed to join — check your connection.';
+        const msg = e.name === 'AbortError' ? '✗ Timed out — check your connection.' : '✗ Failed to join — check your connection.';
+        if (statusEl) statusEl.textContent = msg;
         if (btn) { btn.disabled = false; btn.textContent = 'Join Game'; }
       }
     }
@@ -353,7 +365,7 @@
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
         const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
-        const res  = await fetch('https://ntfy.sh/' + aTopic, {
+        const res  = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
           method: 'POST', body,
           headers: { 'Content-Type': 'text/plain' },
         });
@@ -362,7 +374,8 @@
         document.getElementById('trivia-status').innerHTML = '<span style="color:#34c759;font-weight:600">✓ Answer submitted! Good luck!</span>';
         btn.textContent = 'Submitted!';
       } catch(e) {
-        document.getElementById('trivia-status').textContent = '✗ Failed — try again.';
+        const msg = e.name === 'AbortError' ? '✗ Timed out — try again.' : '✗ Failed — check your connection.';
+        document.getElementById('trivia-status').textContent = msg;
         btn.disabled = false; btn.textContent = 'Submit Answer';
       }
     }
