@@ -173,8 +173,8 @@
       } catch(e) {
         const m = e.message || '';
         status.textContent = (m.includes('429') || m.includes('too many'))
-          ? '✗ Slow down — wait a moment and try again.'
-          : '✗ Failed to send — ' + (m || 'check your connection.');
+          ? '✗ Too many messages at once — just tap Send It again!'
+          : '✗ Failed to send — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
