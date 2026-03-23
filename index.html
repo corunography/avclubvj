@@ -239,11 +239,18 @@
       }, 1000);
     }
 
+    function getOrCreateAnonId() {
+      let id = localStorage.getItem('anon-id');
+      if (!id) { id = String(Math.floor(1000 + Math.random() * 9000)); localStorage.setItem('anon-id', id); }
+      return id;
+    }
+
     async function sendMsg() {
       const rawText = document.getElementById('msg').value.trim();
       const username = (document.getElementById('username')?.value || '').trim();
       if (username) localStorage.setItem('msg-username', username);
-      const text = username ? username + ':  ' + rawText : rawText;
+      const displayName = username || ('Anonymous_' + getOrCreateAnonId());
+      const text = displayName + ':  ' + rawText;
       if (!rawText || !topic) return;
       const btn    = document.getElementById('btn');
       const status = document.getElementById('status');
