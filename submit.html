@@ -127,8 +127,14 @@
     const params   = new URLSearchParams(location.search);
     const topic    = params.get('t');
     const mode     = params.get('mode') || '';  // 'trivia' = trivia-only page
+    const workerUrl = (params.get('w') || '').replace(/\/$/, ''); // Cloudflare Worker proxy URL (optional)
     const qTopic   = topic ? topic + '-q' : null;
     const aTopic   = topic ? topic + '-a' : null;
+
+    // Build ntfy POST URL — use Worker proxy when available (bypasses shared-IP rate limits)
+    function ntfyPostUrl(t) {
+      return workerUrl ? `${workerUrl}/${t}` : `https://ntfy.sh/${t}`;
+    }
 
     // Team identity (persisted across sessions)
     let myTeam    = localStorage.getItem('trivia-team')  || '';
@@ -200,7 +206,7 @@
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
-        const res = await fetchWithTimeout('https://ntfy.sh/' + topic, {
+        const res = await fetchWithTimeout(ntfyPostUrl(topic), {
           method: 'POST', body: text,
           headers: { 'Content-Type': 'text/plain' },
         });
@@ -322,7 +328,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
       const token = generateToken();
       try {
-        const res = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
+        const res = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST',
           body: `TEAM-REG|${name}|${token}`,
           headers: { 'Content-Type': 'text/plain' },
@@ -355,6 +361,40 @@
       });
     }
 
+    function showReveal(correctIndex) {
+      triviaAnswered = true;
+      const isCorrect = selectedAnswer === correctIndex;
+
+      // Colour the answer buttons
+      document.querySelectorAll('.trivia-opt-btn').forEach((btn, i) => {
+        btn.disabled = true;
+        btn.style.transition = 'background 0.3s, border-color 0.3s, color 0.3s';
+        if (i === correctIndex) {
+          btn.style.background   = '#0d3a1a';
+          btn.style.borderColor  = '#30d158';
+          btn.style.color        = '#30d158';
+        } else if (i === selectedAnswer) {
+          btn.style.background   = '#3a0d0d';
+          btn.style.borderColor  = '#ff453a';
+          btn.style.color        = '#ff453a';
+        }
+      });
+
+      // Result message
+      const statusEl = document.getElementById('trivia-status');
+      if (statusEl) {
+        statusEl.textContent  = isCorrect ? '✓ Correct!' : '✗ Wrong!';
+        statusEl.style.color  = isCorrect ? '#30d158' : '#ff453a';
+        statusEl.style.fontSize   = '22px';
+        statusEl.style.fontWeight = '700';
+        statusEl.style.marginTop  = '12px';
+      }
+
+      // Disable submit button
+      const btn = document.getElementById('trivia-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+    }
+
     async function submitTrivia() {
       if (selectedAnswer === -1 || !currentQ) {
         document.getElementById('trivia-status').textContent = 'Please select an answer first.';
@@ -365,7 +405,7 @@
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
         const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
-        const res  = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
+        const res  = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST', body,
           headers: { 'Content-Type': 'text/plain' },
         });
@@ -400,6 +440,8 @@
           if (latestData.type === 'teams' && Array.isArray(latestData.teams)) {
             knownTeams = latestData.teams;
             renderKnownTeams();
+          } else if (latestData.type === 'reveal') {
+            showReveal(latestData.correctIndex);
           } else if (latestData.active === false) {
             showMessageMode();
           } else if (latestData.question && (!currentQ || currentQ.id !== latestData.id)) {
