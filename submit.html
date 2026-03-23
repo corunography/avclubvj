@@ -97,12 +97,26 @@
     <div id="status"></div>
   </div>
 
+  <!-- Trivia: registration -->
+  <div id="trivia-register-wrap" style="display:none;width:100%;max-width:440px;flex-direction:column;gap:12px">
+    <div style="text-align:center;font-size:14px;color:#888;line-height:1.6">Enter your team name to join the game.<br>You'll be locked in for the session.</div>
+    <input type="text" id="team-name-reg-input" class="team-input" placeholder="Team name…" maxlength="30" style="text-align:center;font-size:18px;font-weight:700">
+    <button class="main-btn" id="btn-join-trivia" onclick="joinTrivia()">Join Game</button>
+    <div id="join-status" style="font-size:13px;color:#ff453a;text-align:center;min-height:18px"></div>
+    <div id="known-teams-list" style="display:none;font-size:11px;color:#666;text-align:center;line-height:1.8"></div>
+  </div>
+
+  <!-- Trivia: registered / waiting -->
+  <div id="trivia-playing-badge" style="display:none;font-size:13px;color:#888;text-align:center;margin-bottom:8px;max-width:440px">
+    Playing as <strong style="color:#fff" id="trivia-playing-name"></strong>
+    <span style="color:#3a7bd5;cursor:pointer;margin-left:8px;font-size:11px" onclick="changeTeam()">Change</span>
+  </div>
+
   <!-- Trivia form -->
   <div id="trivia-form">
     <div class="trivia-category" id="trivia-category"></div>
     <div class="trivia-question-box" id="trivia-q"></div>
     <div class="trivia-opts-grid" id="trivia-opts"></div>
-    <input class="team-input" id="team-name" type="text" placeholder="Your name or team name…" maxlength="40">
     <button class="main-btn" id="trivia-btn" onclick="submitTrivia()">Submit Answer</button>
     <div id="trivia-status"></div>
   </div>
@@ -110,10 +124,31 @@
   <div id="trivia-waiting" style="display:none">⏳ Waiting for the next question…</div>
 
   <script>
-    const params  = new URLSearchParams(location.search);
-    const topic   = params.get('t');
-    const qTopic  = topic ? topic + '-q' : null;
-    const aTopic  = topic ? topic + '-a' : null;
+    const params   = new URLSearchParams(location.search);
+    const topic    = params.get('t');
+    const mode     = params.get('mode') || '';  // 'trivia' = trivia-only page
+    const qTopic   = topic ? topic + '-q' : null;
+    const aTopic   = topic ? topic + '-a' : null;
+
+    // Team identity (persisted across sessions)
+    let myTeam    = localStorage.getItem('trivia-team')  || '';
+    let myToken   = localStorage.getItem('trivia-token') || '';
+    let knownTeams = []; // list of registered team names broadcast by app
+
+    function generateToken() {
+      try { return crypto.randomUUID(); } catch(e) {}
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    function renderKnownTeams() {
+      const el = document.getElementById('known-teams-list');
+      if (!el || knownTeams.length === 0) return;
+      el.textContent = 'Teams playing: ' + knownTeams.join(' · ');
+      el.style.display = 'block';
+    }
 
     if (!topic) {
       document.getElementById('btn').disabled = true;
@@ -192,23 +227,47 @@
 
     const LETTERS = ['A','B','C','D'];
 
+    function hideAllForms() {
+      ['msg-form','trivia-register-wrap','trivia-form','trivia-waiting'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      const badge = document.getElementById('trivia-playing-badge');
+      if (badge) badge.style.display = 'none';
+    }
+
+    function showRegister() {
+      hideAllForms();
+      document.getElementById('page-icon').textContent  = '🧠';
+      document.getElementById('page-title').textContent = 'Bar Trivia';
+      document.getElementById('page-sub').textContent   = 'Register your team to play!';
+      const wrap = document.getElementById('trivia-register-wrap');
+      if (wrap) wrap.style.display = 'flex';
+      renderKnownTeams();
+    }
+
+    function showBadge() {
+      const badge = document.getElementById('trivia-playing-badge');
+      const nameEl = document.getElementById('trivia-playing-name');
+      if (badge) badge.style.display = 'block';
+      if (nameEl) nameEl.textContent = myTeam;
+    }
+
     function showTriviaMode(q) {
+      if (mode === 'trivia' && !myToken) { showRegister(); return; }
       currentQ       = q;
       selectedAnswer = -1;
       triviaAnswered = false;
-      // Switch UI
-      document.getElementById('msg-form').style.display          = 'none';
-      document.getElementById('trivia-waiting').style.display    = 'none';
-      document.getElementById('trivia-form').style.display       = 'flex';
+      hideAllForms();
+      showBadge();
       document.getElementById('page-icon').textContent           = '🧠';
       document.getElementById('page-title').textContent          = 'Bar Trivia!';
       document.getElementById('page-sub').textContent            = 'Pick your answer and submit before time runs out.';
       document.getElementById('trivia-category').textContent     = q.category || '';
       document.getElementById('trivia-q').textContent            = q.question || '';
       document.getElementById('trivia-status').textContent       = '';
-      // Restore team name from storage
-      const saved = localStorage.getItem('trivia-team');
-      if (saved) document.getElementById('team-name').value = saved;
+      const triviaFormEl = document.getElementById('trivia-form');
+      if (triviaFormEl) triviaFormEl.style.display = 'flex';
       // Render options
       const btn = document.getElementById('trivia-btn');
       btn.disabled = false; btn.textContent = 'Submit Answer';
@@ -221,9 +280,10 @@
     }
 
     function showWaiting() {
+      if (mode === 'trivia' && !myToken) { showRegister(); return; }
       currentQ = null; selectedAnswer = -1;
-      document.getElementById('msg-form').style.display          = 'none';
-      document.getElementById('trivia-form').style.display       = 'none';
+      hideAllForms();
+      showBadge();
       document.getElementById('trivia-waiting').style.display    = 'block';
       document.getElementById('page-icon').textContent           = '🧠';
       document.getElementById('page-title').textContent          = 'Bar Trivia';
@@ -231,13 +291,48 @@
     }
 
     function showMessageMode() {
+      if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
       currentQ = null; selectedAnswer = -1;
-      document.getElementById('msg-form').style.display          = 'flex';
-      document.getElementById('trivia-form').style.display       = 'none';
-      document.getElementById('trivia-waiting').style.display    = 'none';
+      hideAllForms();
       document.getElementById('page-icon').textContent           = '🎶';
       document.getElementById('page-title').textContent          = 'Send a Message';
       document.getElementById('page-sub').textContent            = 'Your message may appear on the big screen!';
+      const msgForm = document.getElementById('msg-form');
+      if (msgForm) msgForm.style.display = 'flex';
+    }
+
+    async function joinTrivia() {
+      const nameInput = document.getElementById('team-name-reg-input');
+      const name = nameInput?.value?.trim();
+      const statusEl = document.getElementById('join-status');
+      if (!name) { if (statusEl) statusEl.textContent = 'Please enter a team name.'; return; }
+      if (statusEl) statusEl.textContent = '';
+      const btn = document.getElementById('btn-join-trivia');
+      if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
+      const token = generateToken();
+      try {
+        const res = await fetch('https://ntfy.sh/' + aTopic, {
+          method: 'POST',
+          body: `TEAM-REG|${name}|${token}`,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        myTeam = name; myToken = token;
+        localStorage.setItem('trivia-team', name);
+        localStorage.setItem('trivia-token', token);
+        showWaiting();
+      } catch(e) {
+        if (statusEl) statusEl.textContent = '✗ Failed to join — check your connection.';
+        if (btn) { btn.disabled = false; btn.textContent = 'Join Game'; }
+      }
+    }
+
+    function changeTeam() {
+      if (!confirm('Change your team name? Your current answers will be lost.')) return;
+      localStorage.removeItem('trivia-team');
+      localStorage.removeItem('trivia-token');
+      myTeam = ''; myToken = '';
+      showRegister();
     }
 
     function selectAnswer(idx) {
@@ -253,12 +348,11 @@
         document.getElementById('trivia-status').textContent = 'Please select an answer first.';
         return;
       }
-      const teamName = document.getElementById('team-name')?.value?.trim() || 'Anonymous';
-      localStorage.setItem('trivia-team', teamName);
+      const teamName = myTeam || 'Anonymous';
       const btn = document.getElementById('trivia-btn');
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
-        const body = `TRIVIA|${currentQ.id}|${teamName}|${selectedAnswer}`;
+        const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
         const res  = await fetch('https://ntfy.sh/' + aTopic, {
           method: 'POST', body,
           headers: { 'Content-Type': 'text/plain' },
@@ -290,7 +384,10 @@
           } catch(e) {}
         });
         if (latestData) {
-          if (latestData.active === false) {
+          if (latestData.type === 'teams' && Array.isArray(latestData.teams)) {
+            knownTeams = latestData.teams;
+            renderKnownTeams();
+          } else if (latestData.active === false) {
             showMessageMode();
           } else if (latestData.question && (!currentQ || currentQ.id !== latestData.id)) {
             showTriviaMode(latestData);
@@ -300,7 +397,17 @@
       setTimeout(pollTrivia, 3000);
     }
 
-    if (topic) pollTrivia();
+    if (topic) {
+      if (mode === 'trivia') {
+        // Trivia-only page: show registration or waiting immediately
+        if (myTeam && myToken) {
+          showWaiting();
+        } else {
+          showRegister();
+        }
+      }
+      pollTrivia();
+    }
   </script>
 </body>
 </html>
