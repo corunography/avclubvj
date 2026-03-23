@@ -19,6 +19,18 @@
 
     /* ── Message form ── */
     #msg-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; }
+    .username-row {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
+      padding: 10px 16px; margin-bottom: 10px; transition: border-color 0.2s;
+    }
+    .username-row:focus-within { border-color: #3a7bd5; }
+    .username-at { color: #555; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .username-row input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 16px; font-family: inherit; -webkit-appearance: none;
+    }
+    .username-row input::placeholder { color: #555; }
     textarea {
       width: 100%; height: 110px;
       background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
@@ -91,8 +103,12 @@
 
   <!-- Normal message form -->
   <div id="msg-form">
-    <textarea id="msg" placeholder="Type your message here…" maxlength="280" oninput="onInput()"></textarea>
-    <div class="char-count" id="char-count">0 / 280</div>
+    <div class="username-row">
+      <span class="username-at">@</span>
+      <input type="text" id="username" placeholder="your username (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="msg" placeholder="Type your message here…" maxlength="240" oninput="onInput()"></textarea>
+    <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
   </div>
@@ -187,11 +203,20 @@
     }
 
     // ── Message form ──────────────────────────────────────────────────────────
+    // Restore saved username
+    const usernameEl = document.getElementById('username');
+    if (usernameEl) {
+      usernameEl.value = localStorage.getItem('msg-username') || '';
+      usernameEl.addEventListener('change', () => {
+        localStorage.setItem('msg-username', usernameEl.value.trim());
+      });
+    }
+
     function onInput() {
       const len = document.getElementById('msg').value.length;
       const el  = document.getElementById('char-count');
-      el.textContent = len + ' / 280';
-      el.className   = 'char-count' + (len > 240 ? ' warn' : '');
+      el.textContent = len + ' / 240';
+      el.className   = 'char-count' + (len > 200 ? ' warn' : '');
     }
 
     const COOLDOWN_SEC = 12;
@@ -215,8 +240,11 @@
     }
 
     async function sendMsg() {
-      const text = document.getElementById('msg').value.trim();
-      if (!text || !topic) return;
+      const rawText = document.getElementById('msg').value.trim();
+      const username = (document.getElementById('username')?.value || '').trim();
+      if (username) localStorage.setItem('msg-username', username);
+      const text = username ? username + ':  ' + rawText : rawText;
+      if (!rawText || !topic) return;
       const btn    = document.getElementById('btn');
       const status = document.getElementById('status');
       btn.disabled = true; btn.textContent = 'Sending…';
