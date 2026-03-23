@@ -228,8 +228,7 @@
         });
         if (!res.ok) {
           const body = await res.text().catch(() => '');
-          const isDaily = body.includes('daily') || body.includes('day limit') || body.includes('tier');
-          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, isDaily });
+          throw Object.assign(new Error('HTTP ' + res.status + ' — ' + body.slice(0, 200)), { status: res.status, body });
         }
         status.innerHTML = '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
@@ -240,11 +239,7 @@
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
           ? '✗ Request timed out — check your connection and try again.'
-          : e.isDaily
-            ? '✗ Daily message limit reached — service resumes after midnight UTC.'
-            : e.status === 429
-              ? '✗ Too many messages at once — wait a moment and try again.'
-              : '✗ Failed to send — check your connection and try again.';
+          : '✗ Error ' + (e.status || '') + ': ' + (e.body || e.message || 'check your connection and try again.');
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
