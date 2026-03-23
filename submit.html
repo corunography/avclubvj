@@ -467,14 +467,15 @@
 
     if (topic) {
       if (mode === 'trivia') {
-        // Trivia-only page: show registration or waiting immediately
+        // Trivia-only page: show registration or waiting, then start polling
         if (myTeam && myToken) {
           showWaiting();
         } else {
           showRegister();
         }
+        pollTrivia(); // only poll the -q topic in trivia mode
       }
-      pollTrivia();
+      // Message mode needs no trivia polling — stays on the message form
     }
   </script>
 </body>
