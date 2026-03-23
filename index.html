@@ -228,7 +228,8 @@
         });
         if (!res.ok) {
           const body = await res.text().catch(() => '');
-          throw Object.assign(new Error('HTTP ' + res.status + ' — ' + body.slice(0, 200)), { status: res.status, body });
+          const isQuota = body.includes('daily message quota') || body.includes('daily') || body.includes('quota');
+          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, isQuota });
         }
         status.innerHTML = '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
@@ -239,7 +240,11 @@
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
           ? '✗ Request timed out — check your connection and try again.'
-          : '✗ Error ' + (e.status || '') + ': ' + (e.body || e.message || 'check your connection and try again.');
+          : e.isQuota
+            ? '✗ Message limit reached for today — please try again tomorrow!'
+            : e.status === 429
+              ? '✗ Too many messages — wait a moment and try again.'
+              : '✗ Failed to send — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
