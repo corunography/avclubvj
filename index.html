@@ -124,16 +124,30 @@
   <div id="trivia-waiting" style="display:none">⏳ Waiting for the next question…</div>
 
   <script>
-    const params   = new URLSearchParams(location.search);
-    const topic    = params.get('t');
-    const mode     = params.get('mode') || '';  // 'trivia' = trivia-only page
-    const workerUrl = (params.get('w') || '').replace(/\/$/, ''); // Cloudflare Worker proxy URL (optional)
-    const qTopic   = topic ? topic + '-q' : null;
-    const aTopic   = topic ? topic + '-a' : null;
+    const params    = new URLSearchParams(location.search);
+    const topic     = params.get('t');
+    const mode      = params.get('mode') || '';  // 'trivia' = trivia-only page
+    const workerUrl = (params.get('w') || '').replace(/\/$/, '');
+    const ntfyAk    = params.get('ak') || '';   // ntfy auth token (passed via QR URL)
+    const qTopic    = topic ? topic + '-q' : null;
+    const aTopic    = topic ? topic + '-a' : null;
 
-    // Build ntfy POST URL — use Worker proxy when available (bypasses shared-IP rate limits)
+    // Auth headers — only added when token is present
+    function authHeaders(extra) {
+      const h = { 'Content-Type': 'text/plain', ...extra };
+      if (ntfyAk) h['Authorization'] = 'Bearer ' + ntfyAk;
+      return h;
+    }
+
+    // Build ntfy POST URL — use Worker proxy when available
     function ntfyPostUrl(t) {
       return workerUrl ? `${workerUrl}/${t}` : `https://ntfy.sh/${t}`;
+    }
+
+    // Build ntfy poll URL
+    function ntfyPollUrl(t, since) {
+      const base = `https://ntfy.sh/${t}/json?poll=1&since=${since}`;
+      return base;
     }
 
     // Team identity (persisted across sessions)
@@ -208,7 +222,7 @@
       try {
         const res = await fetchWithTimeout(ntfyPostUrl(topic), {
           method: 'POST', body: text,
-          headers: { 'Content-Type': 'text/plain' },
+          headers: authHeaders(),
         });
         if (!res.ok) {
           const body = await res.text().catch(() => '');
@@ -331,7 +345,7 @@
         const res = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST',
           body: `TEAM-REG|${name}|${token}`,
-          headers: { 'Content-Type': 'text/plain' },
+          headers: authHeaders(),
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         myTeam = name; myToken = token;
@@ -407,7 +421,7 @@
         const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
         const res  = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST', body,
-          headers: { 'Content-Type': 'text/plain' },
+          headers: authHeaders(),
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         triviaAnswered = true;
@@ -425,7 +439,9 @@
       if (!qTopic) return;
       try {
         const since = triviaLastId || 'all';
-        const res   = await fetch(`https://ntfy.sh/${qTopic}/json?poll=1&since=${since}`);
+        const res   = await fetch(ntfyPollUrl(qTopic, since), {
+          headers: ntfyAk ? { 'Authorization': 'Bearer ' + ntfyAk } : {},
+        });
         const text  = await res.text();
         text.trim().split('\n').filter(Boolean).forEach(line => {
           try {
