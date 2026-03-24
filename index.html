@@ -179,6 +179,10 @@
       <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
     </div>
     <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
+    <!-- Progress bar -->
+    <div id="photo-progress-wrap" style="display:none;width:100%;background:#1c1c1e;border-radius:99px;height:8px;overflow:hidden">
+      <div id="photo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7bd5,#5b9cf6);border-radius:99px;transition:width 0.2s ease"></div>
+    </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Send Photo!</button>
     <div id="photo-status"></div>
   </div>
@@ -411,40 +415,57 @@
       photoStatus.textContent = '';
     });
 
-    async function sendPhoto() {
+    function sendPhoto() {
       if (!resizedDataUrl || !topic || !workerBase) {
         photoStatus.innerHTML = '<span class="error">Photo uploads require a worker URL — please use the venue QR code.</span>';
         return;
       }
-      const caption = (document.getElementById('photo-caption')?.value || '').trim();
+      const caption     = (document.getElementById('photo-caption')?.value || '').trim();
+      const progressWrap = document.getElementById('photo-progress-wrap');
+      const progressBar  = document.getElementById('photo-progress-bar');
+
       photoBtn.disabled = true;
-      photoStatus.textContent = 'Sending…';
-      try {
-        const res = await fetchWithTimeout(
-          `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dataUrl: resizedDataUrl, caption }),
-          },
-          20000
-        );
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
-        // Reset form
-        resizedDataUrl = null;
-        previewImg.src = '';
-        previewWrap.style.display = 'none';
-        pickArea.style.display    = 'flex';
-        document.getElementById('photo-caption').value = '';
-        fileInput.value = '';
-        // Keep button disabled — one photo per submission
-        setTimeout(() => { photoBtn.disabled = false; }, 15000);
-      } catch(e) {
-        const isTimeout = e.name === 'AbortError';
-        photoStatus.innerHTML = '<span class="error">' + (isTimeout ? '✗ Timed out — check your connection.' : '✗ Upload failed — please try again.') + '</span>';
+      photoStatus.textContent = '';
+      progressWrap.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption });
+      const xhr     = new XMLHttpRequest();
+      xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 25000;
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        progressBar.style.width = '100%';
+        setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
+          resizedDataUrl = null;
+          previewImg.src = '';
+          previewWrap.style.display = 'none';
+          pickArea.style.display    = 'flex';
+          document.getElementById('photo-caption').value = '';
+          fileInput.value = '';
+          setTimeout(() => { photoBtn.disabled = false; }, 15000);
+        } else {
+          photoStatus.innerHTML = '<span class="error">✗ Upload failed (error ' + xhr.status + ') — please try again.</span>';
+          photoBtn.disabled = false;
+        }
+      };
+
+      xhr.onerror = xhr.ontimeout = () => {
+        progressWrap.style.display = 'none';
+        photoStatus.innerHTML = '<span class="error">✗ Upload failed — check your connection and try again.</span>';
         photoBtn.disabled = false;
-      }
+      };
+
+      xhr.send(payload);
     }
 
     function resizeImage(file, maxPx, quality) {
