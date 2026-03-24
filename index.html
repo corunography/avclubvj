@@ -350,14 +350,15 @@
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
-        const res = await fetchWithTimeout(ntfyPostUrl(topic), {
-          method: 'POST', body: text,
-          headers: { 'Content-Type': 'text/plain' },
-        });
+        // Use Cloudflare Worker R2 storage — no rate limits, same infra as photos
+        if (!workerBase) throw new Error('No worker URL configured');
+        const res = await fetchWithTimeout(
+          `${workerBase}/messages?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } }
+        );
         if (!res.ok) {
-          const body = await res.text().catch(() => '');
-          const isQuota = body.includes('daily message quota') || body.includes('daily') || body.includes('quota');
-          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, isQuota });
+          const body = await res.json().catch(() => ({}));
+          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: body.error || '' });
         }
         status.innerHTML = '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
@@ -368,11 +369,9 @@
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
           ? '✗ Request timed out — check your connection and try again.'
-          : e.isQuota
-            ? '✗ Message limit reached for today — please try again tomorrow!'
-            : e.status === 429
-              ? '✗ Too many messages — wait a moment and try again.'
-              : '✗ Failed to send — check your connection and try again.';
+          : e.status === 429
+            ? '✗ Queue is full — please wait a moment and try again.'
+            : '✗ Failed to send — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
