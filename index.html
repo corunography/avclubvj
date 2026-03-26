@@ -447,7 +447,7 @@
     const photoBtn    = document.getElementById('photo-btn');
     const photoStatus = document.getElementById('photo-status');
 
-    fileInput.addEventListener('change', async () => {
+    fileInput?.addEventListener('change', async () => {
       const file = fileInput.files[0];
       if (!file) return;
       photoStatus.textContent = 'Resizing…';
@@ -459,7 +459,7 @@
       photoStatus.textContent = '';
     });
 
-    rmBtn.addEventListener('click', () => {
+    rmBtn?.addEventListener('click', () => {
       resizedDataUrl = null;
       previewImg.src = '';
       previewWrap.style.display = 'none';
@@ -624,6 +624,7 @@
     }
 
     function showTriviaMode(q) {
+      if (mode !== 'trivia') return;   // Never interrupt the messaging page
       if (mode === 'trivia' && !myToken) { showRegister(); return; }
       currentQ       = q;
       selectedAnswer = -1;
