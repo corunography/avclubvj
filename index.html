@@ -109,6 +109,40 @@
     .error   { color: #ff453a; }
     .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
 
+    /* ── Photo form ── */
+    #photo-section { width: 100%; max-width: 440px; margin-top: 18px; }
+    #photo-toggle-btn {
+      width: 100%; background: none; border: 1.5px dashed #333;
+      border-radius: 14px; color: #888; font-size: 14px; font-weight: 600;
+      font-family: inherit; padding: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: border-color .15s, color .15s; -webkit-tap-highlight-color: transparent;
+    }
+    #photo-toggle-btn:active { opacity: .7; }
+    #photo-toggle-btn.open { border-style: solid; border-color: #3a7bd5; color: #3a7bd5; }
+    #photo-form-inner { display: none; flex-direction: column; gap: 12px; margin-top: 12px; }
+    #photo-form-inner.open { display: flex; }
+    .photo-preview-wrap { display: none; position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: #1c1c1e; }
+    .photo-preview-wrap.has-photo { display: block; }
+    #photo-preview { width: 100%; max-height: 260px; object-fit: contain; display: block; }
+    .photo-clear-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; border-radius: 50%; width: 30px; height: 30px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .photo-file-label {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
+      color: #fff; font-size: 15px; font-weight: 600; padding: 13px;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .photo-file-label:active { opacity: .75; }
+    #photo-file-input { display: none; }
+    #photo-caption {
+      width: 100%; background: #1c1c1e; border: 1.5px solid #333; border-radius: 12px;
+      color: #fff; font-size: 15px; font-family: inherit;
+      padding: 12px 14px; outline: none; transition: border-color .2s;
+    }
+    #photo-caption:focus { border-color: #3a7bd5; }
+    #photo-caption::placeholder { color: #555; }
+    #photo-status { font-size: 13px; text-align: center; min-height: 16px; }
+
     /* ── Emoji Applause bar ── */
     #emoji-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -119,7 +153,7 @@
     }
     #emoji-bar-label { text-align: center; font-size: 10px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
     .react-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
-    .react-btn { width: 100%; background: #1c1c1e; border: none; border-radius: 14px; font-size: 42px; padding: 12px 4px 8px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
+    .react-btn { width: 100%; background: #1c1c1e; border: none; border-radius: 14px; font-size: 52px; padding: 14px 4px 10px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
     .react-btn:active { transform: scale(.8); background: #2c2c2e; }
     .react-btn.fired { background: #2a2a2e; animation: reactPop .25s ease-out; }
     @keyframes reactPop { 0% { transform: scale(.7) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
@@ -136,6 +170,24 @@
     <div class="char-count" id="char-count">0 / 280</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
+  </div>
+
+  <!-- Photo submission (shown alongside message form in default mode) -->
+  <div id="photo-section" style="display:none">
+    <button id="photo-toggle-btn" onclick="togglePhotoForm()"><span>📸 Share a Photo</span></button>
+    <div id="photo-form-inner">
+      <div class="photo-preview-wrap" id="photo-preview-wrap">
+        <img id="photo-preview" src="" alt="Preview">
+        <button class="photo-clear-btn" onclick="clearPhoto()">✕</button>
+      </div>
+      <label class="photo-file-label" for="photo-file-input">
+        <span id="photo-file-label-text">📷 Choose or Take Photo</span>
+      </label>
+      <input type="file" id="photo-file-input" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
+      <input type="text" id="photo-caption" placeholder="Caption (optional)" maxlength="120">
+      <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Upload Photo</button>
+      <div id="photo-status"></div>
+    </div>
   </div>
 
   <!-- Trivia: registration -->
@@ -266,7 +318,7 @@
     }
 
     function hideAllForms() {
-      ['msg-form','trivia-register-wrap','trivia-form','trivia-waiting','poll-wrap'].forEach(id => {
+      ['msg-form','photo-section','trivia-register-wrap','trivia-form','trivia-waiting','poll-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -311,6 +363,8 @@
       document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
       const msgForm = document.getElementById('msg-form');
       if (msgForm) msgForm.style.display = 'flex';
+      const photoSection = document.getElementById('photo-section');
+      if (photoSection && topic) photoSection.style.display = 'block';
     }
 
     async function sendMsg() {
@@ -510,6 +564,97 @@
       setTimeout(pollTrivia, 3000);
     }
 
+    // ── Photo submission ──────────────────────────────────────────────────────
+    let photoDataUrl = null;
+    let photoCooldown = false;
+
+    function togglePhotoForm() {
+      const btn   = document.getElementById('photo-toggle-btn');
+      const inner = document.getElementById('photo-form-inner');
+      const open  = inner.classList.toggle('open');
+      btn.classList.toggle('open', open);
+      const sp = btn.querySelector('span');
+      if (sp) sp.textContent = open ? '✕ Cancel' : '📸 Share a Photo';
+    }
+
+    function onPhotoSelected(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const raw = e.target.result;
+        // Resize to max 1024px to stay under worker's 1.5MB limit
+        const img = new Image();
+        img.onload = function() {
+          const MAX = 1024;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+            else        { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          photoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          const preview = document.getElementById('photo-preview');
+          const wrap    = document.getElementById('photo-preview-wrap');
+          const label   = document.getElementById('photo-file-label-text');
+          preview.src = photoDataUrl;
+          wrap.classList.add('has-photo');
+          label.textContent = '📷 Change Photo';
+          document.getElementById('photo-btn').disabled = false;
+          document.getElementById('photo-status').textContent = '';
+        };
+        img.src = raw;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearPhoto() {
+      photoDataUrl = null;
+      document.getElementById('photo-preview').src = '';
+      document.getElementById('photo-preview-wrap').classList.remove('has-photo');
+      document.getElementById('photo-file-label-text').textContent = '📷 Choose or Take Photo';
+      document.getElementById('photo-file-input').value = '';
+      document.getElementById('photo-btn').disabled = true;
+      document.getElementById('photo-status').textContent = '';
+    }
+
+    async function sendPhoto() {
+      if (!photoDataUrl || !topic || photoCooldown) return;
+      const caption = (document.getElementById('photo-caption').value || '').trim();
+      const btn     = document.getElementById('photo-btn');
+      const status  = document.getElementById('photo-status');
+      btn.disabled = true; btn.textContent = 'Uploading…';
+      status.textContent = ''; status.className = '';
+      photoCooldown = true;
+      try {
+        const res = await fetchWithTimeout(
+          `${workerUrl}/photos?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataUrl: photoDataUrl, caption }) },
+          20000
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+        status.innerHTML = '✓ Photo submitted for review!';
+        status.className = 'success';
+        clearPhoto();
+        document.getElementById('photo-caption').value = '';
+        btn.textContent = 'Upload Photo';
+        // Re-enable after 30s
+        setTimeout(() => { photoCooldown = false; }, 30000);
+      } catch(e) {
+        const m = e.message || '';
+        status.textContent = m.includes('429') ? '✗ Queue is full — please wait a moment.' :
+          e.name === 'AbortError' ? '✗ Timed out — check your connection.' :
+          '✗ Upload failed — check your connection.';
+        status.className = 'error';
+        btn.disabled = false; btn.textContent = 'Upload Photo';
+        photoCooldown = false;
+      }
+    }
+
     // ── Live Poll mode ────────────────────────────────────────────────────────
     let pollMyVote  = null;  // option index after voting
     let pollSelected = null; // option index while choosing
@@ -653,6 +798,7 @@
         }
         pollTrivia();
       } else {
+        showMessageMode();
         pollTrivia(); // trivia questions can interrupt message mode
       }
     }
