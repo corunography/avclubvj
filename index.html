@@ -15,10 +15,36 @@
     }
     .icon  { font-size: 48px; margin-bottom: 16px; }
     h1     { font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
-    .sub   { font-size: 14px; color: #888; margin-bottom: 28px; text-align: center; line-height: 1.5; }
+    .sub   { font-size: 14px; color: #888; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+
+    /* ── Tab switcher ── */
+    .tabs {
+      display: flex; gap: 0; margin-bottom: 24px;
+      background: #1c1c1e; border-radius: 12px; padding: 4px;
+      width: 100%; max-width: 440px;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; background: transparent;
+      color: #888; font-size: 15px; font-weight: 600; font-family: inherit;
+      border-radius: 9px; cursor: pointer; transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-btn.active { background: #2c2c2e; color: #fff; }
 
     /* ── Message form ── */
     #msg-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; }
+    .username-row {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
+      padding: 10px 16px; margin-bottom: 10px; transition: border-color 0.2s;
+    }
+    .username-row:focus-within { border-color: #3a7bd5; }
+    .username-at { color: #555; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .username-row input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 16px; font-family: inherit; -webkit-appearance: none;
+    }
+    .username-row input::placeholder { color: #555; }
     textarea {
       width: 100%; height: 110px;
       background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
@@ -30,6 +56,39 @@
     textarea::placeholder { color: #555; }
     .char-count { font-size: 11px; color: #555; text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; }
     .char-count.warn { color: #ff9500; }
+
+    /* ── Photo form ── */
+    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 12px; }
+    .pick-area {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; background: #1c1c1e; border: 1.5px dashed #333;
+      border-radius: 16px; padding: 32px 20px; cursor: pointer;
+      transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .pick-area:active { border-color: #3a7bd5; }
+    .pick-area .pick-icon { font-size: 40px; }
+    .pick-area .pick-txt  { font-size: 15px; color: #888; text-align: center; }
+    #photo-preview-wrap { display: none; position: relative; }
+    #photo-preview {
+      width: 100%; border-radius: 12px; display: block;
+      object-fit: contain; max-height: 280px; background: #000;
+    }
+    .rm-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.75); border: none; color: #fff;
+      border-radius: 50%; width: 30px; height: 30px; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .caption-input {
+      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
+      border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit;
+      padding: 12px 16px; outline: none; transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .caption-input:focus { border-color: #3a7bd5; }
+    .caption-input::placeholder { color: #555; }
+    #file-input { display: none; }
 
     /* ── Trivia form ── */
     #trivia-form { width: 100%; max-width: 480px; display: none; flex-direction: column; gap: 12px; }
@@ -104,44 +163,11 @@
     button.main-btn:hover  { background: #2d6bc4; }
     button.main-btn:active { transform: scale(0.98); }
     button.main-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; transform: none; }
-    #status { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; max-width: 440px; line-height: 1.5; }
+    #status       { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; max-width: 440px; line-height: 1.5; }
+    #photo-status { font-size: 14px; text-align: center; min-height: 20px; line-height: 1.5; }
     .success { color: #34c759; font-weight: 600; }
     .error   { color: #ff453a; }
     .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
-
-    /* ── Photo form ── */
-    #photo-section { width: 100%; max-width: 440px; margin-top: 18px; }
-    #photo-toggle-btn {
-      width: 100%; background: none; border: 1.5px dashed #333;
-      border-radius: 14px; color: #888; font-size: 14px; font-weight: 600;
-      font-family: inherit; padding: 13px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: border-color .15s, color .15s; -webkit-tap-highlight-color: transparent;
-    }
-    #photo-toggle-btn:active { opacity: .7; }
-    #photo-toggle-btn.open { border-style: solid; border-color: #3a7bd5; color: #3a7bd5; }
-    #photo-form-inner { display: none; flex-direction: column; gap: 12px; margin-top: 12px; }
-    #photo-form-inner.open { display: flex; }
-    .photo-preview-wrap { display: none; position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: #1c1c1e; }
-    .photo-preview-wrap.has-photo { display: block; }
-    #photo-preview { width: 100%; max-height: 260px; object-fit: contain; display: block; }
-    .photo-clear-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; border-radius: 50%; width: 30px; height: 30px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .photo-file-label {
-      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
-      color: #fff; font-size: 15px; font-weight: 600; padding: 13px;
-      cursor: pointer; transition: border-color .15s;
-    }
-    .photo-file-label:active { opacity: .75; }
-    #photo-file-input { display: none; }
-    #photo-caption {
-      width: 100%; background: #1c1c1e; border: 1.5px solid #333; border-radius: 12px;
-      color: #fff; font-size: 15px; font-family: inherit;
-      padding: 12px 14px; outline: none; transition: border-color .2s;
-    }
-    #photo-caption:focus { border-color: #3a7bd5; }
-    #photo-caption::placeholder { color: #555; }
-    #photo-status { font-size: 13px; text-align: center; min-height: 16px; }
 
     /* ── Emoji Applause bar ── */
     #emoji-bar {
@@ -164,30 +190,42 @@
   <h1 id="page-title">Send a Message</h1>
   <p class="sub" id="page-sub">Your message may appear on the big screen!</p>
 
+  <!-- Tab switcher (hidden in trivia/poll mode) -->
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" id="tab-msg"   onclick="switchTab('msg')">💬 Message</button>
+    <button class="tab-btn"        id="tab-photo" onclick="switchTab('photo')">📸 Photo</button>
+  </div>
+
   <!-- Normal message form -->
   <div id="msg-form">
-    <textarea id="msg" placeholder="Type your message here…" maxlength="280" oninput="onInput()"></textarea>
-    <div class="char-count" id="char-count">0 / 280</div>
+    <div class="username-row">
+      <span class="username-at">@</span>
+      <input type="text" id="username" placeholder="your username (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="msg" placeholder="Type your message here…" maxlength="240" oninput="onInput()"></textarea>
+    <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
   </div>
 
-  <!-- Photo submission (shown alongside message form in default mode) -->
-  <div id="photo-section" style="display:none">
-    <button id="photo-toggle-btn" onclick="togglePhotoForm()"><span>📸 Share a Photo</span></button>
-    <div id="photo-form-inner">
-      <div class="photo-preview-wrap" id="photo-preview-wrap">
-        <img id="photo-preview" src="" alt="Preview">
-        <button class="photo-clear-btn" onclick="clearPhoto()">✕</button>
-      </div>
-      <label class="photo-file-label" for="photo-file-input">
-        <span id="photo-file-label-text">📷 Choose or Take Photo</span>
-      </label>
-      <input type="file" id="photo-file-input" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
-      <input type="text" id="photo-caption" placeholder="Caption (optional)" maxlength="120">
-      <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Upload Photo</button>
-      <div id="photo-status"></div>
+  <!-- Photo form -->
+  <div id="photo-form">
+    <input type="file" id="file-input" accept="image/*">
+    <label for="file-input" class="pick-area" id="pick-area">
+      <span class="pick-icon">📷</span>
+      <span class="pick-txt">Tap to take a photo<br>or choose from your library</span>
+    </label>
+    <div id="photo-preview-wrap">
+      <img id="photo-preview" alt="Preview">
+      <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
     </div>
+    <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
+    <!-- Progress bar -->
+    <div id="photo-progress-wrap" style="display:none;width:100%;background:#1c1c1e;border-radius:99px;height:8px;overflow:hidden">
+      <div id="photo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7bd5,#5b9cf6);border-radius:99px;transition:width 0.2s ease"></div>
+    </div>
+    <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Send Photo!</button>
+    <div id="photo-status"></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -234,11 +272,279 @@
     const params    = new URLSearchParams(location.search);
     const topic     = params.get('t');
     const mode      = params.get('mode') || '';  // 'trivia' or 'poll'
-    const workerUrl = (params.get('w') || 'https://avclubvj.corunography.workers.dev').replace(/\/$/, '');
+    const workerUrl = (params.get('w') || '').replace(/\/$/, '');
+    const ntfyAk    = params.get('ak') || '';   // ntfy auth token (passed via QR URL)
     const qTopic    = topic ? topic + '-q' : null;
     const aTopic    = topic ? topic + '-a' : null;
 
-    // ── Emoji Applause ─────────────────────────────────────────────────────────
+    // URL-based auth avoids CORS preflight (no custom headers needed)
+    const ntfyAuthParam = ntfyAk ? '&auth=' + btoa(':' + ntfyAk) : '';
+
+    // Normalise worker URL — ensure it has a protocol; fall back to default worker
+    const workerBase = workerUrl
+      ? (workerUrl.startsWith('http') ? workerUrl : 'https://' + workerUrl).replace(/\/$/, '')
+      : 'https://avclubvj.corunography.workers.dev';
+
+    // Build ntfy POST URL — use Worker proxy when available
+    function ntfyPostUrl(t) {
+      return workerBase ? `${workerBase}/${t}` : `https://ntfy.sh/${t}`;
+    }
+
+    // Build ntfy poll URL
+    function ntfyPollUrl(t, since) {
+      return workerBase
+        ? `${workerBase}/${t}/json?poll=1&since=${since}`
+        : `https://ntfy.sh/${t}/json?poll=1&since=${since}`;
+    }
+
+    // Team identity (persisted across sessions)
+    let myTeam    = localStorage.getItem('trivia-team')  || '';
+    let myToken   = localStorage.getItem('trivia-token') || '';
+    let knownTeams = []; // list of registered team names broadcast by app
+
+    function generateToken() {
+      try { return crypto.randomUUID(); } catch(e) {}
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    // Fetch with a hard timeout so requests never hang indefinitely
+    function fetchWithTimeout(url, options, ms = 10000) {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal })
+        .finally(() => clearTimeout(tid));
+    }
+
+    function renderKnownTeams() {
+      const el = document.getElementById('known-teams-list');
+      if (!el || knownTeams.length === 0) return;
+      el.textContent = 'Teams playing: ' + knownTeams.join(' · ');
+      el.style.display = 'block';
+    }
+
+    if (!topic) {
+      document.getElementById('btn').disabled = true;
+      document.getElementById('status').innerHTML =
+        '<span class="error-setup">No venue code in this link.<br>Please ask the venue for the correct QR code.</span>';
+    }
+
+    // ── Tab switcher ──────────────────────────────────────────────────────────
+    let activeTab = 'msg';
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tab-msg').classList.toggle('active', tab === 'msg');
+      document.getElementById('tab-photo').classList.toggle('active', tab === 'photo');
+      document.getElementById('msg-form').style.display   = tab === 'msg'   ? 'flex'  : 'none';
+      document.getElementById('photo-form').style.display = tab === 'photo' ? 'flex'  : 'none';
+      if (tab === 'msg') {
+        document.getElementById('page-icon').textContent  = '🎶';
+        document.getElementById('page-title').textContent = 'Send a Message';
+        document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      } else {
+        document.getElementById('page-icon').textContent  = '📸';
+        document.getElementById('page-title').textContent = 'Share a Photo';
+        document.getElementById('page-sub').textContent   = 'Your photo could appear on screen!';
+      }
+    }
+
+    // ── Message form ──────────────────────────────────────────────────────────
+    // Restore saved username
+    const usernameEl = document.getElementById('username');
+    if (usernameEl) {
+      usernameEl.value = localStorage.getItem('msg-username') || '';
+      usernameEl.addEventListener('change', () => {
+        localStorage.setItem('msg-username', usernameEl.value.trim());
+      });
+    }
+
+    function onInput() {
+      const len = document.getElementById('msg').value.length;
+      const el  = document.getElementById('char-count');
+      el.textContent = len + ' / 240';
+      el.className   = 'char-count' + (len > 200 ? ' warn' : '');
+    }
+
+    const COOLDOWN_SEC = 12;
+    let cooldownTimer  = null;
+
+    function startCooldown() {
+      const btn = document.getElementById('btn');
+      let remaining = COOLDOWN_SEC;
+      btn.disabled = true;
+      btn.textContent = `Wait ${remaining}s…`;
+      if (cooldownTimer) clearInterval(cooldownTimer);
+      cooldownTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(cooldownTimer); cooldownTimer = null;
+          btn.disabled = false; btn.textContent = 'Send Another!';
+        } else {
+          btn.textContent = `Wait ${remaining}s…`;
+        }
+      }, 1000);
+    }
+
+    function getOrCreateAnonId() {
+      let id = localStorage.getItem('anon-id');
+      if (!id) { id = String(Math.floor(1000 + Math.random() * 9000)); localStorage.setItem('anon-id', id); }
+      return id;
+    }
+
+    async function sendMsg() {
+      const rawText = document.getElementById('msg').value.trim();
+      const username = (document.getElementById('username')?.value || '').trim();
+      if (username) localStorage.setItem('msg-username', username);
+      const displayName = username || ('Anonymous_' + getOrCreateAnonId());
+      const text = displayName + ':  ' + rawText;
+      if (!rawText || !topic) return;
+      const btn    = document.getElementById('btn');
+      const status = document.getElementById('status');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      status.textContent = ''; status.className = '';
+      try {
+        // Use Cloudflare Worker R2 storage — no rate limits, same infra as photos
+        if (!workerBase) throw new Error('No worker URL configured');
+        const res = await fetchWithTimeout(
+          `${workerBase}/messages?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } }
+        );
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: body.error || '' });
+        }
+        status.innerHTML = '✓ Sent! It may appear on screen shortly.';
+        status.className = 'success';
+        document.getElementById('msg').value = '';
+        onInput();
+        startCooldown();
+      } catch(e) {
+        const isTimeout = e.name === 'AbortError';
+        status.textContent = isTimeout
+          ? '✗ Request timed out — check your connection and try again.'
+          : e.status === 429
+            ? '✗ Queue is full — please wait a moment and try again.'
+            : '✗ Failed to send — check your connection and try again.';
+        status.className = 'error';
+        btn.textContent = 'Send It!'; btn.disabled = false;
+      }
+    }
+
+    document.getElementById('msg')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+    });
+
+    // ── Photo form ────────────────────────────────────────────────────────────
+    let resizedDataUrl = null;
+
+    const fileInput   = document.getElementById('file-input');
+    const pickArea    = document.getElementById('pick-area');
+    const previewWrap = document.getElementById('photo-preview-wrap');
+    const previewImg  = document.getElementById('photo-preview');
+    const rmBtn       = document.getElementById('rm-btn');
+    const photoBtn    = document.getElementById('photo-btn');
+    const photoStatus = document.getElementById('photo-status');
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      photoStatus.textContent = 'Resizing…';
+      resizedDataUrl = await resizeImage(file, 1024, 0.80);
+      previewImg.src = resizedDataUrl;
+      previewWrap.style.display = 'block';
+      pickArea.style.display    = 'none';
+      photoBtn.disabled = false;
+      photoStatus.textContent = '';
+    });
+
+    rmBtn.addEventListener('click', () => {
+      resizedDataUrl = null;
+      previewImg.src = '';
+      previewWrap.style.display = 'none';
+      pickArea.style.display    = 'flex';
+      photoBtn.disabled = true;
+      fileInput.value = '';
+      photoStatus.textContent = '';
+    });
+
+    function sendPhoto() {
+      if (!resizedDataUrl || !topic || !workerBase) {
+        photoStatus.innerHTML = '<span class="error">Photo uploads require a worker URL — please use the venue QR code.</span>';
+        return;
+      }
+      const caption     = (document.getElementById('photo-caption')?.value || '').trim();
+      const progressWrap = document.getElementById('photo-progress-wrap');
+      const progressBar  = document.getElementById('photo-progress-bar');
+
+      photoBtn.disabled = true;
+      photoStatus.textContent = '';
+      progressWrap.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption });
+      const xhr     = new XMLHttpRequest();
+      xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 25000;
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        progressBar.style.width = '100%';
+        setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
+          resizedDataUrl = null;
+          previewImg.src = '';
+          previewWrap.style.display = 'none';
+          pickArea.style.display    = 'flex';
+          document.getElementById('photo-caption').value = '';
+          fileInput.value = '';
+          setTimeout(() => { photoBtn.disabled = false; }, 15000);
+        } else {
+          photoStatus.innerHTML = '<span class="error">✗ Upload failed (error ' + xhr.status + ') — please try again.</span>';
+          photoBtn.disabled = false;
+        }
+      };
+
+      xhr.onerror = xhr.ontimeout = () => {
+        progressWrap.style.display = 'none';
+        photoStatus.innerHTML = '<span class="error">✗ Upload failed — check your connection and try again.</span>';
+        photoBtn.disabled = false;
+      };
+
+      xhr.send(payload);
+    }
+
+    function resizeImage(file, maxPx, quality) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxPx || h > maxPx) {
+              if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+              else        { w = Math.round(w * maxPx / h); h = maxPx; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ── Emoji Applause ────────────────────────────────────────────────────────
     let reactCooldown = 0;
 
     function applyApplause(ap) {
@@ -264,7 +570,7 @@
       const now = Date.now();
       if (now - reactCooldown < 1200 || !topic) return;
       reactCooldown = now;
-      fetch(`${workerUrl}/react?venueId=${encodeURIComponent(topic)}`, {
+      fetch(`${workerBase}/react?venueId=${encodeURIComponent(topic)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ emoji }),
@@ -277,133 +583,11 @@
 
     // Fetch venue config (applause state) from Worker on load
     if (topic) {
-      fetch(`${workerUrl}/remote-url?venueId=${encodeURIComponent(topic)}`)
+      fetch(`${workerBase}/remote-url?venueId=${encodeURIComponent(topic)}`)
         .then(r => r.json())
         .then(d => { if (d.applause) applyApplause(d.applause); })
         .catch(() => {});
     }
-
-    // ── Shared helpers ─────────────────────────────────────────────────────────
-    // Team identity (persisted across sessions)
-    let myTeam    = localStorage.getItem('trivia-team')  || '';
-    let myToken   = localStorage.getItem('trivia-token') || '';
-    let knownTeams = [];
-
-    function generateToken() {
-      try { return crypto.randomUUID(); } catch(e) {}
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-      });
-    }
-
-    function fetchWithTimeout(url, options, ms = 10000) {
-      const ctrl = new AbortController();
-      const tid  = setTimeout(() => ctrl.abort(), ms);
-      return fetch(url, { ...options, signal: ctrl.signal })
-        .finally(() => clearTimeout(tid));
-    }
-
-    function renderKnownTeams() {
-      const el = document.getElementById('known-teams-list');
-      if (!el || knownTeams.length === 0) return;
-      el.textContent = 'Teams playing: ' + knownTeams.join(' · ');
-      el.style.display = 'block';
-    }
-
-    if (!topic) {
-      document.getElementById('btn').disabled = true;
-      document.getElementById('status').innerHTML =
-        '<span class="error-setup">No venue code in this link.<br>Please ask the venue for the correct QR code.</span>';
-    }
-
-    function hideAllForms() {
-      ['msg-form','photo-section','trivia-register-wrap','trivia-form','trivia-waiting','poll-wrap'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-      });
-      const badge = document.getElementById('trivia-playing-badge');
-      if (badge) badge.style.display = 'none';
-    }
-
-    // ── Message form ──────────────────────────────────────────────────────────
-    function onInput() {
-      const len = document.getElementById('msg').value.length;
-      const el  = document.getElementById('char-count');
-      el.textContent = len + ' / 280';
-      el.className   = 'char-count' + (len > 240 ? ' warn' : '');
-    }
-
-    const COOLDOWN_SEC = 12;
-    let cooldownTimer  = null;
-
-    function startCooldown() {
-      const btn = document.getElementById('btn');
-      let remaining = COOLDOWN_SEC;
-      btn.disabled = true;
-      btn.textContent = `Wait ${remaining}s…`;
-      if (cooldownTimer) clearInterval(cooldownTimer);
-      cooldownTimer = setInterval(() => {
-        remaining--;
-        if (remaining <= 0) {
-          clearInterval(cooldownTimer); cooldownTimer = null;
-          btn.disabled = false; btn.textContent = 'Send Another!';
-        } else {
-          btn.textContent = `Wait ${remaining}s…`;
-        }
-      }, 1000);
-    }
-
-    function showMessageMode() {
-      if (mode === 'trivia') { showWaiting(); return; }
-      if (mode === 'poll')   { return; } // poll mode never shows message form
-      hideAllForms();
-      document.getElementById('page-icon').textContent  = '🎶';
-      document.getElementById('page-title').textContent = 'Send a Message';
-      document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
-      const msgForm = document.getElementById('msg-form');
-      if (msgForm) msgForm.style.display = 'flex';
-      const photoSection = document.getElementById('photo-section');
-      if (photoSection && topic) photoSection.style.display = 'block';
-    }
-
-    async function sendMsg() {
-      const text = document.getElementById('msg').value.trim();
-      if (!text || !topic) return;
-      const btn    = document.getElementById('btn');
-      const status = document.getElementById('status');
-      btn.disabled = true; btn.textContent = 'Sending…';
-      status.textContent = ''; status.className = '';
-      try {
-        const res = await fetchWithTimeout('https://ntfy.sh/' + topic, {
-          method: 'POST', body: text,
-          headers: { 'Content-Type': 'text/plain' },
-        });
-        if (!res.ok) {
-          const body = await res.text().catch(() => '');
-          throw new Error('HTTP ' + res.status + (body ? ': ' + body.slice(0, 120) : ''));
-        }
-        status.innerHTML = '✓ Sent! It may appear on screen shortly.';
-        status.className = 'success';
-        document.getElementById('msg').value = '';
-        onInput();
-        startCooldown();
-      } catch(e) {
-        const m = e.message || '';
-        const isTimeout = e.name === 'AbortError';
-        status.textContent = isTimeout
-          ? '✗ Request timed out — check your connection and try again.'
-          : (m.includes('429') || m.includes('too many'))
-            ? '✗ Too many messages at once — just tap Send It again!'
-            : '✗ Failed to send — check your connection and try again.';
-        status.className = 'error';
-        btn.textContent = 'Send It!'; btn.disabled = false;
-      }
-    }
-
-    document.getElementById('msg')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
-    });
 
     // ── Trivia mode ───────────────────────────────────────────────────────────
     let currentQ       = null;
@@ -412,6 +596,15 @@
     let triviaAnswered = false;
 
     const LETTERS = ['A','B','C','D'];
+
+    function hideAllForms() {
+      ['msg-form','photo-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      const badge = document.getElementById('trivia-playing-badge');
+      if (badge) badge.style.display = 'none';
+    }
 
     function showRegister() {
       hideAllForms();
@@ -445,6 +638,7 @@
       document.getElementById('trivia-status').textContent       = '';
       const triviaFormEl = document.getElementById('trivia-form');
       if (triviaFormEl) triviaFormEl.style.display = 'flex';
+      // Render options
       const btn = document.getElementById('trivia-btn');
       btn.disabled = false; btn.textContent = 'Submit Answer';
       const optsEl = document.getElementById('trivia-opts');
@@ -466,6 +660,26 @@
       document.getElementById('page-sub').textContent            = 'A question is coming up — stay tuned!';
     }
 
+    function showMessageMode() {
+      if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
+      if (mode === 'poll')   { return; }                // poll page never shows message form
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms();
+      // Restore tabs + active tab
+      document.getElementById('tabs').style.display = 'flex';
+      if (activeTab === 'msg') {
+        document.getElementById('msg-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent  = '🎶';
+        document.getElementById('page-title').textContent = 'Send a Message';
+        document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      } else {
+        document.getElementById('photo-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent    = '📸';
+        document.getElementById('page-title').textContent   = 'Share a Photo';
+        document.getElementById('page-sub').textContent     = 'Your photo could appear on screen!';
+      }
+    }
+
     async function joinTrivia() {
       const nameInput = document.getElementById('team-name-reg-input');
       const name = nameInput?.value?.trim();
@@ -476,7 +690,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
       const token = generateToken();
       try {
-        const res = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
+        const res = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST',
           body: `TEAM-REG|${name}|${token}`,
           headers: { 'Content-Type': 'text/plain' },
@@ -509,6 +723,37 @@
       });
     }
 
+    function showReveal(correctIndex) {
+      triviaAnswered = true;
+      const isCorrect = selectedAnswer === correctIndex;
+
+      document.querySelectorAll('.trivia-opt-btn').forEach((btn, i) => {
+        btn.disabled = true;
+        btn.style.transition = 'background 0.3s, border-color 0.3s, color 0.3s';
+        if (i === correctIndex) {
+          btn.style.background   = '#0d3a1a';
+          btn.style.borderColor  = '#30d158';
+          btn.style.color        = '#30d158';
+        } else if (i === selectedAnswer) {
+          btn.style.background   = '#3a0d0d';
+          btn.style.borderColor  = '#ff453a';
+          btn.style.color        = '#ff453a';
+        }
+      });
+
+      const statusEl = document.getElementById('trivia-status');
+      if (statusEl) {
+        statusEl.textContent  = isCorrect ? '✓ Correct!' : '✗ Wrong!';
+        statusEl.style.color  = isCorrect ? '#30d158' : '#ff453a';
+        statusEl.style.fontSize   = '22px';
+        statusEl.style.fontWeight = '700';
+        statusEl.style.marginTop  = '12px';
+      }
+
+      const btn = document.getElementById('trivia-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+    }
+
     async function submitTrivia() {
       if (selectedAnswer === -1 || !currentQ) {
         document.getElementById('trivia-status').textContent = 'Please select an answer first.';
@@ -519,7 +764,7 @@
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
         const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
-        const res  = await fetchWithTimeout('https://ntfy.sh/' + aTopic, {
+        const res  = await fetchWithTimeout(ntfyPostUrl(aTopic), {
           method: 'POST', body,
           headers: { 'Content-Type': 'text/plain' },
         });
@@ -537,127 +782,39 @@
     // Poll for trivia questions topic
     async function pollTrivia() {
       if (!qTopic) return;
+      let nextInterval = currentQ && !triviaAnswered ? 3000 : 6000;
       try {
         const since = triviaLastId || 'all';
-        const res   = await fetch(`https://ntfy.sh/${qTopic}/json?poll=1&since=${since}`);
+        const res   = await fetch(ntfyPollUrl(qTopic, since));
+        if (!res.ok) { setTimeout(pollTrivia, nextInterval); return; }
         const text  = await res.text();
-        let latestData = null;
         text.trim().split('\n').filter(Boolean).forEach(line => {
           try {
             const ev = JSON.parse(line);
             if (ev.id) triviaLastId = ev.id;
             if (ev.event !== 'message' || !ev.message) return;
-            latestData = JSON.parse(ev.message);
+            const data = JSON.parse(ev.message);
+            if (data.type === 'teams' && Array.isArray(data.teams)) {
+              knownTeams = data.teams;
+              renderKnownTeams();
+            } else if (data.type === 'reveal') {
+              showReveal(data.correctIndex);
+              nextInterval = 6000;
+            } else if (data.active === false) {
+              showMessageMode();
+            } else if (data.question && (!currentQ || currentQ.id !== data.id)) {
+              showTriviaMode(data);
+              nextInterval = 3000;
+            }
           } catch(e) {}
         });
-        if (latestData) {
-          if (latestData.type === 'teams' && Array.isArray(latestData.teams)) {
-            knownTeams = latestData.teams;
-            renderKnownTeams();
-          } else if (latestData.active === false) {
-            showMessageMode();
-          } else if (latestData.question && (!currentQ || currentQ.id !== latestData.id)) {
-            showTriviaMode(latestData);
-          }
-        }
       } catch(e) {}
-      setTimeout(pollTrivia, 3000);
-    }
-
-    // ── Photo submission ──────────────────────────────────────────────────────
-    let photoDataUrl = null;
-    let photoCooldown = false;
-
-    function togglePhotoForm() {
-      const btn   = document.getElementById('photo-toggle-btn');
-      const inner = document.getElementById('photo-form-inner');
-      const open  = inner.classList.toggle('open');
-      btn.classList.toggle('open', open);
-      const sp = btn.querySelector('span');
-      if (sp) sp.textContent = open ? '✕ Cancel' : '📸 Share a Photo';
-    }
-
-    function onPhotoSelected(input) {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const raw = e.target.result;
-        // Resize to max 1024px to stay under worker's 1.5MB limit
-        const img = new Image();
-        img.onload = function() {
-          const MAX = 1024;
-          let w = img.width, h = img.height;
-          if (w > MAX || h > MAX) {
-            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
-            else        { w = Math.round(w * MAX / h); h = MAX; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          photoDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-          const preview = document.getElementById('photo-preview');
-          const wrap    = document.getElementById('photo-preview-wrap');
-          const label   = document.getElementById('photo-file-label-text');
-          preview.src = photoDataUrl;
-          wrap.classList.add('has-photo');
-          label.textContent = '📷 Change Photo';
-          document.getElementById('photo-btn').disabled = false;
-          document.getElementById('photo-status').textContent = '';
-        };
-        img.src = raw;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function clearPhoto() {
-      photoDataUrl = null;
-      document.getElementById('photo-preview').src = '';
-      document.getElementById('photo-preview-wrap').classList.remove('has-photo');
-      document.getElementById('photo-file-label-text').textContent = '📷 Choose or Take Photo';
-      document.getElementById('photo-file-input').value = '';
-      document.getElementById('photo-btn').disabled = true;
-      document.getElementById('photo-status').textContent = '';
-    }
-
-    async function sendPhoto() {
-      if (!photoDataUrl || !topic || photoCooldown) return;
-      const caption = (document.getElementById('photo-caption').value || '').trim();
-      const btn     = document.getElementById('photo-btn');
-      const status  = document.getElementById('photo-status');
-      btn.disabled = true; btn.textContent = 'Uploading…';
-      status.textContent = ''; status.className = '';
-      photoCooldown = true;
-      try {
-        const res = await fetchWithTimeout(
-          `${workerUrl}/photos?venueId=${encodeURIComponent(topic)}`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dataUrl: photoDataUrl, caption }) },
-          20000
-        );
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
-        status.innerHTML = '✓ Photo submitted for review!';
-        status.className = 'success';
-        clearPhoto();
-        document.getElementById('photo-caption').value = '';
-        btn.textContent = 'Upload Photo';
-        // Re-enable after 30s
-        setTimeout(() => { photoCooldown = false; }, 30000);
-      } catch(e) {
-        const m = e.message || '';
-        status.textContent = m.includes('429') ? '✗ Queue is full — please wait a moment.' :
-          e.name === 'AbortError' ? '✗ Timed out — check your connection.' :
-          '✗ Upload failed — check your connection.';
-        status.className = 'error';
-        btn.disabled = false; btn.textContent = 'Upload Photo';
-        photoCooldown = false;
-      }
+      setTimeout(pollTrivia, nextInterval);
     }
 
     // ── Live Poll mode ────────────────────────────────────────────────────────
-    let pollMyVote  = null;  // option index after voting
-    let pollSelected = null; // option index while choosing
+    let pollMyVote   = null;
+    let pollSelected = null;
     let currentPoll  = null;
 
     function pollEsc(s) {
@@ -736,7 +893,7 @@
       if (sub) { sub.disabled = true; sub.textContent = 'Submitting…'; }
       try {
         const res = await fetchWithTimeout(
-          `${workerUrl}/poll-vote?venueId=${encodeURIComponent(topic)}`,
+          `${workerBase}/poll-vote?venueId=${encodeURIComponent(topic)}`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: pollPollToken(), optionIndex: idx }) }
         );
@@ -758,17 +915,13 @@
       if (!topic) return;
       try {
         const res  = await fetchWithTimeout(
-          `${workerUrl}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000
+          `${workerBase}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000
         );
         const data = await res.json();
         if (data.poll !== undefined) {
           const wasActive = currentPoll && currentPoll.active;
           currentPoll = data.poll;
-          // Reset vote tracking if poll changed
           if (!currentPoll || !currentPoll.active) { pollMyVote = null; pollSelected = null; }
-          else if (wasActive && currentPoll.question !== (currentPoll._lastQ || currentPoll.question)) {
-            pollMyVote = null; pollSelected = null;
-          }
           renderPoll(currentPoll);
         }
         if (data.applause) applyApplause(data.applause);
@@ -798,8 +951,8 @@
         }
         pollTrivia();
       } else {
-        showMessageMode();
-        pollTrivia(); // trivia questions can interrupt message mode
+        // Default: message/photo tabs + trivia can interrupt
+        pollTrivia();
       }
     }
   </script>
