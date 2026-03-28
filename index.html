@@ -125,6 +125,17 @@
     #trivia-status { font-size: 13px; text-align: center; min-height: 18px; }
     #trivia-waiting { font-size: 13px; color: #666; text-align: center; margin-top: 8px; }
 
+    /* ── Trivia scoreboard ── */
+    #trivia-scores-wrap { display: none; width: 100%; max-width: 480px; margin-top: 16px; }
+    .scores-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .scores-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .08em; }
+    .scores-toggle { margin-left: auto; font-size: 11px; color: #3a7bd5; background: none; border: none; cursor: pointer; font-family: inherit; padding: 2px 0; -webkit-tap-highlight-color: transparent; }
+    .scores-list { display: flex; flex-direction: column; gap: 5px; }
+    .scores-row { display: flex; align-items: center; gap: 10px; background: #1c1c1e; border-radius: 10px; padding: 8px 12px; }
+    .scores-rank { font-size: 14px; min-width: 24px; text-align: center; flex-shrink: 0; }
+    .scores-team { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scores-pts  { font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
     /* ── Poll form ── */
     #poll-wrap { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
     .poll-badge { display: inline-flex; align-items: center; gap: 6px; background: #ff375f; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .08em; border-radius: 20px; padding: 4px 12px; margin-bottom: 20px; text-transform: uppercase; }
@@ -273,6 +284,15 @@
   </div>
 
   <div id="trivia-waiting" style="display:none">⏳ Waiting for the next question…</div>
+
+  <!-- Trivia scoreboard (shown during waiting + active question) -->
+  <div id="trivia-scores-wrap">
+    <div class="scores-header">
+      <span class="scores-title">🏆 Scoreboard</span>
+      <button class="scores-toggle" id="scores-toggle-btn" onclick="toggleScoresList()">Hide</button>
+    </div>
+    <div class="scores-list" id="trivia-scores-list"></div>
+  </div>
 
   <!-- Live Poll form -->
   <div id="poll-wrap">
@@ -681,6 +701,38 @@
       }
     }
 
+    // ── Trivia scoreboard ─────────────────────────────────────────────────────
+    let scoresCollapsed = false;
+    let lastScores = [];
+
+    function renderScores(scores) {
+      lastScores = scores || [];
+      const wrap = document.getElementById('trivia-scores-wrap');
+      const list = document.getElementById('trivia-scores-list');
+      if (!wrap || !list) return;
+      if (!lastScores.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      if (scoresCollapsed) { list.style.display = 'none'; return; }
+      list.style.display = 'flex';
+      const medals = ['🥇','🥈','🥉'];
+      list.innerHTML = lastScores.map((s, i) => {
+        const rankColor = i === 0 ? '#ffd60a' : i === 1 ? '#aaa' : i === 2 ? '#cd7f32' : '#555';
+        const myRow = s.team === myTeam;
+        return `<div class="scores-row" style="${myRow ? 'border:1.5px solid #3a7bd5;' : ''}">
+          <span class="scores-rank">${i < 3 ? medals[i] : (i+1)+'.'}</span>
+          <span class="scores-team" style="color:${myRow ? '#5a9bf5' : rankColor}">${s.team.replace(/</g,'&lt;')}</span>
+          <span class="scores-pts">${s.score} pt${s.score !== 1 ? 's' : ''}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleScoresList() {
+      scoresCollapsed = !scoresCollapsed;
+      const btn = document.getElementById('scores-toggle-btn');
+      if (btn) btn.textContent = scoresCollapsed ? 'Show' : 'Hide';
+      renderScores(lastScores);
+    }
+
     // ── Trivia mode ───────────────────────────────────────────────────────────
     let currentQ       = null;
     let selectedAnswer = -1;
@@ -690,7 +742,7 @@
     const LETTERS = ['A','B','C','D'];
 
     function hideAllForms() {
-      ['msg-form','photo-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap'].forEach(id => {
+      ['msg-form','photo-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -743,6 +795,7 @@
           <span class="trivia-opt-letter">${LETTERS[i]}</span>${opt}
         </button>
       `).join('');
+      renderScores(lastScores); // show scoreboard below question (if scores exist)
     }
 
     function showWaiting() {
@@ -755,6 +808,7 @@
       document.getElementById('page-icon').textContent           = '🧠';
       document.getElementById('page-title').textContent          = 'Bar Trivia';
       document.getElementById('page-sub').textContent            = 'A question is coming up — stay tuned!';
+      renderScores(lastScores); // re-show scoreboard if scores exist
     }
 
     function showMessageMode() {
@@ -897,6 +951,9 @@
           knownTeams = data.teams;
           renderKnownTeams();
         }
+
+        // Update scoreboard (always, so it refreshes live)
+        renderScores(data.scores || []);
 
         if (!data.active) {
           // Trivia session ended — return to default mode
