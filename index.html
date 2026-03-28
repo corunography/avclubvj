@@ -11,7 +11,7 @@
       background: #0a0a0f; color: #fff;
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 32px 24px 120px;
+      padding: 32px 24px 32px;
     }
     .icon  { font-size: 48px; margin-bottom: 16px; }
     h1     { font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
@@ -564,6 +564,10 @@
           }
         }
       }
+      // Keep body padding in sync with the actual bar height so content is never hidden beneath it
+      requestAnimationFrame(() => {
+        document.body.style.paddingBottom = show ? (bar.offsetHeight + 16) + 'px' : '32px';
+      });
     }
 
     function sendReact(emoji, btn) {
