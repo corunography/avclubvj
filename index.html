@@ -627,8 +627,8 @@
     }
 
     function showTriviaMode(q) {
-      if (mode !== 'trivia') return;   // Never interrupt the messaging page
-      if (mode === 'trivia' && !myToken) { showRegister(); return; }
+      if (mode === '') return;   // Never interrupt the default messaging/photo page
+      if (!myToken) { showRegister(); return; }
       currentQ       = q;
       selectedAnswer = -1;
       triviaAnswered = false;
@@ -666,7 +666,7 @@
 
     function showMessageMode() {
       if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
-      if (mode === 'poll')   { return; }                // poll page never shows message form
+      if (mode === 'poll') { showPollMode(); renderPoll(currentPoll); return; } // poll page returns to poll view
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
       // Restore tabs + active tab
@@ -930,10 +930,18 @@
         );
         const data = await res.json();
         if (data.poll !== undefined) {
-          const wasActive = currentPoll && currentPoll.active;
+          const wasActive = !!(currentPoll && currentPoll.active);
           currentPoll = data.poll;
-          if (!currentPoll || !currentPoll.active) { pollMyVote = null; pollSelected = null; }
-          renderPoll(currentPoll);
+          const isActive = !!(currentPoll && currentPoll.active);
+          if (!isActive) { pollMyVote = null; pollSelected = null; }
+          if (isActive) {
+            if (!wasActive) showPollMode(); // poll just fired — switch to poll UI from any mode
+            renderPoll(currentPoll);
+          } else if (wasActive) {
+            showMessageMode(); // poll ended — return to mode default (waiting/no-poll)
+          } else if (mode === 'poll') {
+            renderPoll(currentPoll); // initial load, no poll active yet
+          }
         }
         if (data.applause) applyApplause(data.applause);
       } catch(e) {}
@@ -953,17 +961,16 @@
     if (topic) {
       if (mode === 'poll') {
         showPollMode();
-        fetchPollState();
+        fetchPollState(); // primary: watch for polls
+        pollTrivia();     // secondary: switch to trivia if it fires
       } else if (mode === 'trivia') {
-        if (myTeam && myToken) {
-          showWaiting();
-        } else {
-          showRegister();
-        }
-        pollTrivia();
+        if (myTeam && myToken) { showWaiting(); } else { showRegister(); }
+        pollTrivia();     // primary: watch for trivia
+        fetchPollState(); // secondary: switch to poll if it fires
       } else {
-        // Default: message/photo tabs + trivia can interrupt
+        // Default message/photo page — trivia can interrupt, polls can interrupt
         pollTrivia();
+        fetchPollState();
       }
     }
   </script>
