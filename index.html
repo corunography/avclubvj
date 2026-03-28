@@ -97,6 +97,12 @@
       font-size: 17px; font-weight: 700; line-height: 1.4; text-align: center; color: #fff;
     }
     .trivia-category { font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    /* ── Trivia countdown ── */
+    #trivia-countdown-wrap { display: none; align-items: center; gap: 8px; padding: 0 2px; }
+    #trivia-countdown-bar  { flex: 1; height: 5px; background: #2c2c2e; border-radius: 3px; overflow: hidden; }
+    #trivia-countdown-fill { height: 100%; width: 100%; background: #3a7bd5; border-radius: 3px; transition: width 0.9s linear, background 0.3s; }
+    #trivia-countdown-num  { font-size: 13px; font-weight: 700; min-width: 28px; text-align: right; color: #aaa; font-variant-numeric: tabular-nums; }
+
     .trivia-opts-grid { display: flex; flex-direction: column; gap: 8px; }
     .trivia-opt-btn {
       width: 100%; background: #1c1c1e; border: 1.5px solid #333;
@@ -278,6 +284,10 @@
   <div id="trivia-form">
     <div class="trivia-category" id="trivia-category"></div>
     <div class="trivia-question-box" id="trivia-q"></div>
+    <div id="trivia-countdown-wrap">
+      <div id="trivia-countdown-bar"><div id="trivia-countdown-fill"></div></div>
+      <span id="trivia-countdown-num">30</span>s
+    </div>
     <div class="trivia-opts-grid" id="trivia-opts"></div>
     <button class="main-btn" id="trivia-btn" onclick="submitTrivia()">Submit Answer</button>
     <div id="trivia-status"></div>
@@ -745,6 +755,7 @@
 
     function hideAllForms() {
       triviaUIVisible = false;
+      stopTriviaCountdown();
       ['msg-form','photo-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -800,6 +811,7 @@
       `).join('');
       triviaUIVisible = true;
       renderScores(lastScores); // show scoreboard below question (if scores exist)
+      startTriviaCountdown(q.timeLimit, q.startTime);
     }
 
     function showWaiting() {
@@ -908,8 +920,45 @@
 
       const btn = document.getElementById('trivia-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+      stopTriviaCountdown(); // hide timer on reveal
       // Scroll the result into view so it's not hidden below the fold
       if (statusEl) setTimeout(() => statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    }
+
+    // ── Trivia countdown ──────────────────────────────────────────────────────
+    let triviaCountdownInterval = null;
+
+    function startTriviaCountdown(timeLimit, startTime) {
+      stopTriviaCountdown();
+      const elapsed  = startTime ? Math.max(0, Math.floor((Date.now() - startTime) / 1000)) : 0;
+      let remaining  = Math.max(0, (timeLimit || 30) - elapsed);
+      const total    = timeLimit || 30;
+      const wrap     = document.getElementById('trivia-countdown-wrap');
+      const numEl    = document.getElementById('trivia-countdown-num');
+      const fill     = document.getElementById('trivia-countdown-fill');
+      if (!wrap) return;
+      function update() {
+        if (numEl) numEl.textContent = remaining;
+        if (fill)  fill.style.width  = Math.max(0, (remaining / total) * 100) + '%';
+        const urgent = remaining <= 10;
+        if (fill)  fill.style.background  = urgent ? '#ff453a' : '#3a7bd5';
+        if (numEl) numEl.style.color      = urgent ? '#ff453a' : '#aaa';
+      }
+      wrap.style.display = 'flex';
+      update();
+      if (remaining > 0) {
+        triviaCountdownInterval = setInterval(() => {
+          remaining--;
+          update();
+          if (remaining <= 0) stopTriviaCountdown();
+        }, 1000);
+      }
+    }
+
+    function stopTriviaCountdown() {
+      if (triviaCountdownInterval) { clearInterval(triviaCountdownInterval); triviaCountdownInterval = null; }
+      const wrap = document.getElementById('trivia-countdown-wrap');
+      if (wrap) wrap.style.display = 'none';
     }
 
     async function submitTrivia() {
@@ -966,7 +1015,7 @@
         } else if (data.question) {
           // New question arrived
           if (!currentQ || currentQ.id !== data.id) {
-            showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '' });
+            showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
             triviaRevealHandled = false;
             nextInterval = 3000;
           }
