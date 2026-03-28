@@ -178,8 +178,9 @@
       border-top: 1px solid #222; z-index: 100; display: none;
     }
     #emoji-bar-label { text-align: center; font-size: 10px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
-    .react-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
-    .react-btn { width: 100%; background: #1c1c1e; border: none; border-radius: 14px; font-size: 52px; padding: 14px 4px 10px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
+    .react-row { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .react-row::-webkit-scrollbar { display: none; }
+    .react-btn { flex-shrink: 0; width: 72px; background: #1c1c1e; border: none; border-radius: 14px; font-size: 52px; padding: 14px 4px 10px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
     .react-btn:active { transform: scale(.8); background: #2c2c2e; }
     .react-btn.fired { background: #2a2a2e; animation: reactPop .25s ease-out; }
     @keyframes reactPop { 0% { transform: scale(.7) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
@@ -564,10 +565,8 @@
           }
         }
       }
-      // Keep body padding in sync with the actual bar height so content is never hidden beneath it
-      requestAnimationFrame(() => {
-        document.body.style.paddingBottom = show ? (bar.offsetHeight + 16) + 'px' : '32px';
-      });
+      // Offset body so content clears the fixed emoji bar (1 row ≈ 130px)
+      document.body.style.paddingBottom = show ? '140px' : '32px';
     }
 
     function sendReact(emoji, btn) {
