@@ -705,12 +705,14 @@
     let scoresCollapsed = false;
     let lastScores = [];
 
+    let triviaUIVisible = false; // true only when trivia waiting/question UI is showing
+
     function renderScores(scores) {
       lastScores = scores || [];
       const wrap = document.getElementById('trivia-scores-wrap');
       const list = document.getElementById('trivia-scores-list');
       if (!wrap || !list) return;
-      if (!lastScores.length) { wrap.style.display = 'none'; return; }
+      if (!triviaUIVisible || !lastScores.length) { wrap.style.display = 'none'; return; }
       wrap.style.display = 'block';
       if (scoresCollapsed) { list.style.display = 'none'; return; }
       list.style.display = 'flex';
@@ -742,6 +744,7 @@
     const LETTERS = ['A','B','C','D'];
 
     function hideAllForms() {
+      triviaUIVisible = false;
       ['msg-form','photo-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -795,6 +798,7 @@
           <span class="trivia-opt-letter">${LETTERS[i]}</span>${opt}
         </button>
       `).join('');
+      triviaUIVisible = true;
       renderScores(lastScores); // show scoreboard below question (if scores exist)
     }
 
@@ -808,6 +812,7 @@
       document.getElementById('page-icon').textContent           = '🧠';
       document.getElementById('page-title').textContent          = 'Bar Trivia';
       document.getElementById('page-sub').textContent            = 'A question is coming up — stay tuned!';
+      triviaUIVisible = true;
       renderScores(lastScores); // re-show scoreboard if scores exist
     }
 
