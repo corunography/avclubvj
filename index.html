@@ -289,7 +289,7 @@
   <div id="trivia-scores-wrap">
     <div class="scores-header">
       <span class="scores-title">🏆 Scoreboard</span>
-      <button class="scores-toggle" id="scores-toggle-btn" onclick="toggleScoresList()">Hide</button>
+      <button class="scores-toggle" id="scores-toggle-btn" onclick="toggleScoresList()">Show</button>
     </div>
     <div class="scores-list" id="trivia-scores-list"></div>
   </div>
@@ -702,7 +702,7 @@
     }
 
     // ── Trivia scoreboard ─────────────────────────────────────────────────────
-    let scoresCollapsed = false;
+    let scoresCollapsed = true;
     let lastScores = [];
 
     let triviaUIVisible = false; // true only when trivia waiting/question UI is showing
