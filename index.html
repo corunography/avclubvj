@@ -169,6 +169,11 @@
     .error   { color: #ff453a; }
     .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
 
+    /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
+    #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 14px; }
+    .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
+    .mode-nav-btn:active { background: #2c2c2e; color: #fff; }
+
     /* ── Emoji Applause bar ── */
     #emoji-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -187,6 +192,12 @@
   </style>
 </head>
 <body>
+  <!-- Mini nav: message/photo access during trivia & poll (replaces tall header) -->
+  <div id="mode-nav">
+    <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
+    <button class="mode-nav-btn" onclick="gotoPhoto()">📸 Photo</button>
+  </div>
+
   <div class="icon" id="page-icon">🎶</div>
   <h1 id="page-title">Send a Message</h1>
   <p class="sub" id="page-sub">Your message may appear on the big screen!</p>
@@ -546,6 +557,44 @@
     }
 
     // ── Emoji Applause ────────────────────────────────────────────────────────
+    // ── Mode nav helpers ──────────────────────────────────────────────────────
+    function showModeNav() {
+      document.getElementById('mode-nav').style.display = 'flex';
+      document.getElementById('page-icon').style.display  = 'none';
+      document.getElementById('page-title').style.display = 'none';
+      document.getElementById('page-sub').style.display   = 'none';
+    }
+    function hideModeNav() {
+      document.getElementById('mode-nav').style.display   = 'none';
+      document.getElementById('page-icon').style.display  = '';
+      document.getElementById('page-title').style.display = '';
+      document.getElementById('page-sub').style.display   = '';
+    }
+    function gotoMessages() {
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display    = 'flex';
+      document.getElementById('msg-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent  = '🎶';
+      document.getElementById('page-title').textContent = 'Send a Message';
+      document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      activeTab = 'msg';
+      document.getElementById('tab-msg').classList.add('active');
+      document.getElementById('tab-photo').classList.remove('active');
+    }
+    function gotoPhoto() {
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display      = 'flex';
+      document.getElementById('photo-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent   = '📸';
+      document.getElementById('page-title').textContent  = 'Share a Photo';
+      document.getElementById('page-sub').textContent    = 'Your photo could appear on screen!';
+      activeTab = 'photo';
+      document.getElementById('tab-msg').classList.remove('active');
+      document.getElementById('tab-photo').classList.add('active');
+    }
+
     let reactCooldown = 0;
 
     function applyApplause(ap) {
@@ -610,6 +659,7 @@
     }
 
     function showRegister() {
+      hideModeNav();
       hideAllForms();
       document.getElementById('page-icon').textContent  = '🧠';
       document.getElementById('page-title').textContent = 'Bar Trivia';
@@ -629,6 +679,7 @@
     function showTriviaMode(q) {
       if (mode === '') return;   // Never interrupt the default messaging/photo page
       if (!myToken) { showRegister(); return; }
+      showModeNav();
       currentQ       = q;
       selectedAnswer = -1;
       triviaAnswered = false;
@@ -655,6 +706,7 @@
 
     function showWaiting() {
       if (mode === 'trivia' && !myToken) { showRegister(); return; }
+      showModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
       showBadge();
@@ -667,6 +719,7 @@
     function showMessageMode() {
       if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
       if (mode === 'poll') { showPollMode(); renderPoll(currentPoll); return; } // poll page returns to poll view
+      hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
       // Restore tabs + active tab
@@ -755,6 +808,8 @@
 
       const btn = document.getElementById('trivia-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+      // Scroll the result into view so it's not hidden below the fold
+      if (statusEl) setTimeout(() => statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     }
 
     async function submitTrivia() {
@@ -949,6 +1004,7 @@
     }
 
     function showPollMode() {
+      showModeNav();
       hideAllForms();
       document.getElementById('page-icon').textContent  = '📊';
       document.getElementById('page-title').textContent = 'Live Poll';
