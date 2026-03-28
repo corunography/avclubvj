@@ -169,6 +169,11 @@
     .error   { color: #ff453a; }
     .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
 
+    /* ── Live content banner (non-intrusive alert when user is on messages/photos) ── */
+    #content-banner { display: none; width: 100%; max-width: 440px; padding: 12px 16px; background: #1a2a40; border: 1.5px solid #3a7bd5; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; margin-bottom: 12px; animation: bannerPulse 2s ease-in-out infinite; }
+    #content-banner:active { opacity: 0.8; }
+    @keyframes bannerPulse { 0%, 100% { border-color: #3a7bd5; } 50% { border-color: #5a9bf5; box-shadow: 0 0 12px rgba(58,123,213,0.35); } }
+
     /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
     #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 14px; }
     .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
@@ -192,6 +197,9 @@
   </style>
 </head>
 <body>
+  <!-- Non-intrusive live-content alert (shown when user manually went to messages/photos) -->
+  <div id="content-banner" onclick="joinLiveContent()"></div>
+
   <!-- Mini nav: message/photo access during trivia & poll (replaces tall header) -->
   <div id="mode-nav">
     <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
@@ -571,6 +579,7 @@
       document.getElementById('page-sub').style.display   = '';
     }
     function gotoMessages() {
+      userManualNav = true; hideContentBanner();
       currentQ = null; selectedAnswer = -1;
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display    = 'flex';
@@ -583,6 +592,7 @@
       document.getElementById('tab-photo').classList.remove('active');
     }
     function gotoPhoto() {
+      userManualNav = true; hideContentBanner();
       currentQ = null; selectedAnswer = -1;
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display      = 'flex';
@@ -641,6 +651,36 @@
         .catch(() => {});
     }
 
+    // ── Live-content banner (non-intrusive alert when user manually navigated away) ──
+    let userManualNav = false;  // true when user intentionally went to messages/photos
+    let pendingBannerType = null; // 'trivia' or 'poll'
+
+    function showContentBanner(type) {
+      pendingBannerType = type;
+      const el = document.getElementById('content-banner');
+      if (!el) return;
+      el.textContent = type === 'trivia' ? '🧠 Trivia question is live — tap to play!' : '📊 Live poll is open — tap to vote!';
+      el.style.display = 'block';
+    }
+    function hideContentBanner() {
+      pendingBannerType = null;
+      const el = document.getElementById('content-banner');
+      if (el) el.style.display = 'none';
+    }
+    function joinLiveContent() {
+      const type = pendingBannerType;
+      userManualNav = false;
+      hideContentBanner();
+      if (type === 'poll') {
+        showPollMode();
+        if (currentPoll) renderPoll(currentPoll);
+      } else {
+        // trivia or unknown — go to trivia waiting/question
+        if (currentQ) { showTriviaMode(currentQ); }
+        else { showWaiting(); }
+      }
+    }
+
     // ── Trivia mode ───────────────────────────────────────────────────────────
     let currentQ       = null;
     let selectedAnswer = -1;
@@ -678,6 +718,7 @@
 
     function showTriviaMode(q) {
       if (mode === '') return;   // Never interrupt the default messaging/photo page
+      if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; } // user is busy — notify instead
       if (!myToken) { showRegister(); return; }
       showModeNav();
       currentQ       = q;
@@ -859,7 +900,7 @@
 
         if (!data.active) {
           // Trivia session ended — return to default mode
-          if (currentQ) { showMessageMode(); triviaRevealHandled = false; }
+          if (currentQ) { userManualNav = false; hideContentBanner(); showMessageMode(); triviaRevealHandled = false; }
         } else if (data.question) {
           // New question arrived
           if (!currentQ || currentQ.id !== data.id) {
@@ -990,9 +1031,13 @@
           const isActive = !!(currentPoll && currentPoll.active);
           if (!isActive) { pollMyVote = null; pollSelected = null; }
           if (isActive) {
-            if (!wasActive) showPollMode(); // poll just fired — switch to poll UI from any mode
+            if (!wasActive) {
+              if (userManualNav) { showContentBanner('poll'); } // user is busy — notify instead
+              else { showPollMode(); }
+            }
             renderPoll(currentPoll);
           } else if (wasActive) {
+            userManualNav = false; hideContentBanner(); // content ended — clear nav lock
             showMessageMode(); // poll ended — return to mode default (waiting/no-poll)
           } else if (mode === 'poll') {
             renderPoll(currentPoll); // initial load, no poll active yet
