@@ -71,7 +71,7 @@
     #photo-preview-wrap { display: none; position: relative; }
     #photo-preview {
       width: 100%; border-radius: 12px; display: block;
-      object-fit: contain; max-height: 160px; background: #000;
+      object-fit: contain; max-height: 280px; background: #000;
     }
     .rm-btn {
       position: absolute; top: 8px; right: 8px;
@@ -691,11 +691,10 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
       const token = generateToken();
       try {
-        const res = await fetchWithTimeout(ntfyPostUrl(aTopic), {
-          method: 'POST',
-          body: `TEAM-REG|${name}|${token}`,
-          headers: { 'Content-Type': 'text/plain' },
-        });
+        const res = await fetchWithTimeout(
+          `${workerBase}/trivia-join?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', body: JSON.stringify({ team: name, token }), headers: { 'Content-Type': 'application/json' } }
+        );
         if (!res.ok) throw new Error('HTTP ' + res.status);
         myTeam = name; myToken = token;
         localStorage.setItem('trivia-team', name);
@@ -764,11 +763,14 @@
       const btn = document.getElementById('trivia-btn');
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
-        const body = `TRIVIA|${currentQ.id}|${myTeam || teamName}|${myToken || ''}|${selectedAnswer}`;
-        const res  = await fetchWithTimeout(ntfyPostUrl(aTopic), {
-          method: 'POST', body,
-          headers: { 'Content-Type': 'text/plain' },
-        });
+        const res = await fetchWithTimeout(
+          `${workerBase}/trivia-answer?venueId=${encodeURIComponent(topic)}`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ qid: currentQ.id, team: myTeam || teamName, token: myToken || '', answerIndex: selectedAnswer }),
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
         if (!res.ok) throw new Error('HTTP ' + res.status);
         triviaAnswered = true;
         document.getElementById('trivia-status').innerHTML = '<span style="color:#34c759;font-weight:600">✓ Answer submitted! Good luck!</span>';
@@ -780,35 +782,40 @@
       }
     }
 
-    // Poll for trivia questions topic
+    // Poll trivia state via worker → tunnel (replaces ntfy.sh transport)
+    let triviaRevealHandled = false;
     async function pollTrivia() {
-      if (!qTopic) return;
-      let nextInterval = currentQ && !triviaAnswered ? 3000 : 6000;
+      if (!topic || !workerBase) return;
+      let nextInterval = currentQ && !triviaAnswered ? 3000 : 5000;
       try {
-        const since = triviaLastId || 'all';
-        const res   = await fetch(ntfyPollUrl(qTopic, since));
-        if (!res.ok) { setTimeout(pollTrivia, nextInterval); return; }
-        const text  = await res.text();
-        text.trim().split('\n').filter(Boolean).forEach(line => {
-          try {
-            const ev = JSON.parse(line);
-            if (ev.id) triviaLastId = ev.id;
-            if (ev.event !== 'message' || !ev.message) return;
-            const data = JSON.parse(ev.message);
-            if (data.type === 'teams' && Array.isArray(data.teams)) {
-              knownTeams = data.teams;
-              renderKnownTeams();
-            } else if (data.type === 'reveal') {
-              showReveal(data.correctIndex);
-              nextInterval = 6000;
-            } else if (data.active === false) {
-              showMessageMode();
-            } else if (data.question && (!currentQ || currentQ.id !== data.id)) {
-              showTriviaMode(data);
-              nextInterval = 3000;
-            }
-          } catch(e) {}
-        });
+        const res  = await fetchWithTimeout(
+          `${workerBase}/trivia-state?venueId=${encodeURIComponent(topic)}`, {}, 8000
+        );
+        const data = await res.json();
+
+        // Update known teams list
+        if (Array.isArray(data.teams) && data.teams.length > 0) {
+          knownTeams = data.teams;
+          renderKnownTeams();
+        }
+
+        if (!data.active) {
+          // Trivia session ended — return to default mode
+          if (currentQ) { showMessageMode(); triviaRevealHandled = false; }
+        } else if (data.question) {
+          // New question arrived
+          if (!currentQ || currentQ.id !== data.id) {
+            showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '' });
+            triviaRevealHandled = false;
+            nextInterval = 3000;
+          }
+          // Reveal has been triggered on desktop
+          if (data.revealed && !triviaRevealHandled) {
+            showReveal(data.correctIndex);
+            triviaRevealHandled = true;
+            nextInterval = 5000;
+          }
+        }
       } catch(e) {}
       setTimeout(pollTrivia, nextInterval);
     }
