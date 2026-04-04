@@ -841,12 +841,12 @@
 
     // Public: called when a question arrives from the server
     function showTriviaMode(q) {
-      // Unregistered on default URL → show banner to invite them to join
-      if (mode === '' && !myToken) { currentQ = q; showContentBanner('trivia'); return; }
-      // User deliberately navigated away (e.g. back to messages) → show banner, don't interrupt
-      if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; }
-      // Registered and available → show the question
-      doShowTriviaUi(q);
+      // Dedicated trivia page → always show question directly
+      if (mode === 'trivia') { doShowTriviaUi(q); return; }
+      // Already actively playing (trivia UI is visible) → auto-advance to next question
+      if (triviaUIVisible) { doShowTriviaUi(q); return; }
+      // Default URL or user manually navigated away → always show non-intrusive banner
+      currentQ = q; showContentBanner('trivia');
     }
 
     function showWaiting() {
