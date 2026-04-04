@@ -809,7 +809,6 @@
     }
 
     function showTriviaMode(q) {
-      if (mode === '') return;   // Never interrupt the default messaging/photo page
       if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; } // user is busy — notify instead
       if (!myToken) { showRegister(); return; }
       showModeNav();
@@ -860,18 +859,28 @@
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
-      // Restore tabs + active tab
+      // Restore tabs + active tab (fall back to msg if AI tab is active but AI is off)
+      const restoreTab = (activeTab === 'ai' && !aiActive) ? 'msg' : activeTab;
+      if (restoreTab !== activeTab) { activeTab = 'msg'; }
       document.getElementById('tabs').style.display = 'flex';
-      if (activeTab === 'msg') {
+      document.getElementById('tab-msg').classList.toggle('active', restoreTab === 'msg');
+      document.getElementById('tab-photo').classList.toggle('active', restoreTab === 'photo');
+      document.getElementById('tab-ai').classList.toggle('active', restoreTab === 'ai');
+      if (restoreTab === 'msg') {
         document.getElementById('msg-form').style.display = 'flex';
         document.getElementById('page-icon').textContent  = '🎶';
         document.getElementById('page-title').textContent = 'Send a Message';
         document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
-      } else {
+      } else if (restoreTab === 'photo') {
         document.getElementById('photo-form').style.display = 'flex';
         document.getElementById('page-icon').textContent    = '📸';
         document.getElementById('page-title').textContent   = 'Share a Photo';
         document.getElementById('page-sub').textContent     = 'Your photo could appear on screen!';
+      } else {
+        document.getElementById('ai-prompt-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent  = '✨';
+        document.getElementById('page-title').textContent = 'AI Prompt';
+        document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
     }
 
@@ -1255,9 +1264,9 @@
       }
     }
 
-    // Poll /app-state every 7s to show/hide AI tab
+    // Poll /app-state every 5s to show/hide AI tab
     async function pollAppState() {
-      if (!topic || !workerBase) return;
+      if (!topic || !workerBase) { setTimeout(pollAppState, 5000); return; }
       try {
         const res  = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
         const data = await res.json();
@@ -1267,7 +1276,7 @@
           setAiTabVisible(aiActive);
         }
       } catch(e) {}
-      setTimeout(pollAppState, 7000);
+      setTimeout(pollAppState, 5000);
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
