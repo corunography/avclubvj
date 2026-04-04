@@ -57,6 +57,13 @@
     .char-count { font-size: 11px; color: #555; text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; }
     .char-count.warn { color: #ff9500; }
 
+    /* ── AI Prompt form ── */
+    #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+    #ai-prompt-form textarea:focus { border-color: #a855f7; }
+    .ai-main-btn { background: #a855f7 !important; }
+    .ai-main-btn:hover { background: #9333ea !important; }
+    .ai-main-btn:disabled { background: #2c2c2e !important; color: #555; }
+
     /* ── Photo form ── */
     #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 12px; }
     .pick-area {
@@ -196,38 +203,6 @@
     .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
     .mode-nav-btn:active { background: #2c2c2e; color: #fff; }
 
-
-    /* ── AI Prompt form ── */
-    #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 12px; }
-    .ai-name-input {
-      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
-      border-radius: 14px; color: #fff; font-size: 16px; font-family: inherit;
-      padding: 14px 16px; outline: none; transition: border-color 0.2s; -webkit-appearance: none;
-    }
-    .ai-name-input:focus { border-color: #a855f7; }
-    .ai-name-input::placeholder { color: #555; }
-    #ai-prompt-textarea {
-      width: 100%; height: 130px;
-      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
-      color: #fff; font-size: 16px; font-family: inherit;
-      padding: 14px 16px; resize: none; outline: none;
-      transition: border-color 0.2s; -webkit-appearance: none;
-    }
-    #ai-prompt-textarea:focus { border-color: #a855f7; }
-    #ai-prompt-textarea::placeholder { color: #555; }
-    #ai-prompt-status { margin-top: 4px; font-size: 14px; text-align: center; min-height: 20px; }
-    button.ai-submit-btn {
-      width: 100%; padding: 16px; background: #a855f7; color: #fff;
-      border: none; border-radius: 14px; font-size: 17px; font-weight: 700;
-      font-family: inherit; cursor: pointer; transition: background 0.15s, transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    button.ai-submit-btn:hover  { background: #9333ea; }
-    button.ai-submit-btn:active { transform: scale(0.98); }
-    button.ai-submit-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; transform: none; }
-    @keyframes bannerPulseAi { 0%, 100% { border-color: #a855f7; } 50% { border-color: #c084fc; box-shadow: 0 0 12px rgba(168,85,247,0.35); } }
-    #content-banner.ai-banner { background: #1e1232; border-color: #a855f7; animation: bannerPulseAi 2s ease-in-out infinite; }
-
     /* ── Emoji Applause bar ── */
     #emoji-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -263,6 +238,7 @@
   <div class="tabs" id="tabs">
     <button class="tab-btn active" id="tab-msg"   onclick="switchTab('msg')">💬 Message</button>
     <button class="tab-btn"        id="tab-photo" onclick="switchTab('photo')">📸 Photo</button>
+    <button class="tab-btn"        id="tab-ai"    onclick="switchTab('ai')" style="display:none;color:#c084fc">✨ Prompt</button>
   </div>
 
   <!-- Normal message form -->
@@ -295,6 +271,18 @@
     </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Send Photo!</button>
     <div id="photo-status"></div>
+  </div>
+
+  <!-- AI Prompt form -->
+  <div id="ai-prompt-form">
+    <div class="username-row" style="border-color:#333">
+      <span class="username-at" style="color:#a855f7">✨</span>
+      <input type="text" id="ai-name" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
+    <div class="char-count" id="ai-char-count">0 / 200</div>
+    <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
+    <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -342,17 +330,6 @@
       <div class="poll-waiting-icon">⏳</div>
       <div class="poll-waiting">Connecting…</div>
     </div>
-  </div>
-
-
-  <!-- AI Prompt submission form -->
-  <div id="ai-prompt-form">
-    <input type="text" class="ai-name-input" id="ai-submitter-name" placeholder="Your name (optional)" maxlength="40"
-      autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
-    <textarea id="ai-prompt-textarea" placeholder="Describe a visual… e.g. neon jellyfish floating through a purple nebula" maxlength="300" oninput="onAiInput()"></textarea>
-    <div class="char-count" id="ai-char-count">0 / 300</div>
-    <button class="ai-submit-btn" id="ai-btn" onclick="sendAiPrompt()">✨ Submit Visual Idea</button>
-    <div id="ai-prompt-status"></div>
   </div>
 
   <!-- Emoji Applause bar (fixed bottom) -->
@@ -430,16 +407,22 @@
       activeTab = tab;
       document.getElementById('tab-msg').classList.toggle('active', tab === 'msg');
       document.getElementById('tab-photo').classList.toggle('active', tab === 'photo');
-      document.getElementById('msg-form').style.display   = tab === 'msg'   ? 'flex'  : 'none';
-      document.getElementById('photo-form').style.display = tab === 'photo' ? 'flex'  : 'none';
+      document.getElementById('tab-ai').classList.toggle('active', tab === 'ai');
+      document.getElementById('msg-form').style.display        = tab === 'msg'   ? 'flex' : 'none';
+      document.getElementById('photo-form').style.display      = tab === 'photo' ? 'flex' : 'none';
+      document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
       if (tab === 'msg') {
         document.getElementById('page-icon').textContent  = '🎶';
         document.getElementById('page-title').textContent = 'Send a Message';
         document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
-      } else {
+      } else if (tab === 'photo') {
         document.getElementById('page-icon').textContent  = '📸';
         document.getElementById('page-title').textContent = 'Share a Photo';
         document.getElementById('page-sub').textContent   = 'Your photo could appear on screen!';
+      } else {
+        document.getElementById('page-icon').textContent  = '✨';
+        document.getElementById('page-title').textContent = 'AI Prompt';
+        document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
     }
 
@@ -732,14 +715,13 @@
       pendingBannerType = type;
       const el = document.getElementById('content-banner');
       if (!el) return;
-      el.classList.toggle('ai-banner', type === 'ai');
-      el.textContent = type === 'trivia' ? '🧠 Trivia question is live — tap to play!' : type === 'ai' ? '🎨 AI Visuals active — tap to submit a prompt!' : '📊 Live poll is open — tap to vote!';
+      el.textContent = type === 'trivia' ? '🧠 Trivia question is live — tap to play!' : '📊 Live poll is open — tap to vote!';
       el.style.display = 'block';
     }
     function hideContentBanner() {
       pendingBannerType = null;
       const el = document.getElementById('content-banner');
-      if (el) { el.style.display = 'none'; el.classList.remove('ai-banner'); }
+      if (el) el.style.display = 'none';
     }
     function joinLiveContent() {
       const type = pendingBannerType;
@@ -748,8 +730,6 @@
       if (type === 'poll') {
         showPollMode();
         if (currentPoll) renderPoll(currentPoll);
-      } else if (type === 'ai') {
-        showAiPromptMode();
       } else {
         // trivia or unknown — go to trivia waiting/question
         if (currentQ) { showTriviaMode(currentQ); }
@@ -877,7 +857,6 @@
     function showMessageMode() {
       if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
       if (mode === 'poll') { showPollMode(); renderPoll(currentPoll); return; } // poll page returns to poll view
-      if (aiActive && mode === '') { showAiPromptMode(); return; } // AI mode takes over when active
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
@@ -1216,107 +1195,76 @@
       if (wrap) wrap.style.display = 'flex';
     }
 
-    // ── AI Prompt submission ─────────────────────────────────────────────────
+    // ── AI Prompt tab ────────────────────────────────────────────────────────
     let aiActive = false;
+    let aiPromptCooldownTimer = null;
 
-    function showAiPromptMode() {
-      showModeNav();
-      hideAllForms();
-      document.getElementById('page-icon').textContent  = '🎨';
-      document.getElementById('page-title').textContent = 'Submit a Visual Idea';
-      document.getElementById('page-sub').textContent   = 'Your idea may be generated on the big screen!';
-      const form = document.getElementById('ai-prompt-form');
-      if (form) form.style.display = 'flex';
-      const savedName = localStorage.getItem('ai-prompt-name') || '';
-      const nameEl = document.getElementById('ai-submitter-name');
-      if (savedName && nameEl && !nameEl.value) nameEl.value = savedName;
-    }
+    // Restore saved name for AI prompts
+    const aiNameEl = document.getElementById('ai-name');
+    if (aiNameEl) aiNameEl.value = localStorage.getItem('ai-prompt-name') || '';
 
-    function onAiInput() {
-      const len = document.getElementById('ai-prompt-textarea').value.length;
+    function onAiPromptInput() {
+      const len = document.getElementById('ai-prompt-text')?.value.length || 0;
       const el  = document.getElementById('ai-char-count');
-      if (el) { el.textContent = len + ' / 300'; el.className = 'char-count' + (len > 260 ? ' warn' : ''); }
+      if (el) { el.textContent = len + ' / 200'; el.className = 'char-count' + (len > 160 ? ' warn' : ''); }
     }
 
-    let aiCooldownTimer = null;
-    function startAiCooldown() {
-      const btn = document.getElementById('ai-btn');
-      let remaining = 15;
-      btn.disabled = true; btn.textContent = `Wait ${remaining}s…`;
-      if (aiCooldownTimer) clearInterval(aiCooldownTimer);
-      aiCooldownTimer = setInterval(() => {
-        remaining--;
-        if (remaining <= 0) {
-          clearInterval(aiCooldownTimer); aiCooldownTimer = null;
-          btn.disabled = false; btn.textContent = '✨ Submit Another Idea';
-        } else {
-          btn.textContent = `Wait ${remaining}s…`;
-        }
-      }, 1000);
+    function setAiTabVisible(show) {
+      const tab = document.getElementById('tab-ai');
+      if (!tab) return;
+      tab.style.display = show ? '' : 'none';
+      // If AI tab was active and AI just turned off, switch back to messages
+      if (!show && activeTab === 'ai') switchTab('msg');
     }
 
     async function sendAiPrompt() {
-      const name   = (document.getElementById('ai-submitter-name')?.value || '').trim() || 'Anonymous';
-      const prompt = (document.getElementById('ai-prompt-textarea')?.value || '').trim();
+      const promptText = document.getElementById('ai-prompt-text')?.value.trim();
+      const name = (aiNameEl?.value || '').trim();
+      if (!promptText || !topic) return;
+      if (name) localStorage.setItem('ai-prompt-name', name);
+      const btn    = document.getElementById('ai-prompt-btn');
       const status = document.getElementById('ai-prompt-status');
-      if (!prompt) { if (status) { status.textContent = 'Please describe a visual first!'; status.className = 'error'; } return; }
-      const btn = document.getElementById('ai-btn');
-      btn.disabled = true; btn.textContent = 'Submitting…';
-      if (status) { status.textContent = ''; status.className = ''; }
+      btn.disabled = true; btn.textContent = 'Sending…';
+      status.textContent = ''; status.className = '';
       try {
         const res = await fetchWithTimeout(
           `${workerBase}/ai-prompts?venueId=${encodeURIComponent(topic)}`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, prompt }) }
+          { method: 'POST', body: JSON.stringify({ prompt: promptText, name: name || 'Anonymous' }),
+            headers: { 'Content-Type': 'application/json' } }
         );
-        if (!res.ok) { const b = await res.text().catch(() => ''); throw new Error(b || 'HTTP ' + res.status); }
-        localStorage.setItem('ai-prompt-name', name);
-        document.getElementById('ai-prompt-textarea').value = '';
-        onAiInput();
-        if (status) { status.innerHTML = '✨ Submitted! It may appear on screen soon.'; status.className = 'success'; }
-        startAiCooldown();
+        if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { serverMsg: b.error || '' }); }
+        status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
+        status.className = 'success';
+        document.getElementById('ai-prompt-text').value = '';
+        onAiPromptInput();
+        // 15s cooldown
+        let remaining = 15;
+        btn.textContent = `Wait ${remaining}s…`;
+        if (aiPromptCooldownTimer) clearInterval(aiPromptCooldownTimer);
+        aiPromptCooldownTimer = setInterval(() => {
+          remaining--;
+          if (remaining <= 0) {
+            clearInterval(aiPromptCooldownTimer); aiPromptCooldownTimer = null;
+            btn.disabled = false; btn.textContent = 'Submit Another!';
+          } else { btn.textContent = `Wait ${remaining}s…`; }
+        }, 1000);
       } catch(e) {
-        if (status) { status.textContent = e.name === 'AbortError' ? '✗ Timed out — try again.' : '✗ ' + (e.message || 'Failed to send.'); status.className = 'error'; }
-        btn.disabled = false; btn.textContent = '✨ Submit Visual Idea';
+        status.textContent = '✗ Failed to send — check your connection and try again.';
+        status.className = 'error';
+        btn.textContent = 'Submit Prompt!'; btn.disabled = false;
       }
     }
 
-    document.getElementById('ai-prompt-textarea')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey && e.metaKey) { e.preventDefault(); sendAiPrompt(); }
-    });
-
+    // Poll /app-state every 7s to show/hide AI tab
     async function pollAppState() {
       if (!topic || !workerBase) return;
       try {
-        const res = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 6000);
-        const d = await res.json();
-        const wasActive = aiActive;
-        aiActive = !!d.aiActive;
-        if (aiActive && !wasActive) {
-          // AI just came online
-          const inTrivia = !!currentQ;
-          const inPoll   = !!(currentPoll && currentPoll.active);
-          if (!inTrivia && !inPoll && mode === '') {
-            if (userManualNav) { showContentBanner('ai'); }
-            else { showAiPromptMode(); }
-          }
-        } else if (!aiActive && wasActive) {
-          // AI just went offline — if showing AI form, return to messages
-          const form = document.getElementById('ai-prompt-form');
-          if (form && form.style.display !== 'none') {
-            userManualNav = false;
-            hideContentBanner();
-            // showMessageMode will detect aiActive=false and show messages/photos
-            hideModeNav();
-            hideAllForms();
-            document.getElementById('tabs').style.display = 'flex';
-            document.getElementById('msg-form').style.display = 'flex';
-            document.getElementById('page-icon').textContent  = '🎶';
-            document.getElementById('page-title').textContent = 'Send a Message';
-            document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
-            activeTab = 'msg';
-            document.getElementById('tab-msg').classList.add('active');
-            document.getElementById('tab-photo').classList.remove('active');
-          }
+        const res  = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
+        const data = await res.json();
+        const nowActive = !!data.aiActive;
+        if (nowActive !== aiActive) {
+          aiActive = nowActive;
+          setAiTabVisible(aiActive);
         }
       } catch(e) {}
       setTimeout(pollAppState, 7000);
@@ -1333,11 +1281,11 @@
         pollTrivia();     // primary: watch for trivia
         fetchPollState(); // secondary: switch to poll if it fires
       } else {
-        // Default message/photo page — trivia, polls, and AI can all interrupt
+        // Default message/photo page — trivia can interrupt, polls can interrupt
         pollTrivia();
         fetchPollState();
-        pollAppState();
       }
+      pollAppState(); // watch for AI active state to show/hide Prompt tab
     }
   </script>
 </body>
