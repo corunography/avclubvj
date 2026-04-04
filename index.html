@@ -731,8 +731,8 @@
         showPollMode();
         if (currentPoll) renderPoll(currentPoll);
       } else {
-        // trivia or unknown — go to trivia waiting/question
-        if (currentQ) { showTriviaMode(currentQ); }
+        // trivia — show question UI directly (bypass banner logic)
+        if (currentQ) { doShowTriviaUi(currentQ); }
         else { showWaiting(); }
       }
     }
@@ -808,8 +808,8 @@
       if (nameEl) nameEl.textContent = myTeam;
     }
 
-    function showTriviaMode(q) {
-      if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; } // user is busy — notify instead
+    // Internal: actually render the trivia UI (called after user taps banner or on dedicated trivia page)
+    function doShowTriviaUi(q) {
       if (!myToken) { showRegister(); return; }
       showModeNav();
       currentQ       = q;
@@ -837,6 +837,13 @@
       triviaUIVisible = true;
       renderScores(lastScores); // show scoreboard below question (if scores exist)
       startTriviaCountdown(q.timeLimit, q.startTime);
+    }
+
+    // Public: called when a question arrives from the server
+    function showTriviaMode(q) {
+      // On default URL: always show banner (non-intrusive) — let user tap to join
+      if (mode === '' || userManualNav) { currentQ = q; showContentBanner('trivia'); return; }
+      doShowTriviaUi(q); // dedicated trivia page: show question directly
     }
 
     function showWaiting() {
@@ -1178,15 +1185,16 @@
           if (!isActive) { pollMyVote = null; pollSelected = null; }
           if (isActive) {
             if (!wasActive) {
-              if (userManualNav) { showContentBanner('poll'); } // user is busy — notify instead
-              else { showPollMode(); }
+              // On the default URL, always show the banner — never force-switch away from a message in progress
+              if (mode === '' || userManualNav) { showContentBanner('poll'); }
+              else { showPollMode(); } // dedicated poll page: auto-switch
             }
             renderPoll(currentPoll);
           } else if (wasActive) {
             userManualNav = false; hideContentBanner(); // content ended — clear nav lock
-            showMessageMode(); // poll ended — return to mode default (waiting/no-poll)
+            showMessageMode(); // poll ended — return to message/photo page
           } else if (mode === 'poll') {
-            renderPoll(currentPoll); // initial load, no poll active yet
+            renderPoll(currentPoll); // initial load on dedicated poll page, no poll active yet
           }
         }
         if (data.applause) applyApplause(data.applause);
