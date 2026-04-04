@@ -841,9 +841,12 @@
 
     // Public: called when a question arrives from the server
     function showTriviaMode(q) {
-      // On default URL: always show banner (non-intrusive) — let user tap to join
-      if (mode === '' || userManualNav) { currentQ = q; showContentBanner('trivia'); return; }
-      doShowTriviaUi(q); // dedicated trivia page: show question directly
+      // Unregistered on default URL → show banner to invite them to join
+      if (mode === '' && !myToken) { currentQ = q; showContentBanner('trivia'); return; }
+      // User deliberately navigated away (e.g. back to messages) → show banner, don't interrupt
+      if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; }
+      // Registered and available → show the question
+      doShowTriviaUi(q);
     }
 
     function showWaiting() {
@@ -909,7 +912,8 @@
         myTeam = name; myToken = token;
         localStorage.setItem('trivia-team', name);
         localStorage.setItem('trivia-token', token);
-        showWaiting();
+        // If a question is already live, jump straight to it — don't make the user wait
+        if (currentQ) { doShowTriviaUi(currentQ); } else { showWaiting(); }
       } catch(e) {
         const msg = e.name === 'AbortError' ? '✗ Timed out — check your connection.' : '✗ Failed to join — check your connection.';
         if (statusEl) statusEl.textContent = msg;
