@@ -11,14 +11,40 @@
       background: #0a0a0f; color: #fff;
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 32px 24px;
+      padding: 32px 24px 32px;
     }
     .icon  { font-size: 48px; margin-bottom: 16px; }
     h1     { font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
-    .sub   { font-size: 14px; color: #888; margin-bottom: 28px; text-align: center; line-height: 1.5; }
+    .sub   { font-size: 14px; color: #888; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+
+    /* ── Tab switcher ── */
+    .tabs {
+      display: flex; gap: 0; margin-bottom: 24px;
+      background: #1c1c1e; border-radius: 12px; padding: 4px;
+      width: 100%; max-width: 440px;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; background: transparent;
+      color: #888; font-size: 15px; font-weight: 600; font-family: inherit;
+      border-radius: 9px; cursor: pointer; transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-btn.active { background: #2c2c2e; color: #fff; }
 
     /* ── Message form ── */
     #msg-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; }
+    .username-row {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
+      padding: 10px 16px; margin-bottom: 10px; transition: border-color 0.2s;
+    }
+    .username-row:focus-within { border-color: #3a7bd5; }
+    .username-at { color: #555; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .username-row input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 16px; font-family: inherit; -webkit-appearance: none;
+    }
+    .username-row input::placeholder { color: #555; }
     textarea {
       width: 100%; height: 110px;
       background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
@@ -31,6 +57,46 @@
     .char-count { font-size: 11px; color: #555; text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; }
     .char-count.warn { color: #ff9500; }
 
+    /* ── AI Prompt form ── */
+    #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+    #ai-prompt-form textarea:focus { border-color: #a855f7; }
+    .ai-main-btn { background: #a855f7 !important; }
+    .ai-main-btn:hover { background: #9333ea !important; }
+    .ai-main-btn:disabled { background: #2c2c2e !important; color: #555; }
+
+    /* ── Photo form ── */
+    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 12px; }
+    .pick-area {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; background: #1c1c1e; border: 1.5px dashed #333;
+      border-radius: 16px; padding: 32px 20px; cursor: pointer;
+      transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .pick-area:active { border-color: #3a7bd5; }
+    .pick-area .pick-icon { font-size: 40px; }
+    .pick-area .pick-txt  { font-size: 15px; color: #888; text-align: center; }
+    #photo-preview-wrap { display: none; position: relative; }
+    #photo-preview {
+      width: 100%; border-radius: 12px; display: block;
+      object-fit: contain; max-height: 200px; background: #000;
+    }
+    .rm-btn {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.75); border: none; color: #fff;
+      border-radius: 50%; width: 30px; height: 30px; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .caption-input {
+      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
+      border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit;
+      padding: 12px 16px; outline: none; transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .caption-input:focus { border-color: #3a7bd5; }
+    .caption-input::placeholder { color: #555; }
+    #file-input { display: none; }
+
     /* ── Trivia form ── */
     #trivia-form { width: 100%; max-width: 480px; display: none; flex-direction: column; gap: 12px; }
     .trivia-question-box {
@@ -38,6 +104,12 @@
       font-size: 17px; font-weight: 700; line-height: 1.4; text-align: center; color: #fff;
     }
     .trivia-category { font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    /* ── Trivia countdown ── */
+    #trivia-countdown-wrap { display: none; align-items: center; gap: 8px; padding: 0 2px; }
+    #trivia-countdown-bar  { flex: 1; height: 5px; background: #2c2c2e; border-radius: 3px; overflow: hidden; }
+    #trivia-countdown-fill { height: 100%; width: 100%; background: #3a7bd5; border-radius: 3px; transition: width 0.9s linear, background 0.3s; }
+    #trivia-countdown-num  { font-size: 13px; font-weight: 700; min-width: 28px; text-align: right; color: #aaa; font-variant-numeric: tabular-nums; }
+
     .trivia-opts-grid { display: flex; flex-direction: column; gap: 8px; }
     .trivia-opt-btn {
       width: 100%; background: #1c1c1e; border: 1.5px solid #333;
@@ -66,6 +138,43 @@
     #trivia-status { font-size: 13px; text-align: center; min-height: 18px; }
     #trivia-waiting { font-size: 13px; color: #666; text-align: center; margin-top: 8px; }
 
+    /* ── Trivia scoreboard ── */
+    #trivia-scores-wrap { display: none; width: 100%; max-width: 480px; margin-top: 16px; }
+    .scores-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .scores-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .08em; }
+    .scores-toggle { margin-left: auto; font-size: 11px; color: #3a7bd5; background: none; border: none; cursor: pointer; font-family: inherit; padding: 2px 0; -webkit-tap-highlight-color: transparent; }
+    .scores-list { display: flex; flex-direction: column; gap: 5px; }
+    .scores-row { display: flex; align-items: center; gap: 10px; background: #1c1c1e; border-radius: 10px; padding: 8px 12px; }
+    .scores-rank { font-size: 14px; min-width: 24px; text-align: center; flex-shrink: 0; }
+    .scores-team { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scores-pts  { font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+    /* ── Poll form ── */
+    #poll-wrap { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+    .poll-badge { display: inline-flex; align-items: center; gap: 6px; background: #ff375f; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .08em; border-radius: 20px; padding: 4px 12px; margin-bottom: 20px; text-transform: uppercase; }
+    .poll-blink { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: .3 } }
+    .poll-question { font-size: 20px; font-weight: 700; text-align: center; line-height: 1.35; margin-bottom: 24px; max-width: 400px; }
+    .poll-opts { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .poll-opt-btn { width: 100%; background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 600; font-family: inherit; padding: 16px 18px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background .15s, border-color .15s; -webkit-tap-highlight-color: transparent; text-align: left; }
+    .poll-opt-btn:active { transform: scale(.98); }
+    .poll-opt-btn.selected { background: #1a2a40; border-color: #3a7bd5; }
+    .poll-opt-btn.voted { background: #2a0e17; border-color: #ff375f; cursor: default; }
+    .poll-opt-btn.my-vote { background: #3a0f1e; border-color: #ff375f; }
+    .poll-opt-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #3a7bd5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: 0; transition: opacity .15s; color: #3a7bd5; background: #1a2a40; }
+    .poll-opt-text { flex: 1; }
+    .poll-opt-pct { font-size: 14px; color: #888; font-weight: 700; min-width: 38px; text-align: right; flex-shrink: 0; }
+    .poll-bar-wrap { position: absolute; inset: 0; border-radius: 12px; overflow: hidden; pointer-events: none; }
+    .poll-bar-fill { height: 100%; background: rgba(255,55,95,.15); transition: width .5s ease; }
+    .poll-opt-inner { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; }
+    .poll-submit-btn { width: 100%; padding: 15px; background: #3a7bd5; color: #fff; border: none; border-radius: 14px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s, opacity .15s; margin-top: 12px; -webkit-tap-highlight-color: transparent; }
+    .poll-submit-btn:active { opacity: .8; }
+    .poll-submit-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; }
+    .poll-total { font-size: 12px; color: #555; text-align: center; margin-top: 14px; }
+    .poll-closed { font-size: 13px; color: #f5a623; text-align: center; margin-top: 10px; font-weight: 600; }
+    .poll-waiting { text-align: center; color: #aaa; font-size: 15px; max-width: 320px; line-height: 1.6; }
+    .poll-waiting-icon { font-size: 40px; margin-bottom: 14px; }
+
     /* ── Shared button ── */
     button.main-btn {
       width: 100%; max-width: 440px;
@@ -78,36 +187,102 @@
     button.main-btn:hover  { background: #2d6bc4; }
     button.main-btn:active { transform: scale(0.98); }
     button.main-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; transform: none; }
-    #status { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; max-width: 440px; line-height: 1.5; }
+    #status       { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; max-width: 440px; line-height: 1.5; }
+    #photo-status { font-size: 14px; text-align: center; min-height: 20px; line-height: 1.5; }
     .success { color: #34c759; font-weight: 600; }
     .error   { color: #ff453a; }
     .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
+
+    /* ── Live content banner (non-intrusive alert when user is on messages/photos) ── */
+    #content-banner { display: none; width: 100%; max-width: 440px; padding: 12px 16px; background: #1a2a40; border: 1.5px solid #3a7bd5; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; margin-bottom: 12px; animation: bannerPulse 2s ease-in-out infinite; }
+    #content-banner:active { opacity: 0.8; }
+    @keyframes bannerPulse { 0%, 100% { border-color: #3a7bd5; } 50% { border-color: #5a9bf5; box-shadow: 0 0 12px rgba(58,123,213,0.35); } }
+
+    /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
+    #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 14px; }
+    .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
+    .mode-nav-btn:active { background: #2c2c2e; color: #fff; }
+
+    /* ── Emoji Applause bar ── */
+    #emoji-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,15,0.97);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      padding: 10px 16px env(safe-area-inset-bottom, 14px);
+      border-top: 1px solid #222; z-index: 100; display: none;
+    }
+    #emoji-bar-label { text-align: center; font-size: 10px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+    .react-row { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .react-row::-webkit-scrollbar { display: none; }
+    .react-btn { flex-shrink: 0; width: 72px; background: #1c1c1e; border: none; border-radius: 14px; font-size: 52px; padding: 14px 4px 10px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
+    .react-btn:active { transform: scale(.8); background: #2c2c2e; }
+    .react-btn.fired { background: #2a2a2e; animation: reactPop .25s ease-out; }
+    @keyframes reactPop { 0% { transform: scale(.7) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
   </style>
 </head>
 <body>
+  <!-- Non-intrusive live-content alert (shown when user manually went to messages/photos) -->
+  <div id="content-banner" onclick="joinLiveContent()"></div>
+
+  <!-- Mini nav: message/photo access during trivia & poll (replaces tall header) -->
+  <div id="mode-nav">
+    <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
+    <button class="mode-nav-btn" onclick="gotoPhoto()">📸 Photo</button>
+  </div>
+
   <div class="icon" id="page-icon">🎶</div>
   <h1 id="page-title">Send a Message</h1>
   <p class="sub" id="page-sub">Your message may appear on the big screen!</p>
 
+  <!-- Tab switcher (hidden in trivia/poll mode) -->
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" id="tab-msg"   onclick="switchTab('msg')">💬 Message</button>
+    <button class="tab-btn"        id="tab-photo" onclick="switchTab('photo')">📸 Photo</button>
+    <button class="tab-btn"        id="tab-ai"    onclick="switchTab('ai')" style="display:none;color:#c084fc">✨ Prompt</button>
+  </div>
+
   <!-- Normal message form -->
   <div id="msg-form">
-    <textarea id="msg" placeholder="Type your message here…" maxlength="280" oninput="onInput()"></textarea>
-    <div class="char-count" id="char-count">0 / 280</div>
+    <div class="username-row">
+      <span class="username-at">@</span>
+      <input type="text" id="username" placeholder="your username (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="msg" placeholder="Type your message here…" maxlength="240" oninput="onInput()"></textarea>
+    <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
   </div>
 
-  <!-- AI Prompt submission form -->
-  <div id="ai-prompt-form" style="display:none;width:100%;max-width:440px;flex-direction:column;gap:12px">
-    <input type="text" id="ai-submitter-name" placeholder="Your name (optional)" maxlength="40"
-      style="width:100%;background:#1c1c1e;border:1.5px solid #333;border-radius:14px;color:#fff;font-size:16px;font-family:inherit;padding:14px 16px;outline:none;transition:border-color 0.2s;-webkit-appearance:none"
-      onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#333'">
-    <textarea id="ai-prompt-text" placeholder="Describe a visual… (e.g. neon jellyfish floating through a purple nebula)" maxlength="300"
-      style="width:100%;height:130px;background:#1c1c1e;border:1.5px solid #333;border-radius:14px;color:#fff;font-size:16px;font-family:inherit;padding:14px 16px;resize:none;outline:none;transition:border-color 0.2s;-webkit-appearance:none"
-      oninput="onAiInput()" onfocus="this.style.borderColor='#a855f7'" onblur="this.style.borderColor='#333'"></textarea>
-    <div class="char-count" id="ai-char-count">0 / 300</div>
-    <button class="main-btn" id="ai-btn" onclick="sendAiPrompt()" style="background:#a855f7">✨ Submit Visual Idea</button>
-    <div id="ai-status"></div>
+  <!-- Photo form -->
+  <div id="photo-form">
+    <input type="file" id="file-input" accept="image/*">
+    <label for="file-input" class="pick-area" id="pick-area">
+      <span class="pick-icon">📷</span>
+      <span class="pick-txt">Tap to take a photo<br>or choose from your library</span>
+    </label>
+    <div id="photo-preview-wrap">
+      <img id="photo-preview" alt="Preview">
+      <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
+    </div>
+    <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
+    <!-- Progress bar -->
+    <div id="photo-progress-wrap" style="display:none;width:100%;background:#1c1c1e;border-radius:99px;height:8px;overflow:hidden">
+      <div id="photo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7bd5,#5b9cf6);border-radius:99px;transition:width 0.2s ease"></div>
+    </div>
+    <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Send Photo!</button>
+    <div id="photo-status"></div>
+  </div>
+
+  <!-- AI Prompt form -->
+  <div id="ai-prompt-form">
+    <div class="username-row" style="border-color:#333">
+      <span class="username-at" style="color:#a855f7">✨</span>
+      <input type="text" id="ai-name" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
+    <div class="char-count" id="ai-char-count">0 / 200</div>
+    <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
+    <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -129,6 +304,10 @@
   <div id="trivia-form">
     <div class="trivia-category" id="trivia-category"></div>
     <div class="trivia-question-box" id="trivia-q"></div>
+    <div id="trivia-countdown-wrap">
+      <div id="trivia-countdown-bar"><div id="trivia-countdown-fill"></div></div>
+      <span id="trivia-countdown-num">30</span>
+    </div>
     <div class="trivia-opts-grid" id="trivia-opts"></div>
     <button class="main-btn" id="trivia-btn" onclick="submitTrivia()">Submit Answer</button>
     <div id="trivia-status"></div>
@@ -136,21 +315,43 @@
 
   <div id="trivia-waiting" style="display:none">⏳ Waiting for the next question…</div>
 
+  <!-- Trivia scoreboard (shown during waiting + active question) -->
+  <div id="trivia-scores-wrap">
+    <div class="scores-header">
+      <span class="scores-title">🏆 Scoreboard</span>
+      <button class="scores-toggle" id="scores-toggle-btn" onclick="toggleScoresList()">Show</button>
+    </div>
+    <div class="scores-list" id="trivia-scores-list"></div>
+  </div>
+
+  <!-- Live Poll form -->
+  <div id="poll-wrap">
+    <div id="poll-root">
+      <div class="poll-waiting-icon">⏳</div>
+      <div class="poll-waiting">Connecting…</div>
+    </div>
+  </div>
+
+  <!-- Emoji Applause bar (fixed bottom) -->
+  <div id="emoji-bar">
+    <div id="emoji-bar-label">React</div>
+    <div class="react-row" id="react-row"></div>
+  </div>
+
   <script>
     const params    = new URLSearchParams(location.search);
     const topic     = params.get('t');
-    const mode      = params.get('mode') || '';  // 'trivia' = trivia-only page
+    const mode      = params.get('mode') || '';  // 'trivia' or 'poll'
     const workerUrl = (params.get('w') || '').replace(/\/$/, '');
 
-    // Normalise worker URL — ensure it has a protocol
     // Worker handles R2 storage only (photos, messages, AI prompts)
     const workerBase = workerUrl
       ? (workerUrl.startsWith('http') ? workerUrl : 'https://' + workerUrl).replace(/\/$/, '')
-      : '';
+      : 'https://avclubvj.corunography.workers.dev';
 
     // Tunnel URL — resolved on page load from Worker's /remote-url endpoint.
-    // All real-time endpoints (status, trivia, polls) go through the tunnel
-    // directly, bypassing the Worker to reduce costs.
+    // Real-time endpoints (status, trivia, polls, reactions) go through the
+    // tunnel directly, bypassing the Worker to reduce costs.
     let tunnelBase = '';
 
     async function resolveTunnel() {
@@ -162,6 +363,7 @@
         if (!res.ok) return;
         const data = await res.json();
         if (data.tunnelUrl) tunnelBase = data.tunnelUrl.replace(/\/$/, '');
+        if (data.applause) applyApplause(data.applause);
       } catch(_) {}
     }
 
@@ -199,12 +401,46 @@
         '<span class="error-setup">No venue code in this link.<br>Please ask the venue for the correct QR code.</span>';
     }
 
+    // ── Tab switcher ──────────────────────────────────────────────────────────
+    let activeTab = 'msg';
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tab-msg').classList.toggle('active', tab === 'msg');
+      document.getElementById('tab-photo').classList.toggle('active', tab === 'photo');
+      document.getElementById('tab-ai').classList.toggle('active', tab === 'ai');
+      document.getElementById('msg-form').style.display        = tab === 'msg'   ? 'flex' : 'none';
+      document.getElementById('photo-form').style.display      = tab === 'photo' ? 'flex' : 'none';
+      document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
+      if (tab === 'msg') {
+        document.getElementById('page-icon').textContent  = '🎶';
+        document.getElementById('page-title').textContent = 'Send a Message';
+        document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      } else if (tab === 'photo') {
+        document.getElementById('page-icon').textContent  = '📸';
+        document.getElementById('page-title').textContent = 'Share a Photo';
+        document.getElementById('page-sub').textContent   = 'Your photo could appear on screen!';
+      } else {
+        document.getElementById('page-icon').textContent  = '✨';
+        document.getElementById('page-title').textContent = 'AI Prompt';
+        document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
+      }
+    }
+
     // ── Message form ──────────────────────────────────────────────────────────
+    // Restore saved username
+    const usernameEl = document.getElementById('username');
+    if (usernameEl) {
+      usernameEl.value = localStorage.getItem('msg-username') || '';
+      usernameEl.addEventListener('change', () => {
+        localStorage.setItem('msg-username', usernameEl.value.trim());
+      });
+    }
+
     function onInput() {
       const len = document.getElementById('msg').value.length;
       const el  = document.getElementById('char-count');
-      el.textContent = len + ' / 280';
-      el.className   = 'char-count' + (len > 240 ? ' warn' : '');
+      el.textContent = len + ' / 240';
+      el.className   = 'char-count' + (len > 200 ? ' warn' : '');
     }
 
     const COOLDOWN_SEC = 12;
@@ -227,28 +463,33 @@
       }, 1000);
     }
 
+    function getOrCreateAnonId() {
+      let id = localStorage.getItem('anon-id');
+      if (!id) { id = String(Math.floor(1000 + Math.random() * 9000)); localStorage.setItem('anon-id', id); }
+      return id;
+    }
+
     async function sendMsg() {
-      const text = document.getElementById('msg').value.trim();
-      if (!text || !topic) return;
+      const rawText = document.getElementById('msg').value.trim();
+      const username = (document.getElementById('username')?.value || '').trim();
+      if (username) localStorage.setItem('msg-username', username);
+      const displayName = username || ('Anonymous_' + getOrCreateAnonId());
+      const text = displayName + ':  ' + rawText;
+      if (!rawText || !topic) return;
       const btn    = document.getElementById('btn');
       const status = document.getElementById('status');
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
-        // Messages go to Worker → R2 storage (app polls Worker for new messages)
+        // Use Cloudflare Worker R2 storage — no rate limits, same infra as photos
+        if (!workerBase) throw new Error('No worker URL configured');
         const res = await fetchWithTimeout(
-          `${workerBase}/messages?venueId=${encodeURIComponent(topic)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-          }
+          `${workerBase}/messages?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) {
-          const body = await res.text().catch(() => '');
-          throw Object.assign(new Error(body || 'HTTP ' + res.status), {
-            status: res.status,
-            isQuota: res.status === 429,
-          });
+          const body = await res.json().catch(() => ({}));
+          throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: body.error || '' });
         }
         status.innerHTML = '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
@@ -259,8 +500,8 @@
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
           ? '✗ Request timed out — check your connection and try again.'
-          : e.isQuota
-            ? '✗ Too many messages — wait a moment and try again.'
+          : e.status === 429
+            ? '✗ Queue is full — please wait a moment and try again.'
             : '✗ Failed to send — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
@@ -271,15 +512,271 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
     });
 
+    // ── Photo form ────────────────────────────────────────────────────────────
+    let resizedDataUrl = null;
+
+    const fileInput   = document.getElementById('file-input');
+    const pickArea    = document.getElementById('pick-area');
+    const previewWrap = document.getElementById('photo-preview-wrap');
+    const previewImg  = document.getElementById('photo-preview');
+    const rmBtn       = document.getElementById('rm-btn');
+    const photoBtn    = document.getElementById('photo-btn');
+    const photoStatus = document.getElementById('photo-status');
+
+    fileInput?.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      photoStatus.textContent = 'Resizing…';
+      resizedDataUrl = await resizeImage(file, 1024, 0.80);
+      previewImg.src = resizedDataUrl;
+      previewWrap.style.display = 'block';
+      pickArea.style.display    = 'none';
+      photoBtn.disabled = false;
+      photoStatus.textContent = '';
+    });
+
+    rmBtn?.addEventListener('click', () => {
+      resizedDataUrl = null;
+      previewImg.src = '';
+      previewWrap.style.display = 'none';
+      pickArea.style.display    = 'flex';
+      photoBtn.disabled = true;
+      fileInput.value = '';
+      photoStatus.textContent = '';
+    });
+
+    function sendPhoto() {
+      if (!resizedDataUrl || !topic || !workerBase) {
+        photoStatus.innerHTML = '<span class="error">Photo uploads require a worker URL — please use the venue QR code.</span>';
+        return;
+      }
+      const caption     = (document.getElementById('photo-caption')?.value || '').trim();
+      const progressWrap = document.getElementById('photo-progress-wrap');
+      const progressBar  = document.getElementById('photo-progress-bar');
+
+      photoBtn.disabled = true;
+      photoStatus.textContent = '';
+      progressWrap.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption });
+      const xhr     = new XMLHttpRequest();
+      xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 25000;
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        progressBar.style.width = '100%';
+        setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
+          resizedDataUrl = null;
+          previewImg.src = '';
+          previewWrap.style.display = 'none';
+          pickArea.style.display    = 'flex';
+          document.getElementById('photo-caption').value = '';
+          fileInput.value = '';
+          setTimeout(() => { photoBtn.disabled = false; }, 15000);
+        } else {
+          photoStatus.innerHTML = '<span class="error">✗ Upload failed (error ' + xhr.status + ') — please try again.</span>';
+          photoBtn.disabled = false;
+        }
+      };
+
+      xhr.onerror = xhr.ontimeout = () => {
+        progressWrap.style.display = 'none';
+        photoStatus.innerHTML = '<span class="error">✗ Upload failed — check your connection and try again.</span>';
+        photoBtn.disabled = false;
+      };
+
+      xhr.send(payload);
+    }
+
+    function resizeImage(file, maxPx, quality) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxPx || h > maxPx) {
+              if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+              else        { w = Math.round(w * maxPx / h); h = maxPx; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ── Emoji Applause ────────────────────────────────────────────────────────
+    // ── Mode nav helpers ──────────────────────────────────────────────────────
+    function showModeNav() {
+      document.getElementById('mode-nav').style.display = 'flex';
+      document.getElementById('page-icon').style.display  = 'none';
+      document.getElementById('page-title').style.display = 'none';
+      document.getElementById('page-sub').style.display   = 'none';
+    }
+    function hideModeNav() {
+      document.getElementById('mode-nav').style.display   = 'none';
+      document.getElementById('page-icon').style.display  = '';
+      document.getElementById('page-title').style.display = '';
+      document.getElementById('page-sub').style.display   = '';
+    }
+    function gotoMessages() {
+      userManualNav = true; hideContentBanner();
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display    = 'flex';
+      document.getElementById('msg-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent  = '🎶';
+      document.getElementById('page-title').textContent = 'Send a Message';
+      document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      activeTab = 'msg';
+      document.getElementById('tab-msg').classList.add('active');
+      document.getElementById('tab-photo').classList.remove('active');
+    }
+    function gotoPhoto() {
+      userManualNav = true; hideContentBanner();
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display      = 'flex';
+      document.getElementById('photo-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent   = '📸';
+      document.getElementById('page-title').textContent  = 'Share a Photo';
+      document.getElementById('page-sub').textContent    = 'Your photo could appear on screen!';
+      activeTab = 'photo';
+      document.getElementById('tab-msg').classList.remove('active');
+      document.getElementById('tab-photo').classList.add('active');
+    }
+
+    let reactCooldown = 0;
+
+    function applyApplause(ap) {
+      const bar = document.getElementById('emoji-bar');
+      if (!bar) return;
+      const show = !!(ap && ap.enabled && ap.emojis && ap.emojis.length);
+      bar.style.display = show ? 'block' : 'none';
+      if (show) {
+        const row = document.getElementById('react-row');
+        if (row) {
+          const fp = ap.emojis.join(',');
+          if (row.dataset.emojis !== fp) {
+            row.dataset.emojis = fp;
+            row.innerHTML = ap.emojis.map(e =>
+              `<button class="react-btn" onclick="sendReact('${e}',this)">${e}</button>`
+            ).join('');
+          }
+        }
+      }
+      // Offset body so content clears the fixed emoji bar (1 row ≈ 130px)
+      document.body.style.paddingBottom = show ? '140px' : '32px';
+    }
+
+    function sendReact(emoji, btn) {
+      const now = Date.now();
+      if (now - reactCooldown < 1200 || !topic || !tunnelBase) return;
+      reactCooldown = now;
+      fetch(`${tunnelBase}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji }),
+      }).catch(() => {});
+      if (btn) {
+        btn.classList.add('fired');
+        setTimeout(() => btn.classList.remove('fired'), 300);
+      }
+    }
+
+    // Applause state is now fetched by resolveTunnel() on page load
+
+    // ── Live-content banner (non-intrusive alert when user manually navigated away) ──
+    let userManualNav = false;  // true when user intentionally went to messages/photos
+    let pendingBannerType = null; // 'trivia' or 'poll'
+
+    function showContentBanner(type) {
+      pendingBannerType = type;
+      const el = document.getElementById('content-banner');
+      if (!el) return;
+      el.textContent = type === 'trivia' ? '🧠 Trivia question is live — tap to play!' : '📊 Live poll is open — tap to vote!';
+      el.style.display = 'block';
+    }
+    function hideContentBanner() {
+      pendingBannerType = null;
+      const el = document.getElementById('content-banner');
+      if (el) el.style.display = 'none';
+    }
+    function joinLiveContent() {
+      const type = pendingBannerType;
+      userManualNav = false;
+      hideContentBanner();
+      if (type === 'poll') {
+        showPollMode();
+        if (currentPoll) renderPoll(currentPoll);
+      } else {
+        // trivia — show question UI directly (bypass banner logic)
+        if (currentQ) { doShowTriviaUi(currentQ); }
+        else { showWaiting(); }
+      }
+    }
+
+    // ── Trivia scoreboard ─────────────────────────────────────────────────────
+    let scoresCollapsed = true;
+    let lastScores = [];
+
+    let triviaUIVisible = false; // true only when trivia waiting/question UI is showing
+
+    function renderScores(scores) {
+      lastScores = scores || [];
+      const wrap = document.getElementById('trivia-scores-wrap');
+      const list = document.getElementById('trivia-scores-list');
+      if (!wrap || !list) return;
+      if (!triviaUIVisible || !lastScores.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+      if (scoresCollapsed) { list.style.display = 'none'; return; }
+      list.style.display = 'flex';
+      const medals = ['🥇','🥈','🥉'];
+      list.innerHTML = lastScores.map((s, i) => {
+        const rankColor = i === 0 ? '#ffd60a' : i === 1 ? '#aaa' : i === 2 ? '#cd7f32' : '#555';
+        const myRow = s.team === myTeam;
+        return `<div class="scores-row" style="${myRow ? 'border:1.5px solid #3a7bd5;' : ''}">
+          <span class="scores-rank">${i < 3 ? medals[i] : (i+1)+'.'}</span>
+          <span class="scores-team" style="color:${myRow ? '#5a9bf5' : rankColor}">${s.team.replace(/</g,'&lt;')}</span>
+          <span class="scores-pts">${s.score} pt${s.score !== 1 ? 's' : ''}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleScoresList() {
+      scoresCollapsed = !scoresCollapsed;
+      const btn = document.getElementById('scores-toggle-btn');
+      if (btn) btn.textContent = scoresCollapsed ? 'Show' : 'Hide';
+      renderScores(lastScores);
+    }
+
     // ── Trivia mode ───────────────────────────────────────────────────────────
     let currentQ       = null;
     let selectedAnswer = -1;
+    let triviaLastId   = null;
     let triviaAnswered = false;
 
     const LETTERS = ['A','B','C','D'];
 
     function hideAllForms() {
-      ['msg-form','ai-prompt-form','trivia-register-wrap','trivia-form','trivia-waiting'].forEach(id => {
+      triviaUIVisible = false;
+      stopTriviaCountdown();
+      ['msg-form','photo-form','ai-prompt-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -288,6 +785,7 @@
     }
 
     function showRegister() {
+      hideModeNav();
       hideAllForms();
       document.getElementById('page-icon').textContent  = '🧠';
       document.getElementById('page-title').textContent = 'Bar Trivia';
@@ -304,8 +802,10 @@
       if (nameEl) nameEl.textContent = myTeam;
     }
 
-    function showTriviaMode(q) {
-      if (mode === 'trivia' && !myToken) { showRegister(); return; }
+    // Internal: actually render the trivia UI (called after user taps banner or on dedicated trivia page)
+    function doShowTriviaUi(q) {
+      if (!myToken) { showRegister(); return; }
+      showModeNav();
       currentQ       = q;
       selectedAnswer = -1;
       triviaAnswered = false;
@@ -328,10 +828,24 @@
           <span class="trivia-opt-letter">${LETTERS[i]}</span>${opt}
         </button>
       `).join('');
+      triviaUIVisible = true;
+      renderScores(lastScores); // show scoreboard below question (if scores exist)
+      startTriviaCountdown(q.timeLimit, q.startTime);
+    }
+
+    // Public: called when a question arrives from the server
+    function showTriviaMode(q) {
+      // Dedicated trivia page → always show question directly
+      if (mode === 'trivia') { doShowTriviaUi(q); return; }
+      // Already actively playing (trivia UI is visible) → auto-advance to next question
+      if (triviaUIVisible) { doShowTriviaUi(q); return; }
+      // Default URL or user manually navigated away → always show non-intrusive banner
+      currentQ = q; showContentBanner('trivia');
     }
 
     function showWaiting() {
       if (mode === 'trivia' && !myToken) { showRegister(); return; }
+      showModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
       showBadge();
@@ -339,31 +853,38 @@
       document.getElementById('page-icon').textContent           = '🧠';
       document.getElementById('page-title').textContent          = 'Bar Trivia';
       document.getElementById('page-sub').textContent            = 'A question is coming up — stay tuned!';
+      triviaUIVisible = true;
+      renderScores(lastScores); // re-show scoreboard if scores exist
     }
 
     function showMessageMode() {
       if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
+      if (mode === 'poll') { showPollMode(); renderPoll(currentPoll); return; } // poll page returns to poll view
+      hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
-      document.getElementById('page-icon').textContent           = '🎶';
-      document.getElementById('page-title').textContent          = 'Send a Message';
-      document.getElementById('page-sub').textContent            = 'Your message may appear on the big screen!';
-      const msgForm = document.getElementById('msg-form');
-      if (msgForm) msgForm.style.display = 'flex';
-    }
-
-    function showAiPromptMode() {
-      if (mode === 'trivia') return; // locked to trivia
-      currentQ = null; selectedAnswer = -1;
-      hideAllForms();
-      document.getElementById('page-icon').textContent  = '🎨';
-      document.getElementById('page-title').textContent = 'Submit a Visual Idea';
-      document.getElementById('page-sub').textContent   = 'Your idea may be generated on the big screen!';
-      const form = document.getElementById('ai-prompt-form');
-      if (form) form.style.display = 'flex';
-      const savedName = localStorage.getItem('ai-prompt-name') || '';
-      if (savedName && !document.getElementById('ai-submitter-name').value) {
-        document.getElementById('ai-submitter-name').value = savedName;
+      // Restore tabs + active tab (fall back to msg if AI tab is active but AI is off)
+      const restoreTab = (activeTab === 'ai' && !aiActive) ? 'msg' : activeTab;
+      if (restoreTab !== activeTab) { activeTab = 'msg'; }
+      document.getElementById('tabs').style.display = 'flex';
+      document.getElementById('tab-msg').classList.toggle('active', restoreTab === 'msg');
+      document.getElementById('tab-photo').classList.toggle('active', restoreTab === 'photo');
+      document.getElementById('tab-ai').classList.toggle('active', restoreTab === 'ai');
+      if (restoreTab === 'msg') {
+        document.getElementById('msg-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent  = '🎶';
+        document.getElementById('page-title').textContent = 'Send a Message';
+        document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
+      } else if (restoreTab === 'photo') {
+        document.getElementById('photo-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent    = '📸';
+        document.getElementById('page-title').textContent   = 'Share a Photo';
+        document.getElementById('page-sub').textContent     = 'Your photo could appear on screen!';
+      } else {
+        document.getElementById('ai-prompt-form').style.display = 'flex';
+        document.getElementById('page-icon').textContent  = '✨';
+        document.getElementById('page-title').textContent = 'AI Prompt';
+        document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
     }
 
@@ -377,22 +898,18 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Joining…'; }
       const token = generateToken();
       try {
-        // Join via tunnel (direct to local server)
-        const base = tunnelBase || workerBase;
-        if (!base) throw new Error('No connection');
-        const url = tunnelBase
+        const joinUrl = tunnelBase
           ? `${tunnelBase}/trivia-join`
           : `${workerBase}/trivia-join?venueId=${encodeURIComponent(topic)}`;
-        const res = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team: name, token }),
-        });
+        const res = await fetchWithTimeout(joinUrl,
+          { method: 'POST', body: JSON.stringify({ team: name, token }), headers: { 'Content-Type': 'application/json' } }
+        );
         if (!res.ok) throw new Error('HTTP ' + res.status);
         myTeam = name; myToken = token;
         localStorage.setItem('trivia-team', name);
         localStorage.setItem('trivia-token', token);
-        showWaiting();
+        // If a question is already live, jump straight to it — don't make the user wait
+        if (currentQ) { doShowTriviaUi(currentQ); } else { showWaiting(); }
       } catch(e) {
         const msg = e.name === 'AbortError' ? '✗ Timed out — check your connection.' : '✗ Failed to join — check your connection.';
         if (statusEl) statusEl.textContent = msg;
@@ -420,7 +937,6 @@
       triviaAnswered = true;
       const isCorrect = selectedAnswer === correctIndex;
 
-      // Colour the answer buttons
       document.querySelectorAll('.trivia-opt-btn').forEach((btn, i) => {
         btn.disabled = true;
         btn.style.transition = 'background 0.3s, border-color 0.3s, color 0.3s';
@@ -435,7 +951,6 @@
         }
       });
 
-      // Result message
       const statusEl = document.getElementById('trivia-status');
       if (statusEl) {
         statusEl.textContent  = isCorrect ? '✓ Correct!' : '✗ Wrong!';
@@ -445,9 +960,47 @@
         statusEl.style.marginTop  = '12px';
       }
 
-      // Disable submit button
       const btn = document.getElementById('trivia-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+      stopTriviaCountdown(); // hide timer on reveal
+      // Scroll the result into view so it's not hidden below the fold
+      if (statusEl) setTimeout(() => statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    }
+
+    // ── Trivia countdown ──────────────────────────────────────────────────────
+    let triviaCountdownInterval = null;
+
+    function startTriviaCountdown(timeLimit, startTime) {
+      stopTriviaCountdown();
+      const elapsed  = startTime ? Math.max(0, Math.floor((Date.now() - startTime) / 1000)) : 0;
+      let remaining  = Math.max(0, (timeLimit || 30) - elapsed);
+      const total    = timeLimit || 30;
+      const wrap     = document.getElementById('trivia-countdown-wrap');
+      const numEl    = document.getElementById('trivia-countdown-num');
+      const fill     = document.getElementById('trivia-countdown-fill');
+      if (!wrap) return;
+      function update() {
+        if (numEl) numEl.textContent = remaining;
+        if (fill)  fill.style.width  = Math.max(0, (remaining / total) * 100) + '%';
+        const urgent = remaining <= 10;
+        if (fill)  fill.style.background  = urgent ? '#ff453a' : '#3a7bd5';
+        if (numEl) numEl.style.color      = urgent ? '#ff453a' : '#aaa';
+      }
+      wrap.style.display = 'flex';
+      update();
+      if (remaining > 0) {
+        triviaCountdownInterval = setInterval(() => {
+          remaining--;
+          update();
+          if (remaining <= 0) stopTriviaCountdown();
+        }, 1000);
+      }
+    }
+
+    function stopTriviaCountdown() {
+      if (triviaCountdownInterval) { clearInterval(triviaCountdownInterval); triviaCountdownInterval = null; }
+      const wrap = document.getElementById('trivia-countdown-wrap');
+      if (wrap) wrap.style.display = 'none';
     }
 
     async function submitTrivia() {
@@ -455,25 +1008,19 @@
         document.getElementById('trivia-status').textContent = 'Please select an answer first.';
         return;
       }
+      const teamName = myTeam || 'Anonymous';
       const btn = document.getElementById('trivia-btn');
       btn.disabled = true; btn.textContent = 'Submitting…';
       try {
-        // Submit via tunnel (direct to local server)
-        const base = tunnelBase || workerBase;
-        if (!base) throw new Error('No connection');
-        const url = tunnelBase
+        const ansUrl = tunnelBase
           ? `${tunnelBase}/trivia-answer`
           : `${workerBase}/trivia-answer?venueId=${encodeURIComponent(topic)}`;
-        const res = await fetchWithTimeout(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            qid: currentQ.id,
-            team: myTeam || 'Anonymous',
-            token: myToken || '',
-            answerIndex: selectedAnswer,
-          }),
-        });
+        const res = await fetchWithTimeout(ansUrl, {
+            method: 'POST',
+            body: JSON.stringify({ qid: currentQ.id, team: myTeam || teamName, token: myToken || '', answerIndex: selectedAnswer }),
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
         if (!res.ok) throw new Error('HTTP ' + res.status);
         triviaAnswered = true;
         document.getElementById('trivia-status').innerHTML = '<span style="color:#34c759;font-weight:600">✓ Answer submitted! Good luck!</span>';
@@ -485,23 +1032,21 @@
       }
     }
 
-    // ── Trivia polling — fetches /status from tunnel directly ─────────────────
-    // Fast (3s) when a question is active — need quick reveal feedback
-    // Slower (6s) when waiting to conserve bandwidth
+    // Poll trivia state via tunnel /status (direct, no Worker proxy)
+    let triviaRevealHandled = false;
     async function pollTrivia() {
       if (!topic) return;
-      let nextInterval = currentQ && !triviaAnswered ? 3000 : 6000;
+      let nextInterval = currentQ && !triviaAnswered ? 3000 : 5000;
       const base = tunnelBase || workerBase;
       if (!base) { setTimeout(pollTrivia, nextInterval); return; }
       try {
         const url = tunnelBase
           ? `${tunnelBase}/status`
           : `${workerBase}/trivia-state?venueId=${encodeURIComponent(topic)}`;
-        const res = await fetchWithTimeout(url, {}, 6000);
-        if (!res.ok) { setTimeout(pollTrivia, nextInterval); return; }
-        const raw = await res.json();
+        const res  = await fetchWithTimeout(url, {}, 8000);
+        const raw  = await res.json();
 
-        // Normalise: tunnel /status returns full remoteState, Worker returns trivia-only
+        // Normalise: tunnel /status returns full remoteState, fallback returns trivia-only
         const data = tunnelBase ? {
           active:       raw.triviaActive       || false,
           id:           raw.triviaQuestionId   || '',
@@ -516,170 +1061,294 @@
           startTime:    raw.triviaQuestionStartTime || 0,
         } : raw;
 
-        if (data.teams && Array.isArray(data.teams)) {
+        // Update known teams list
+        if (Array.isArray(data.teams) && data.teams.length > 0) {
           knownTeams = data.teams;
           renderKnownTeams();
         }
-        if (data.revealed && !triviaAnswered && currentQ) {
-          showReveal(data.correctIndex);
-          nextInterval = 6000;
-        } else if (!data.active) {
-          if (currentQ) showMessageMode();
-        } else if (data.question && (!currentQ || currentQ.id !== data.id)) {
-          showTriviaMode(data);
-          nextInterval = 3000;
+
+        // Update scoreboard (always, so it refreshes live)
+        renderScores(data.scores || []);
+
+        if (!data.active) {
+          // Trivia session ended — return to default mode
+          if (currentQ) { userManualNav = false; hideContentBanner(); showMessageMode(); triviaRevealHandled = false; }
+        } else if (data.question) {
+          // New question arrived
+          if (!currentQ || currentQ.id !== data.id) {
+            showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
+            triviaRevealHandled = false;
+            nextInterval = 3000;
+          }
+          // Reveal has been triggered on desktop
+          if (data.revealed && !triviaRevealHandled) {
+            showReveal(data.correctIndex);
+            triviaRevealHandled = true;
+            nextInterval = 5000;
+          }
         }
-      } catch(_) {}
+      } catch(e) {}
       setTimeout(pollTrivia, nextInterval);
     }
 
-    // ── Dynamic mode switching — polls /status via tunnel every 7s ───────────
-    // The submit page auto-switches between message form, AI prompt form, etc.
-    // based on what's currently active in the app.
-    // 'mode=trivia' in the URL locks the page to trivia-only (used by viz overlay QR).
-    let _currentSubmitMode = ''; // track to avoid unnecessary re-renders
+    // ── Live Poll mode ────────────────────────────────────────────────────────
+    let pollMyVote   = null;
+    let pollSelected = null;
+    let currentPoll  = null;
 
-    async function fetchAppState() {
-      if (!topic) return null;
+    function pollEsc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function pollPct(votes, total) { return total > 0 ? Math.round(votes / total * 100) : 0; }
+
+    function pollPollSelect(idx) {
+      if (pollMyVote !== null) return;
+      pollSelected = idx;
+      document.querySelectorAll('.poll-opt-btn').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === idx);
+        const chk = btn.querySelector('.poll-opt-check');
+        if (chk) chk.style.opacity = i === idx ? '1' : '0';
+      });
+      const sub = document.getElementById('poll-submit-btn');
+      if (sub) sub.disabled = false;
+    }
+
+    function renderPoll(poll) {
+      const root = document.getElementById('poll-root');
+      if (!poll || !poll.active) {
+        root.innerHTML = '<div class="poll-waiting-icon">📊</div><div class="poll-waiting">No active poll right now.<br>Stay tuned!</div>';
+        return;
+      }
+      if (pollMyVote !== null) {
+        const total = poll.totalVotes || 0;
+        let html = '<div class="poll-badge"><div class="poll-blink"></div>Live Poll</div>';
+        html += `<div class="poll-question">${pollEsc(poll.question)}</div>`;
+        html += '<div class="poll-opts">';
+        poll.options.forEach((opt, i) => {
+          const p = pollPct(opt.votes, total);
+          const isMine = i === pollMyVote;
+          html += `<div class="poll-opt-btn voted${isMine ? ' my-vote' : ''}"><div class="poll-opt-inner">`;
+          html += `<div class="poll-bar-wrap"><div class="poll-bar-fill" style="width:${p}%"></div></div>`;
+          html += `<span class="poll-opt-text">${pollEsc(opt.text)}${isMine ? ' ✓' : ''}</span>`;
+          html += `<span class="poll-opt-pct">${p}%</span></div></div>`;
+        });
+        html += `</div><div class="poll-total">${total} vote${total !== 1 ? 's' : ''}</div>`;
+        if (poll.votingClosed) html += '<div class="poll-closed">Voting is now closed</div>';
+        root.innerHTML = html;
+        return;
+      }
+      let html = '<div class="poll-badge"><div class="poll-blink"></div>Live Poll</div>';
+      html += `<div class="poll-question">${pollEsc(poll.question)}</div>`;
+      if (poll.votingClosed) {
+        html += '<div class="poll-closed">Voting is now closed</div>';
+        root.innerHTML = html; return;
+      }
+      html += '<div class="poll-opts">';
+      poll.options.forEach((opt, i) => {
+        const isSel = i === pollSelected;
+        html += `<button class="poll-opt-btn${isSel ? ' selected' : ''}" onclick="pollPollSelect(${i})">` +
+                `<div class="poll-opt-check" style="opacity:${isSel ? '1' : '0'}">✓</div>` +
+                `<span class="poll-opt-text">${pollEsc(opt.text)}</span></button>`;
+      });
+      html += '</div>';
+      html += `<button class="poll-submit-btn" id="poll-submit-btn"${pollSelected === null ? ' disabled' : ''} onclick="submitPollVote()">Submit Vote</button>`;
+      root.innerHTML = html;
+    }
+
+    function pollPollToken() {
+      let t = localStorage.getItem('av-poll-token');
+      if (!t) {
+        try { t = crypto.randomUUID(); } catch(e) { t = Math.random().toString(36).slice(2) + Date.now(); }
+        localStorage.setItem('av-poll-token', t);
+      }
+      return t;
+    }
+
+    async function submitPollVote() {
+      if (pollSelected === null || pollMyVote !== null || !topic) return;
+      const idx = pollSelected;
+      const sub = document.getElementById('poll-submit-btn');
+      if (sub) { sub.disabled = true; sub.textContent = 'Submitting…'; }
       try {
+        const voteUrl = tunnelBase
+          ? `${tunnelBase}/poll-vote`
+          : `${workerBase}/poll-vote?venueId=${encodeURIComponent(topic)}`;
+        const res = await fetchWithTimeout(voteUrl,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: pollPollToken(), optionIndex: idx }) }
+        );
+        const data = await res.json();
+        if (data.ok) {
+          pollMyVote = idx;
+          if (data.alreadyVoted) pollMyVote = data.votedIndex;
+          if (data.poll) { currentPoll = data.poll; }
+          renderPoll(currentPoll);
+        } else {
+          if (sub) { sub.disabled = false; sub.textContent = 'Submit Vote'; }
+        }
+      } catch(e) {
+        if (sub) { sub.disabled = false; sub.textContent = 'Submit Vote'; }
+      }
+    }
+
+    async function fetchPollState() {
+      if (!topic) return;
+      const base = tunnelBase || workerBase;
+      if (!base) { setTimeout(fetchPollState, 3000); return; }
+      try {
+        let poll, applause;
         if (tunnelBase) {
-          // Direct tunnel — fetch /status and extract feature flags
-          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 6000);
-          if (!res.ok) return null;
-          const d = await res.json();
-          return {
-            aiActive:     !!d.aiActive,
-            triviaActive: !!d.triviaActive,
-            pollActive:   !!(d.poll && d.poll.active),
-          };
-        } else if (workerBase) {
-          // Fallback to Worker proxy (costs Worker requests but works without tunnel)
-          const res = await fetchWithTimeout(
-            `${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 6000
+          // Direct tunnel — fetch /status and extract poll + applause
+          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
+          const d   = await res.json();
+          poll      = d.poll || null;
+          applause  = d.applause || null;
+        } else {
+          // Fallback to Worker proxy
+          const res  = await fetchWithTimeout(
+            `${workerBase}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000
           );
-          if (!res.ok) return null;
-          return await res.json();
+          const data = await res.json();
+          poll      = data.poll !== undefined ? data.poll : null;
+          applause  = data.applause || null;
         }
-        return null;
-      } catch(_) { return null; }
+        if (poll !== undefined) {
+          const wasActive = !!(currentPoll && currentPoll.active);
+          currentPoll = poll;
+          const isActive = !!(currentPoll && currentPoll.active);
+          if (!isActive) { pollMyVote = null; pollSelected = null; }
+          if (isActive) {
+            if (!wasActive) {
+              if (mode === '' || userManualNav) { showContentBanner('poll'); }
+              else { showPollMode(); }
+            }
+            renderPoll(currentPoll);
+          } else if (wasActive) {
+            userManualNav = false; hideContentBanner();
+            showMessageMode();
+          } else if (mode === 'poll') {
+            renderPoll(currentPoll);
+          }
+        }
+        if (applause) applyApplause(applause);
+      } catch(e) {}
+      setTimeout(fetchPollState, 3000);
     }
 
-    function applyAppState(state) {
-      if (!state) return;
-      const { aiActive, triviaActive } = state;
-      let targetMode;
-      if (triviaActive) {
-        targetMode = 'trivia';
-      } else if (aiActive) {
-        targetMode = 'ai-prompt';
-      } else {
-        targetMode = 'message';
-      }
-      if (targetMode === _currentSubmitMode) return; // no change
-      _currentSubmitMode = targetMode;
-      if (targetMode === 'trivia') {
-        // Slide into trivia: show registration if needed, then start polling
-        if (!pollTriviaRunning) {
-          pollTriviaRunning = true;
-          if (myTeam && myToken) showWaiting(); else showRegister();
-          pollTrivia();
-        }
-      } else if (targetMode === 'ai-prompt') {
-        showAiPromptMode();
-      } else {
-        showMessageMode();
+    function showPollMode() {
+      showModeNav();
+      hideAllForms();
+      document.getElementById('page-icon').textContent  = '📊';
+      document.getElementById('page-title').textContent = 'Live Poll';
+      document.getElementById('page-sub').textContent   = 'Vote and see live results!';
+      const wrap = document.getElementById('poll-wrap');
+      if (wrap) wrap.style.display = 'flex';
+    }
+
+    // ── AI Prompt tab ────────────────────────────────────────────────────────
+    let aiActive = false;
+    let aiPromptCooldownTimer = null;
+
+    // Restore saved name for AI prompts
+    const aiNameEl = document.getElementById('ai-name');
+    if (aiNameEl) aiNameEl.value = localStorage.getItem('ai-prompt-name') || '';
+
+    function onAiPromptInput() {
+      const len = document.getElementById('ai-prompt-text')?.value.length || 0;
+      const el  = document.getElementById('ai-char-count');
+      if (el) { el.textContent = len + ' / 200'; el.className = 'char-count' + (len > 160 ? ' warn' : ''); }
+    }
+
+    function setAiTabVisible(show) {
+      const tab = document.getElementById('tab-ai');
+      if (!tab) return;
+      tab.style.display = show ? '' : 'none';
+      // If AI tab was active and AI just turned off, switch back to messages
+      if (!show && activeTab === 'ai') switchTab('msg');
+    }
+
+    async function sendAiPrompt() {
+      const promptText = document.getElementById('ai-prompt-text')?.value.trim();
+      const name = (aiNameEl?.value || '').trim();
+      if (!promptText || !topic) return;
+      if (name) localStorage.setItem('ai-prompt-name', name);
+      const btn    = document.getElementById('ai-prompt-btn');
+      const status = document.getElementById('ai-prompt-status');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      status.textContent = ''; status.className = '';
+      try {
+        const res = await fetchWithTimeout(
+          `${workerBase}/ai-prompts?venueId=${encodeURIComponent(topic)}`,
+          { method: 'POST', body: JSON.stringify({ prompt: promptText, name: name || 'Anonymous' }),
+            headers: { 'Content-Type': 'application/json' } }
+        );
+        if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { serverMsg: b.error || '' }); }
+        status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
+        status.className = 'success';
+        document.getElementById('ai-prompt-text').value = '';
+        onAiPromptInput();
+        // 15s cooldown
+        let remaining = 15;
+        btn.textContent = `Wait ${remaining}s…`;
+        if (aiPromptCooldownTimer) clearInterval(aiPromptCooldownTimer);
+        aiPromptCooldownTimer = setInterval(() => {
+          remaining--;
+          if (remaining <= 0) {
+            clearInterval(aiPromptCooldownTimer); aiPromptCooldownTimer = null;
+            btn.disabled = false; btn.textContent = 'Submit Another!';
+          } else { btn.textContent = `Wait ${remaining}s…`; }
+        }, 1000);
+      } catch(e) {
+        status.textContent = '✗ Failed to send — check your connection and try again.';
+        status.className = 'error';
+        btn.textContent = 'Submit Prompt!'; btn.disabled = false;
       }
     }
 
-    let pollTriviaRunning = false;
-    let appStatePollTimer = null;
-
+    // Poll for AI active state every 5s to show/hide Prompt tab
     async function pollAppState() {
-      const state = await fetchAppState();
-      applyAppState(state);
-      appStatePollTimer = setTimeout(pollAppState, 7000);
+      if (!topic) { setTimeout(pollAppState, 5000); return; }
+      try {
+        let nowActive = false;
+        if (tunnelBase) {
+          // Direct tunnel — fetch /status and extract aiActive flag
+          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
+          const d   = await res.json();
+          nowActive = !!d.aiActive;
+        } else if (workerBase) {
+          // Fallback to Worker proxy
+          const res  = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
+          const data = await res.json();
+          nowActive = !!data.aiActive;
+        }
+        if (nowActive !== aiActive) {
+          aiActive = nowActive;
+          setAiTabVisible(aiActive);
+        }
+      } catch(e) {}
+      setTimeout(pollAppState, 5000);
     }
 
     // ── Init — resolve tunnel URL first, then start polling ──────────────────
     if (topic) {
       resolveTunnel().then(() => {
-        if (mode === 'trivia') {
-          // Trivia-only page (scanned from viz overlay during a trivia question)
-          pollTriviaRunning = true;
-          if (myTeam && myToken) showWaiting(); else showRegister();
-          pollTrivia();
+        if (mode === 'poll') {
+          showPollMode();
+          fetchPollState(); // primary: watch for polls
+          pollTrivia();     // secondary: switch to trivia if it fires
+        } else if (mode === 'trivia') {
+          if (myTeam && myToken) { showWaiting(); } else { showRegister(); }
+          pollTrivia();     // primary: watch for trivia
+          fetchPollState(); // secondary: switch to poll if it fires
         } else {
-          // Dynamic mode — start by showing message form, then poll for state
-          showMessageMode();
-          pollAppState();
+          // Default message/photo page — trivia can interrupt, polls can interrupt
+          pollTrivia();
+          fetchPollState();
         }
+        pollAppState(); // watch for AI active state to show/hide Prompt tab
       });
     }
-
-    // ── AI Prompt form logic ──────────────────────────────────────────────────
-    function onAiInput() {
-      const len = document.getElementById('ai-prompt-text').value.length;
-      const el  = document.getElementById('ai-char-count');
-      el.textContent = len + ' / 300';
-      el.className   = 'char-count' + (len > 260 ? ' warn' : '');
-    }
-
-    let aiCooldownTimer = null;
-    function startAiCooldown() {
-      const btn = document.getElementById('ai-btn');
-      let remaining = 15;
-      btn.disabled = true; btn.textContent = `Wait ${remaining}s…`;
-      if (aiCooldownTimer) clearInterval(aiCooldownTimer);
-      aiCooldownTimer = setInterval(() => {
-        remaining--;
-        if (remaining <= 0) {
-          clearInterval(aiCooldownTimer); aiCooldownTimer = null;
-          btn.disabled = false; btn.textContent = '✨ Submit Another Idea';
-          btn.style.background = '#a855f7';
-        } else {
-          btn.textContent = `Wait ${remaining}s…`;
-        }
-      }, 1000);
-    }
-
-    async function sendAiPrompt() {
-      const name   = (document.getElementById('ai-submitter-name')?.value || '').trim() || 'Anonymous';
-      const prompt = (document.getElementById('ai-prompt-text')?.value   || '').trim();
-      if (!prompt) {
-        const s = document.getElementById('ai-status');
-        s.textContent = 'Please describe a visual first!'; s.className = 'error'; return;
-      }
-      const btn    = document.getElementById('ai-btn');
-      const status = document.getElementById('ai-status');
-      btn.disabled = true; btn.textContent = 'Submitting…'; status.textContent = ''; status.className = '';
-      try {
-        // AI prompts go to Worker → R2 storage (app polls Worker for new prompts)
-        const res = await fetchWithTimeout(`${workerBase}/ai-prompts?venueId=${encodeURIComponent(topic)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, prompt }),
-        });
-        if (!res.ok) {
-          const body = await res.text().catch(() => '');
-          throw new Error(body || 'HTTP ' + res.status);
-        }
-        localStorage.setItem('ai-prompt-name', name); // remember name for next time
-        document.getElementById('ai-prompt-text').value = '';
-        onAiInput();
-        status.innerHTML = '✨ Submitted! It may appear on screen soon.';
-        status.className = 'success';
-        startAiCooldown();
-      } catch(e) {
-        const isTimeout = e.name === 'AbortError';
-        status.textContent = isTimeout ? '✗ Timed out — try again.' : ('✗ ' + (e.message || 'Failed to send.'));
-        status.className = 'error';
-        btn.disabled = false; btn.textContent = '✨ Submit Visual Idea'; btn.style.background = '#a855f7';
-      }
-    }
-
-    document.getElementById('ai-prompt-text')?.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey && e.metaKey) { e.preventDefault(); sendAiPrompt(); }
-    });
   </script>
 </body>
 </html>
