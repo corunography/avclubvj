@@ -835,16 +835,18 @@
 
     // Public: called when a question arrives from the server
     function showTriviaMode(q) {
-      // Dedicated trivia page → always show question directly
-      if (mode === 'trivia') { doShowTriviaUi(q); return; }
+      // User manually navigated to messages/photos → show non-intrusive banner
+      if (userManualNav) { currentQ = q; showContentBanner('trivia'); return; }
       // Already actively playing (trivia UI is visible) → auto-advance to next question
       if (triviaUIVisible) { doShowTriviaUi(q); return; }
-      // Default URL or user manually navigated away → always show non-intrusive banner
+      // Dedicated trivia page (mode=trivia) → show question directly on first load
+      if (mode === 'trivia') { doShowTriviaUi(q); return; }
+      // Default URL, first trivia notification → show non-intrusive banner
       currentQ = q; showContentBanner('trivia');
     }
 
     function showWaiting() {
-      if (mode === 'trivia' && !myToken) { showRegister(); return; }
+      if (!myToken) { showRegister(); return; }
       showModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
@@ -858,8 +860,8 @@
     }
 
     function showMessageMode() {
-      if (mode === 'trivia') { showWaiting(); return; } // trivia page never shows message form
-      if (mode === 'poll') { showPollMode(); renderPoll(currentPoll); return; } // poll page returns to poll view
+      // mode=poll with no manual nav → stay on poll view
+      if (mode === 'poll' && !userManualNav) { showPollMode(); renderPoll(currentPoll); return; }
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
