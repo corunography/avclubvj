@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — AV Club VJ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f; color: #ccc;
+      min-height: 100dvh; padding: 32px 24px 64px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container { max-width: 600px; width: 100%; }
+    h1 { color: #f5f5f7; font-size: 24px; margin-bottom: 8px; }
+    .updated { font-size: 12px; color: #666; margin-bottom: 32px; }
+    h2 { color: #e5e5ea; font-size: 16px; margin-top: 28px; margin-bottom: 10px; }
+    p, li { font-size: 14px; line-height: 1.7; color: #aaa; margin-bottom: 10px; }
+    ul { padding-left: 20px; margin-bottom: 10px; }
+    a { color: #3a7bd5; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #222; font-size: 12px; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: April 8, 2026</p>
+
+    <p>AV Club VJ is a live visualizer application used by DJs and venues. This policy explains how audience data is handled when you interact with the app via the audience submission page (QR code).</p>
+
+    <h2>What We Collect</h2>
+    <p>When you use the audience submission page, the following data may be collected:</p>
+    <ul>
+      <li><strong>Text messages</strong> you submit (up to 240 characters)</li>
+      <li><strong>Photos</strong> you upload (resized to fit the display)</li>
+      <li><strong>AI prompts</strong> you submit for visual generation</li>
+      <li><strong>Team names</strong> you enter for trivia games</li>
+      <li><strong>Poll votes</strong> you submit</li>
+      <li><strong>Username</strong> if you optionally provide one</li>
+    </ul>
+    <p>All submissions are voluntary. No account, login, or personal identification is required.</p>
+
+    <h2>How Data Is Stored</h2>
+    <ul>
+      <li>Submissions are temporarily stored using <strong>Cloudflare R2</strong> (cloud object storage) to relay content from your phone to the venue's display.</li>
+      <li>Content is <strong>automatically deleted</strong> after the venue's app retrieves it, typically within seconds.</li>
+      <li>Photos may be saved to the DJ's local machine for display during the event. These are not uploaded to any external server.</li>
+    </ul>
+
+    <h2>What We Do NOT Do</h2>
+    <ul>
+      <li>We do <strong>not</strong> sell, share, or monetize your data.</li>
+      <li>We do <strong>not</strong> create user profiles or track you across sessions.</li>
+      <li>We do <strong>not</strong> use advertising trackers or analytics cookies.</li>
+      <li>We do <strong>not</strong> store your IP address beyond what Cloudflare retains in standard server logs.</li>
+      <li>We do <strong>not</strong> retain your submissions after they have been delivered to the venue's display.</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <ul>
+      <li><strong>Cloudflare</strong> provides the network infrastructure (Workers, R2 storage, and Tunnel). Cloudflare may process IP addresses and request metadata per their own <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">privacy policy</a>.</li>
+      <li><strong>Apple ShazamKit</strong> may receive audio fingerprints when the DJ enables song identification. No audio recordings are stored.</li>
+      <li><strong>QR Server API</strong> generates QR code images. Only the URL is sent; no personal data.</li>
+    </ul>
+
+    <h2>Public Display</h2>
+    <p>By submitting content through the audience page, you acknowledge that your message, photo, or prompt <strong>may be displayed publicly</strong> on a screen at the venue. The DJ or venue operator has moderation controls and may approve, reject, or skip any submission.</p>
+
+    <h2>Data Retention</h2>
+    <ul>
+      <li>Audience submissions: deleted from cloud storage after retrieval (typically seconds).</li>
+      <li>Photo history: stored locally on the DJ's machine only. Not synced to any cloud service.</li>
+      <li>Trivia scores: stored locally on the DJ's machine for the duration of the event.</li>
+      <li>Usage statistics: anonymous aggregate counts (number of messages, photos per day) stored for up to 90 days for monitoring purposes. No personal data is included.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>AV Club VJ is intended for use at live entertainment venues. We do not knowingly collect information from children under 13. If a venue operator becomes aware that a child has submitted content, they should use the moderation tools to reject it.</p>
+
+    <h2>Changes</h2>
+    <p>We may update this policy from time to time. The "last updated" date at the top reflects the most recent revision.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this privacy policy? Contact us at <a href="mailto:jon@corunography.com">jon@corunography.com</a>.</p>
+
+    <div class="footer">
+      &copy; 2026 Jon Corun / AV Club VJ
+    </div>
+  </div>
+</body>
+</html>
