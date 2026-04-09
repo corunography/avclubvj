@@ -476,19 +476,16 @@
       const rawText = document.getElementById('msg').value.trim();
       const username = (document.getElementById('username')?.value || '').trim();
       if (username) localStorage.setItem('msg-username', username);
-      const displayName = username || ('Anonymous_' + getOrCreateAnonId());
-      const text = displayName + ':  ' + rawText;
       if (!rawText || !topic) return;
       const btn    = document.getElementById('btn');
       const status = document.getElementById('status');
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
-        // Use Cloudflare Worker R2 storage — no rate limits, same infra as photos
-        if (!workerBase) throw new Error('No worker URL configured');
+        if (!tunnelBase) throw Object.assign(new Error('No venue connection'), { noTunnel: true });
         const res = await fetchWithTimeout(
-          `${workerBase}/messages?venueId=${encodeURIComponent(topic)}`,
-          { method: 'POST', body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } }
+          `${tunnelBase}/message`,
+          { method: 'POST', body: JSON.stringify({ text: rawText, username: username || '' }), headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
@@ -502,10 +499,12 @@
       } catch(e) {
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
-          ? '✗ Request timed out — check your connection and try again.'
-          : e.status === 429
-            ? '✗ Queue is full — please wait a moment and try again.'
-            : '✗ Failed to send — check your connection and try again.';
+          ? '✗ Timed out — the venue screen may be unreachable. Try again in a moment.'
+          : e.noTunnel
+            ? '✗ Not connected to a venue. Scan the QR code at the venue to connect.'
+            : e.status === 429
+              ? '✗ Queue is full — please wait a moment and try again.'
+              : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
@@ -1283,12 +1282,13 @@
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
       try {
+        if (!tunnelBase) throw Object.assign(new Error('No venue connection'), { noTunnel: true });
         const res = await fetchWithTimeout(
-          `${workerBase}/ai-prompts?venueId=${encodeURIComponent(topic)}`,
-          { method: 'POST', body: JSON.stringify({ prompt: promptText, name: name || 'Anonymous' }),
+          `${tunnelBase}/ai-prompt`,
+          { method: 'POST', body: JSON.stringify({ prompt: promptText, name: name || '' }),
             headers: { 'Content-Type': 'application/json' } }
         );
-        if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { serverMsg: b.error || '' }); }
+        if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: b.error || '' }); }
         status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
         status.className = 'success';
         document.getElementById('ai-prompt-text').value = '';
@@ -1305,7 +1305,12 @@
           } else { btn.textContent = `Wait ${remaining}s…`; }
         }, 1000);
       } catch(e) {
-        status.textContent = '✗ Failed to send — check your connection and try again.';
+        const isTimeout = e.name === 'AbortError';
+        status.textContent = isTimeout
+          ? '✗ Timed out — the venue screen may be unreachable. Try again in a moment.'
+          : e.noTunnel
+            ? '✗ Not connected to a venue. Scan the QR code at the venue to connect.'
+            : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
         status.className = 'error';
         btn.textContent = 'Submit Prompt!'; btn.disabled = false;
       }
