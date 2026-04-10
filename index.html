@@ -1052,34 +1052,27 @@
 
     async function _unifiedPoll() {
       if (!topic) { setTimeout(_unifiedPoll, _POLL_BASE_MS); return; }
-      const base = tunnelBase || workerBase;
-      if (!base) { setTimeout(_unifiedPoll, _POLL_BASE_MS); return; }
+      // Real-time state (trivia, polls, app-state) requires a live tunnel.
+      // If no tunnel is available, just wait and re-resolve periodically.
+      if (!tunnelBase) {
+        try { await resolveTunnel(); } catch(_) {}
+        setTimeout(_unifiedPoll, 10000);
+        return;
+      }
       try {
-        if (tunnelBase) {
-          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
-          if (!res.ok) throw new Error('status ' + res.status);
-          const d = await res.json();
-          _pollBackoff = 0;
-          _handleTriviaState(d);
-          _handlePollState(d);
-          _handleAppState(d);
-        } else {
-          // Fallback: separate Worker endpoints (no single /status)
-          await Promise.allSettled([
-            _pollTriviaWorker(),
-            _pollPollWorker(),
-            _pollAppWorker(),
-          ]);
-          _pollBackoff = 0;
-        }
+        const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
+        if (!res.ok) throw new Error('status ' + res.status);
+        const d = await res.json();
+        _pollBackoff = 0;
+        _handleTriviaState(d);
+        _handlePollState(d);
+        _handleAppState(d);
       } catch(e) {
         _pollBackoff = Math.min(_pollBackoff + 1, 8);
-        // After 3 consecutive failures, tunnel is likely dead — clear it and
-        // fall back to Worker endpoints. Re-resolve periodically.
-        if (tunnelBase && _pollBackoff >= 3) {
+        // After 3 consecutive failures, tunnel is likely dead — clear it
+        // so next iteration re-resolves instead of hammering a dead URL.
+        if (_pollBackoff >= 3) {
           tunnelBase = '';
-          // Try to get a fresh tunnel URL in the background
-          resolveTunnel();
         }
       }
       const delay = Math.min(_POLL_BASE_MS * Math.pow(1.5, _pollBackoff), _POLL_MAX_MS);
@@ -1119,10 +1112,6 @@
           triviaRevealHandled = true;
         }
       }
-    }
-    async function _pollTriviaWorker() {
-      const res = await fetchWithTimeout(`${workerBase}/trivia-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
-      _handleTriviaState(await res.json());
     }
 
     // ── Live Poll mode ────────────────────────────────────────────────────────
@@ -1249,11 +1238,6 @@
       }
       if (applause) applyApplause(applause);
     }
-    async function _pollPollWorker() {
-      const res = await fetchWithTimeout(`${workerBase}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
-      const data = await res.json();
-      _handlePollState({ poll: data.poll !== undefined ? data.poll : null, applause: data.applause || null });
-    }
 
     function showPollMode() {
       showModeNav();
@@ -1337,10 +1321,6 @@
         aiActive = nowActive;
         setAiTabVisible(aiActive);
       }
-    }
-    async function _pollAppWorker() {
-      const res = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
-      _handleAppState(await res.json());
     }
 
     // ── Init — resolve tunnel URL first, then start polling ──────────────────
