@@ -65,21 +65,20 @@
     .ai-main-btn:disabled { background: #2c2c2e !important; color: #555; }
 
     /* ── Photo form ── */
-    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 6px; }
-    #photo-form .username-row { margin-bottom: 0; }
+    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; gap: 12px; }
     .pick-area {
-      display: flex; flex-direction: row; align-items: center; justify-content: center;
-      gap: 12px; background: #1c1c1e; border: 1.5px dashed #333;
-      border-radius: 16px; padding: 16px 20px; cursor: pointer; width: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; background: #1c1c1e; border: 1.5px dashed #333;
+      border-radius: 16px; padding: 32px 20px; cursor: pointer;
       transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
     }
     .pick-area:active { border-color: #3a7bd5; }
-    .pick-area .pick-icon { font-size: 32px; flex-shrink: 0; }
-    .pick-area .pick-txt  { font-size: 14px; color: #888; text-align: left; }
+    .pick-area .pick-icon { font-size: 40px; }
+    .pick-area .pick-txt  { font-size: 15px; color: #888; text-align: center; }
     #photo-preview-wrap { display: none; position: relative; }
     #photo-preview {
       width: 100%; border-radius: 12px; display: block;
-      object-fit: contain; max-height: min(180px, 24vh); background: #000;
+      object-fit: contain; max-height: 200px; background: #000;
     }
     .rm-btn {
       position: absolute; top: 8px; right: 8px;
@@ -204,13 +203,6 @@
     .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
     .mode-nav-btn:active { background: #2c2c2e; color: #fff; }
 
-    /* ── Powered-by footer ── */
-    #powered-by {
-      text-align: center; padding: 22px 0 10px; font-size: 12px; color: #666;
-    }
-    #powered-by a { color: #888; text-decoration: none; font-weight: 600; transition: color 0.2s; }
-    #powered-by a:hover { color: #bbb; }
-
     /* ── Emoji Applause bar ── */
     #emoji-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -259,7 +251,7 @@
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
-    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.4;margin-top:4px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by AV Club VJ</a></div>
+    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.5;margin-top:10px">By submitting, you agree your content may be displayed publicly at this venue. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a></div>
   </div>
 
   <!-- Photo form -->
@@ -273,18 +265,14 @@
       <img id="photo-preview" alt="Preview">
       <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
     </div>
-    <div class="username-row">
-      <span class="username-at">@</span>
-      <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    </div>
     <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
     <!-- Progress bar -->
     <div id="photo-progress-wrap" style="display:none;width:100%;background:#1c1c1e;border-radius:99px;height:8px;overflow:hidden">
       <div id="photo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7bd5,#5b9cf6);border-radius:99px;transition:width 0.2s ease"></div>
     </div>
-    <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled style="width:100%">Send Photo!</button>
+    <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled>Send Photo!</button>
     <div id="photo-status"></div>
-    <div style="font-size:10px;color:#555;text-align:center;line-height:1.4;margin-top:2px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by AV Club VJ</a></div>
+    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.5;margin-top:10px">By submitting, you agree your content may be displayed publicly at this venue. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a></div>
   </div>
 
   <!-- AI Prompt form -->
@@ -297,7 +285,7 @@
     <div class="char-count" id="ai-char-count">0 / 200</div>
     <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
     <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
-    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.4;margin-top:4px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by AV Club VJ</a></div>
+    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.5;margin-top:10px">By submitting, you agree your content may be displayed publicly at this venue. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -442,21 +430,14 @@
     }
 
     // ── Message form ──────────────────────────────────────────────────────────
-    // Restore saved username — shared between message and photo tabs
-    const usernameEl      = document.getElementById('username');
-    const photoUsernameEl = document.getElementById('photo-username');
-    const savedName = localStorage.getItem('msg-username') || '';
-    if (usernameEl)      usernameEl.value = savedName;
-    if (photoUsernameEl) photoUsernameEl.value = savedName;
-    // Keep both fields and localStorage in sync
-    function syncUsername(source) {
-      const val = source.value.trim();
-      localStorage.setItem('msg-username', val);
-      if (source !== usernameEl && usernameEl)           usernameEl.value = val;
-      if (source !== photoUsernameEl && photoUsernameEl) photoUsernameEl.value = val;
+    // Restore saved username
+    const usernameEl = document.getElementById('username');
+    if (usernameEl) {
+      usernameEl.value = localStorage.getItem('msg-username') || '';
+      usernameEl.addEventListener('change', () => {
+        localStorage.setItem('msg-username', usernameEl.value.trim());
+      });
     }
-    if (usernameEl)      usernameEl.addEventListener('change', () => syncUsername(usernameEl));
-    if (photoUsernameEl) photoUsernameEl.addEventListener('change', () => syncUsername(photoUsernameEl));
 
     function onInput() {
       const len = document.getElementById('msg').value.length;
@@ -572,8 +553,6 @@
         return;
       }
       const caption     = (document.getElementById('photo-caption')?.value || '').trim();
-      const photoName   = (document.getElementById('photo-username')?.value || '').trim();
-      if (photoName) localStorage.setItem('msg-username', photoName);
       const progressWrap = document.getElementById('photo-progress-wrap');
       const progressBar  = document.getElementById('photo-progress-bar');
 
@@ -582,7 +561,7 @@
       progressWrap.style.display = 'block';
       progressBar.style.width = '0%';
 
-      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName });
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption });
       const xhr     = new XMLHttpRequest();
       xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
       xhr.setRequestHeader('Content-Type', 'application/json');
@@ -1057,63 +1036,79 @@
       }
     }
 
-    // Poll trivia state via tunnel /status (direct, no Worker proxy)
-    let triviaRevealHandled = false;
-    async function pollTrivia() {
-      if (!topic) return;
-      let nextInterval = currentQ && !triviaAnswered ? 3000 : 5000;
+    // ── Unified status poller ──────────────────────────────────────────────────
+    // Single /status fetch shared by trivia, poll, and app-state handlers.
+    // Backs off on repeated errors to avoid console spam when tunnel is down.
+    let _pollBackoff = 0;          // consecutive error count
+    const _POLL_BASE_MS = 3000;    // normal interval
+    const _POLL_MAX_MS  = 30000;   // max backoff
+
+    async function _unifiedPoll() {
+      if (!topic) { setTimeout(_unifiedPoll, _POLL_BASE_MS); return; }
       const base = tunnelBase || workerBase;
-      if (!base) { setTimeout(pollTrivia, nextInterval); return; }
+      if (!base) { setTimeout(_unifiedPoll, _POLL_BASE_MS); return; }
       try {
-        const url = tunnelBase
-          ? `${tunnelBase}/status`
-          : `${workerBase}/trivia-state?venueId=${encodeURIComponent(topic)}`;
-        const res  = await fetchWithTimeout(url, {}, 8000);
-        const raw  = await res.json();
-
-        // Normalise: tunnel /status returns full remoteState, fallback returns trivia-only
-        const data = tunnelBase ? {
-          active:       raw.triviaActive       || false,
-          id:           raw.triviaQuestionId   || '',
-          question:     raw.triviaQuestion     || '',
-          options:      raw.triviaOptions      || [],
-          category:     raw.triviaCategory     || '',
-          revealed:     raw.triviaRevealed     || false,
-          correctIndex: raw.triviaRevealed ? (raw.triviaCorrectIndex ?? -1) : -1,
-          teams:        raw.triviaTeams        || [],
-          scores:       raw.triviaScores       || [],
-          timeLimit:    raw.triviaTimeLimit    || 30,
-          startTime:    raw.triviaQuestionStartTime || 0,
-        } : raw;
-
-        // Update known teams list
-        if (Array.isArray(data.teams) && data.teams.length > 0) {
-          knownTeams = data.teams;
-          renderKnownTeams();
+        if (tunnelBase) {
+          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
+          if (!res.ok) throw new Error('status ' + res.status);
+          const d = await res.json();
+          _pollBackoff = 0;
+          _handleTriviaState(d);
+          _handlePollState(d);
+          _handleAppState(d);
+        } else {
+          // Fallback: separate Worker endpoints (no single /status)
+          await Promise.allSettled([
+            _pollTriviaWorker(),
+            _pollPollWorker(),
+            _pollAppWorker(),
+          ]);
+          _pollBackoff = 0;
         }
+      } catch(e) {
+        _pollBackoff = Math.min(_pollBackoff + 1, 8);
+      }
+      const delay = Math.min(_POLL_BASE_MS * Math.pow(1.5, _pollBackoff), _POLL_MAX_MS);
+      setTimeout(_unifiedPoll, delay);
+    }
 
-        // Update scoreboard (always, so it refreshes live)
-        renderScores(data.scores || []);
-
-        if (!data.active) {
-          // Trivia session ended — return to default mode
-          if (currentQ) { userManualNav = false; hideContentBanner(); showMessageMode(); triviaRevealHandled = false; }
-        } else if (data.question) {
-          // New question arrived
-          if (!currentQ || currentQ.id !== data.id) {
-            showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
-            triviaRevealHandled = false;
-            nextInterval = 3000;
-          }
-          // Reveal has been triggered on desktop
-          if (data.revealed && !triviaRevealHandled) {
-            showReveal(data.correctIndex);
-            triviaRevealHandled = true;
-            nextInterval = 5000;
-          }
+    // Trivia state handler
+    let triviaRevealHandled = false;
+    function _handleTriviaState(raw) {
+      const data = {
+        active:       raw.triviaActive       || false,
+        id:           raw.triviaQuestionId   || '',
+        question:     raw.triviaQuestion     || '',
+        options:      raw.triviaOptions      || [],
+        category:     raw.triviaCategory     || '',
+        revealed:     raw.triviaRevealed     || false,
+        correctIndex: raw.triviaRevealed ? (raw.triviaCorrectIndex ?? -1) : -1,
+        teams:        raw.triviaTeams        || [],
+        scores:       raw.triviaScores       || [],
+        timeLimit:    raw.triviaTimeLimit    || 30,
+        startTime:    raw.triviaQuestionStartTime || 0,
+      };
+      if (Array.isArray(data.teams) && data.teams.length > 0) {
+        knownTeams = data.teams;
+        renderKnownTeams();
+      }
+      renderScores(data.scores || []);
+      if (!data.active) {
+        if (currentQ) { userManualNav = false; hideContentBanner(); showMessageMode(); triviaRevealHandled = false; }
+      } else if (data.question) {
+        if (!currentQ || currentQ.id !== data.id) {
+          showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
+          triviaRevealHandled = false;
         }
-      } catch(e) {}
-      setTimeout(pollTrivia, nextInterval);
+        if (data.revealed && !triviaRevealHandled) {
+          showReveal(data.correctIndex);
+          triviaRevealHandled = true;
+        }
+      }
+    }
+    async function _pollTriviaWorker() {
+      const res = await fetchWithTimeout(`${workerBase}/trivia-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
+      _handleTriviaState(await res.json());
     }
 
     // ── Live Poll mode ────────────────────────────────────────────────────────
@@ -1217,48 +1212,33 @@
       }
     }
 
-    async function fetchPollState() {
-      if (!topic) return;
-      const base = tunnelBase || workerBase;
-      if (!base) { setTimeout(fetchPollState, 3000); return; }
-      try {
-        let poll, applause;
-        if (tunnelBase) {
-          // Direct tunnel — fetch /status and extract poll + applause
-          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
-          const d   = await res.json();
-          poll      = d.poll || null;
-          applause  = d.applause || null;
-        } else {
-          // Fallback to Worker proxy
-          const res  = await fetchWithTimeout(
-            `${workerBase}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000
-          );
-          const data = await res.json();
-          poll      = data.poll !== undefined ? data.poll : null;
-          applause  = data.applause || null;
-        }
-        if (poll !== undefined) {
-          const wasActive = !!(currentPoll && currentPoll.active);
-          currentPoll = poll;
-          const isActive = !!(currentPoll && currentPoll.active);
-          if (!isActive) { pollMyVote = null; pollSelected = null; }
-          if (isActive) {
-            if (!wasActive) {
-              if (mode === '' || userManualNav) { showContentBanner('poll'); }
-              else { showPollMode(); }
-            }
-            renderPoll(currentPoll);
-          } else if (wasActive) {
-            userManualNav = false; hideContentBanner();
-            showMessageMode();
-          } else if (mode === 'poll') {
-            renderPoll(currentPoll);
+    function _handlePollState(d) {
+      const poll = d.poll || null;
+      const applause = d.applause || null;
+      if (poll !== undefined) {
+        const wasActive = !!(currentPoll && currentPoll.active);
+        currentPoll = poll;
+        const isActive = !!(currentPoll && currentPoll.active);
+        if (!isActive) { pollMyVote = null; pollSelected = null; }
+        if (isActive) {
+          if (!wasActive) {
+            if (mode === '' || userManualNav) { showContentBanner('poll'); }
+            else { showPollMode(); }
           }
+          renderPoll(currentPoll);
+        } else if (wasActive) {
+          userManualNav = false; hideContentBanner();
+          showMessageMode();
+        } else if (mode === 'poll') {
+          renderPoll(currentPoll);
         }
-        if (applause) applyApplause(applause);
-      } catch(e) {}
-      setTimeout(fetchPollState, 3000);
+      }
+      if (applause) applyApplause(applause);
+    }
+    async function _pollPollWorker() {
+      const res = await fetchWithTimeout(`${workerBase}/poll-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
+      const data = await res.json();
+      _handlePollState({ poll: data.poll !== undefined ? data.poll : null, applause: data.applause || null });
     }
 
     function showPollMode() {
@@ -1337,28 +1317,16 @@
       }
     }
 
-    // Poll for AI active state every 5s to show/hide Prompt tab
-    async function pollAppState() {
-      if (!topic) { setTimeout(pollAppState, 5000); return; }
-      try {
-        let nowActive = false;
-        if (tunnelBase) {
-          // Direct tunnel — fetch /status and extract aiActive flag
-          const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
-          const d   = await res.json();
-          nowActive = !!d.aiActive;
-        } else if (workerBase) {
-          // Fallback to Worker proxy
-          const res  = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
-          const data = await res.json();
-          nowActive = !!data.aiActive;
-        }
-        if (nowActive !== aiActive) {
-          aiActive = nowActive;
-          setAiTabVisible(aiActive);
-        }
-      } catch(e) {}
-      setTimeout(pollAppState, 5000);
+    function _handleAppState(d) {
+      const nowActive = !!d.aiActive;
+      if (nowActive !== aiActive) {
+        aiActive = nowActive;
+        setAiTabVisible(aiActive);
+      }
+    }
+    async function _pollAppWorker() {
+      const res = await fetchWithTimeout(`${workerBase}/app-state?venueId=${encodeURIComponent(topic)}`, {}, 8000);
+      _handleAppState(await res.json());
     }
 
     // ── Init — resolve tunnel URL first, then start polling ──────────────────
@@ -1366,18 +1334,10 @@
       resolveTunnel().then(() => {
         if (mode === 'poll') {
           showPollMode();
-          fetchPollState(); // primary: watch for polls
-          pollTrivia();     // secondary: switch to trivia if it fires
         } else if (mode === 'trivia') {
           if (myTeam && myToken) { showWaiting(); } else { showRegister(); }
-          pollTrivia();     // primary: watch for trivia
-          fetchPollState(); // secondary: switch to poll if it fires
-        } else {
-          // Default message/photo page — trivia can interrupt, polls can interrupt
-          pollTrivia();
-          fetchPollState();
         }
-        pollAppState(); // watch for AI active state to show/hide Prompt tab
+        _unifiedPoll(); // single poller handles trivia, polls, and app state
       });
     }
   </script>
