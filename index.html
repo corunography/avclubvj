@@ -1067,6 +1067,13 @@
         }
       } catch(e) {
         _pollBackoff = Math.min(_pollBackoff + 1, 8);
+        // After 3 consecutive failures, tunnel is likely dead — clear it and
+        // fall back to Worker endpoints. Re-resolve periodically.
+        if (tunnelBase && _pollBackoff >= 3) {
+          tunnelBase = '';
+          // Try to get a fresh tunnel URL in the background
+          resolveTunnel();
+        }
       }
       const delay = Math.min(_POLL_BASE_MS * Math.pow(1.5, _pollBackoff), _POLL_MAX_MS);
       setTimeout(_unifiedPoll, delay);
