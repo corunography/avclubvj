@@ -1063,34 +1063,45 @@
       }
     }
 
-    // ── Unified status poller ──────────────────────────────────────────────────
-    // Single /status fetch shared by trivia, poll, and app-state handlers.
-    // Backs off on repeated errors; clears stale tunnel after 3 failures.
-    let _pollBackoff = 0;
-    const _POLL_BASE_MS = 3000;
-    const _POLL_MAX_MS  = 30000;
+    // ── SSE real-time connection ────────────────────────────────────────────────
+    // Connects to the tunnel's /events SSE endpoint for instant state updates.
+    // Zero polling, zero worker requests. Falls back to periodic re-resolve if
+    // the tunnel isn't available.
+    let _sseSource = null;
+    let _sseConnected = false;
+    let _sseReconnectTimer = null;
 
-    async function _unifiedPoll() {
-      if (!topic) { setTimeout(_unifiedPoll, _POLL_BASE_MS); return; }
+    function _connectSSE() {
       if (!tunnelBase) {
-        try { await resolveTunnel(); } catch(_) {}
-        setTimeout(_unifiedPoll, 10000);
+        // No tunnel — try to resolve one, then retry
+        resolveTunnel().catch(() => {}).then(() => {
+          _sseReconnectTimer = setTimeout(_connectSSE, tunnelBase ? 1000 : 15000);
+        });
         return;
       }
-      try {
-        const res = await fetchWithTimeout(`${tunnelBase}/status`, {}, 8000);
-        if (!res.ok) throw new Error('status ' + res.status);
-        const d = await res.json();
-        _pollBackoff = 0;
-        _handleTriviaState(d);
-        _handlePollState(d);
-        _handleAppState(d);
-      } catch(e) {
-        _pollBackoff = Math.min(_pollBackoff + 1, 8);
-        if (_pollBackoff >= 3) tunnelBase = '';
-      }
-      const delay = Math.min(_POLL_BASE_MS * Math.pow(1.5, _pollBackoff), _POLL_MAX_MS);
-      setTimeout(_unifiedPoll, delay);
+      if (_sseSource) { _sseSource.close(); _sseSource = null; }
+      _sseSource = new EventSource(`${tunnelBase}/events`);
+      _sseSource.onopen = () => {
+        _sseConnected = true;
+        if (_sseReconnectTimer) { clearTimeout(_sseReconnectTimer); _sseReconnectTimer = null; }
+      };
+      _sseSource.onmessage = (ev) => {
+        try {
+          const d = JSON.parse(ev.data);
+          if (d.type === 'state') {
+            _handleTriviaState(d);
+            _handlePollState(d);
+            _handleAppState(d);
+          }
+        } catch(_) {}
+      };
+      _sseSource.onerror = () => {
+        _sseConnected = false;
+        if (_sseSource) { _sseSource.close(); _sseSource = null; }
+        // Tunnel may have died — clear it so we re-resolve
+        tunnelBase = '';
+        _sseReconnectTimer = setTimeout(_connectSSE, 5000);
+      };
     }
 
     let triviaRevealHandled = false;
@@ -1336,7 +1347,7 @@
       }
     }
 
-    // ── Init — resolve tunnel URL first, then start polling ──────────────────
+    // ── Init — resolve tunnel URL first, then connect SSE ──────────────────────
     if (topic) {
       resolveTunnel().then(() => {
         if (mode === 'poll') {
@@ -1344,7 +1355,7 @@
         } else if (mode === 'trivia') {
           if (myTeam && myToken) { showWaiting(); } else { showRegister(); }
         }
-        _unifiedPoll();
+        _connectSSE();
       });
     }
   </script>
