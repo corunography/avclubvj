@@ -256,6 +256,10 @@
 
   <!-- Photo form -->
   <div id="photo-form">
+    <div class="username-row">
+      <span class="username-at">@</span>
+      <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
     <input type="file" id="file-input" accept="image/*">
     <label for="file-input" class="pick-area" id="pick-area">
       <span class="pick-icon">📷</span>
@@ -430,14 +434,21 @@
     }
 
     // ── Message form ──────────────────────────────────────────────────────────
-    // Restore saved username
-    const usernameEl = document.getElementById('username');
-    if (usernameEl) {
-      usernameEl.value = localStorage.getItem('msg-username') || '';
-      usernameEl.addEventListener('change', () => {
-        localStorage.setItem('msg-username', usernameEl.value.trim());
-      });
+    // Restore saved username — shared between message and photo tabs
+    const usernameEl      = document.getElementById('username');
+    const photoUsernameEl = document.getElementById('photo-username');
+    const savedName = localStorage.getItem('msg-username') || '';
+    if (usernameEl)      usernameEl.value = savedName;
+    if (photoUsernameEl) photoUsernameEl.value = savedName;
+    // Keep both fields and localStorage in sync
+    function syncUsername(source) {
+      const val = source.value.trim();
+      localStorage.setItem('msg-username', val);
+      if (source !== usernameEl && usernameEl)           usernameEl.value = val;
+      if (source !== photoUsernameEl && photoUsernameEl) photoUsernameEl.value = val;
     }
+    if (usernameEl)      usernameEl.addEventListener('change', () => syncUsername(usernameEl));
+    if (photoUsernameEl) photoUsernameEl.addEventListener('change', () => syncUsername(photoUsernameEl));
 
     function onInput() {
       const len = document.getElementById('msg').value.length;
@@ -553,6 +564,8 @@
         return;
       }
       const caption     = (document.getElementById('photo-caption')?.value || '').trim();
+      const photoName   = (document.getElementById('photo-username')?.value || '').trim();
+      if (photoName) localStorage.setItem('msg-username', photoName);
       const progressWrap = document.getElementById('photo-progress-wrap');
       const progressBar  = document.getElementById('photo-progress-bar');
 
@@ -561,7 +574,7 @@
       progressWrap.style.display = 'block';
       progressBar.style.width = '0%';
 
-      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption });
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName });
       const xhr     = new XMLHttpRequest();
       xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
       xhr.setRequestHeader('Content-Type', 'application/json');
