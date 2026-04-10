@@ -365,8 +365,15 @@
         );
         if (!res.ok) return;
         const data = await res.json();
-        if (data.tunnelUrl) tunnelBase = data.tunnelUrl.replace(/\/$/, '');
         if (data.applause) applyApplause(data.applause);
+        if (data.tunnelUrl) {
+          // Verify the tunnel is actually reachable before using it
+          const candidate = data.tunnelUrl.replace(/\/$/, '');
+          try {
+            const ping = await fetchWithTimeout(`${candidate}/ping`, {}, 4000);
+            if (ping.ok) tunnelBase = candidate;
+          } catch(_) { /* tunnel stale — stay on worker fallback */ }
+        }
       } catch(_) {}
     }
 
