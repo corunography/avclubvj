@@ -78,7 +78,7 @@
     #photo-preview-wrap { display: none; position: relative; }
     #photo-preview {
       width: 100%; border-radius: 12px; display: block;
-      object-fit: contain; max-height: 36vh; background: #000;
+      object-fit: contain; max-height: min(200px, 28vh); background: #000;
     }
     .rm-btn {
       position: absolute; top: 8px; right: 8px;
@@ -263,10 +263,6 @@
 
   <!-- Photo form -->
   <div id="photo-form">
-    <div class="username-row">
-      <span class="username-at">@</span>
-      <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    </div>
     <input type="file" id="file-input" accept="image/*">
     <label for="file-input" class="pick-area" id="pick-area">
       <span class="pick-icon">📷</span>
@@ -275,6 +271,10 @@
     <div id="photo-preview-wrap">
       <img id="photo-preview" alt="Preview">
       <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
+    </div>
+    <div class="username-row">
+      <span class="username-at">@</span>
+      <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
     <!-- Progress bar -->
