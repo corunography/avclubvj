@@ -1070,12 +1070,13 @@
     let _sseSource = null;
     let _sseConnected = false;
     let _sseReconnectTimer = null;
+    let _sseFailCount = 0;
 
     function _connectSSE() {
       if (!tunnelBase) {
         // No tunnel — try to resolve one, then retry
         resolveTunnel().catch(() => {}).then(() => {
-          _sseReconnectTimer = setTimeout(_connectSSE, tunnelBase ? 1000 : 15000);
+          _sseReconnectTimer = setTimeout(_connectSSE, tunnelBase ? 1000 : 30000);
         });
         return;
       }
@@ -1083,9 +1084,11 @@
       _sseSource = new EventSource(`${tunnelBase}/events`);
       _sseSource.onopen = () => {
         _sseConnected = true;
+        _sseFailCount = 0;
         if (_sseReconnectTimer) { clearTimeout(_sseReconnectTimer); _sseReconnectTimer = null; }
       };
       _sseSource.onmessage = (ev) => {
+        _sseFailCount = 0; // data received = connection healthy
         try {
           const d = JSON.parse(ev.data);
           if (d.type === 'state') {
@@ -1098,9 +1101,16 @@
       _sseSource.onerror = () => {
         _sseConnected = false;
         if (_sseSource) { _sseSource.close(); _sseSource = null; }
-        // Tunnel may have died — clear it so we re-resolve
-        tunnelBase = '';
-        _sseReconnectTimer = setTimeout(_connectSSE, 5000);
+        _sseFailCount++;
+        if (_sseFailCount >= 3) {
+          // Tunnel seems dead — clear and re-resolve (costs 1 worker request)
+          tunnelBase = '';
+          _sseFailCount = 0;
+          _sseReconnectTimer = setTimeout(_connectSSE, 10000);
+        } else {
+          // Transient error — retry same tunnel (zero worker requests)
+          _sseReconnectTimer = setTimeout(_connectSSE, 5000);
+        }
       };
     }
 
