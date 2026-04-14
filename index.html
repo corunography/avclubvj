@@ -65,18 +65,18 @@
     .ai-main-btn:disabled { background: #2c2c2e !important; color: #555; }
 
     /* ── AI Photo upload ── */
-    .ai-photo-section { width: 100%; margin-top: 10px; margin-bottom: 6px; }
-    .ai-photo-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; display: block; }
-    .ai-photo-drop { width: 100%; border: 2px dashed #333; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: border-color .15s; position: relative; overflow: hidden; }
+    .ai-photo-section { width: 100%; margin-top: 8px; margin-bottom: 4px; }
+    .ai-photo-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; display: block; }
+    .ai-photo-drop { width: 100%; border: 2px dashed #555; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; transition: border-color .15s; position: relative; overflow: hidden; }
     .ai-photo-drop:hover, .ai-photo-drop.dragover { border-color: #a855f7; }
     .ai-photo-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .ai-photo-drop .placeholder { font-size: 13px; color: #555; pointer-events: none; }
-    .ai-photo-preview { max-width: 100%; max-height: 160px; border-radius: 8px; display: none; }
-    .ai-photo-remove { position: absolute; top: 6px; right: 8px; background: rgba(0,0,0,.7); border: none; color: #ff453a; font-size: 16px; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: none; line-height: 1; }
-    .ai-weight-row { width: 100%; display: none; align-items: center; gap: 8px; margin-top: 8px; }
-    .ai-weight-row label { font-size: 11px; color: #888; white-space: nowrap; }
+    .ai-photo-drop .placeholder { font-size: 12px; color: #888; pointer-events: none; }
+    .ai-photo-preview { max-width: 100%; max-height: 80px; border-radius: 6px; display: none; }
+    .ai-photo-remove { position: absolute; top: 4px; right: 6px; background: rgba(0,0,0,.7); border: none; color: #ff453a; font-size: 14px; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: none; line-height: 1; }
+    .ai-weight-row { width: 100%; display: none; align-items: center; gap: 6px; margin-top: 4px; }
+    .ai-weight-row label { font-size: 11px; color: #999; white-space: nowrap; }
     .ai-weight-row input[type="range"] { flex: 1; accent-color: #a855f7; height: 4px; }
-    .ai-weight-row .val { font-size: 11px; color: #888; min-width: 30px; text-align: right; }
+    .ai-weight-row .val { font-size: 11px; color: #999; min-width: 30px; text-align: right; }
 
     /* ── Photo form ── */
     #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 6px; }
@@ -310,7 +310,7 @@
     <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
     <div class="char-count" id="ai-char-count">0 / 200</div>
     <div class="ai-photo-section">
-      <span class="ai-photo-label">📷 Reference photo <span style="color:#444;text-transform:none;letter-spacing:0">(optional — influences the style)</span></span>
+      <span class="ai-photo-label">📷 Reference photo <span style="color:#777;text-transform:none;letter-spacing:0">(optional — influences the style)</span></span>
       <div class="ai-photo-drop" id="ai-photo-drop">
         <input type="file" id="ai-photo-input" accept="image/*">
         <div class="placeholder" id="ai-photo-placeholder">Tap to add a photo</div>
