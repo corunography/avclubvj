@@ -25,9 +25,9 @@
 <body>
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: April 8, 2026</p>
+    <p class="updated">Last updated: April 18, 2026</p>
 
-    <p>Phasion Live is a live visualizer application used by DJs and venues. This policy explains how audience data is handled when you interact with the app via the audience submission page (QR code).</p>
+    <p>Phasion Live is a live visualizer application used by DJs and venues. This policy has two parts: how <strong>audience data</strong> is handled when you interact with the app via the submission page (QR code), and how the <strong>operator's desktop app</strong> handles crash telemetry. Audiences are only affected by the first part.</p>
 
     <h2>What We Collect</h2>
     <p>When you use the audience submission page, the following data may be collected:</p>
@@ -62,6 +62,7 @@
       <li><strong>Cloudflare</strong> provides the network infrastructure (Workers, R2 storage, and Tunnel). Cloudflare may process IP addresses and request metadata per their own <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">privacy policy</a>.</li>
       <li><strong>Apple ShazamKit</strong> may receive audio fingerprints when the DJ enables song identification. No audio recordings are stored.</li>
       <li><strong>QR Server API</strong> generates QR code images. Only the URL is sent; no personal data.</li>
+      <li><strong>Sentry</strong> receives anonymous crash reports from the <em>desktop app only</em> (never from the audience page). Details in the "Operator Desktop App — Crash Telemetry" section below. See <a href="https://sentry.io/privacy/" target="_blank">Sentry's privacy policy</a>.</li>
     </ul>
 
     <h2>Public Display</h2>
@@ -77,6 +78,18 @@
 
     <h2>Children</h2>
     <p>Phasion Live is intended for use at live entertainment venues. We do not knowingly collect information from children under 13. If a venue operator becomes aware that a child has submitted content, they should use the moderation tools to reject it.</p>
+
+    <h2>Operator Desktop App — Crash Telemetry</h2>
+    <p>This section applies only to DJs and venue operators who install and run the desktop app. Audiences submitting via the QR code are not affected.</p>
+    <p>When the desktop app encounters an unexpected error, an anonymous crash report is sent to <a href="https://sentry.io/privacy/" target="_blank">Sentry</a> to help the developer diagnose and fix bugs. Reports contain:</p>
+    <ul>
+      <li>The error message and stack trace</li>
+      <li>App version, OS name and version, Electron / Chrome / Node.js versions</li>
+      <li>A breadcrumb log of the last ~100 state transitions (e.g. "tunnel connected", "Syphon started", "moderation toggled") — no submission content is included</li>
+      <li>A random anonymous venue ID (e.g. <code>avclubvj-a1b2c3d4</code>) so multiple reports from the same installation can be grouped together. This ID is generated on first run and stored locally; it is not linked to your identity, email, account, or IP address.</li>
+    </ul>
+    <p>Reports do <strong>not</strong> include audience submissions, passwords, authentication tokens, network URLs, file paths outside short log snippets, usernames, or IP addresses.</p>
+    <p>Crash reporting can be disabled in the desktop app under <strong>Settings → Privacy → Share crash reports</strong>. Disabling takes effect after the next app restart. Reports already sent cannot be recalled.</p>
 
     <h2>Changes</h2>
     <p>We may update this policy from time to time. The "last updated" date at the top reflects the most recent revision.</p>
