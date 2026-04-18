@@ -1124,12 +1124,22 @@
     let _sseConnected = false;
     let _sseReconnectTimer = null;
     let _sseFailCount = 0;
+    let _resolveAttempt = 0; // drives backoff when the tunnel isn't registered yet
 
     function _connectSSE() {
       if (!tunnelBase) {
-        // No tunnel — try to resolve one, then retry
+        // No tunnel — try to resolve one, then retry.  On first-page-load
+        // the DJ's laptop may still be booting cloudflared, so the first few
+        // attempts often fail; back off exponentially from 2s up to 30s.
         resolveTunnel().catch(() => {}).then(() => {
-          _sseReconnectTimer = setTimeout(_connectSSE, tunnelBase ? 1000 : 30000);
+          if (tunnelBase) {
+            _resolveAttempt = 0;
+            _sseReconnectTimer = setTimeout(_connectSSE, 0);
+          } else {
+            _resolveAttempt++;
+            const wait = Math.min(30000, 2000 * Math.pow(2, Math.min(4, _resolveAttempt - 1)));
+            _sseReconnectTimer = setTimeout(_connectSSE, wait);
+          }
         });
         return;
       }
