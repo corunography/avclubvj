@@ -16,6 +16,9 @@
       --hairline:rgba(255,255,255,0.08); --hairline-hi:rgba(255,255,255,0.14);
       --hairline-top:rgba(255,255,255,0.07);
       --bg:#0B0B0D; --surface:#141416; --surface-hi:#18181B;
+      /* Input chips need extra daylight contrast beyond surface-hi,
+         so they get their own fill (#22222A) and a visible 22% border. */
+      --input-bg:#22222A; --input-border:rgba(255,255,255,0.22);
       --glass-bg:rgba(20,20,22,0.72); --glass-bg-hi:rgba(20,20,22,0.88);
       --glass-blur:blur(18px) saturate(180%); --glass-blur-hi:blur(24px) saturate(180%);
       --text:#F2F2F7; --text-muted:#A1A1A6; --text-dim:#6E6E73;
@@ -72,7 +75,7 @@
     /* ── Legal fine print (shared across tabs) ── */
     .legal-fineprint {
       font-size: 10px; color: var(--text-dim);
-      text-align: center; max-width: 320px;
+      text-align: center; max-width: 380px;
       line-height: 1.4; margin-top: 4px; letter-spacing: 0.02em;
     }
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
@@ -84,8 +87,8 @@
        keeps them defined without losing the Pro-Apps aesthetic. */
     .username-row {
       width: 100%; display: flex; align-items: center; gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--hairline-hi);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r-lg);
       padding: 10px 16px; margin-bottom: 10px;
@@ -103,8 +106,8 @@
     .username-row input::placeholder { color: var(--text-dim); }
     textarea {
       width: 100%; height: 110px;
-      background: var(--surface);
-      border: 1px solid var(--hairline-hi);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r-lg);
       color: var(--text); font-size: 16px; font-family: inherit;
@@ -141,8 +144,8 @@
     .ai-photo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; display: block; }
     .ai-photo-drop {
       width: 100%;
-      background: var(--surface);
-      border: 1.5px dashed rgba(255,255,255,0.22);
+      background: var(--input-bg);
+      border: 1.5px dashed var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r);
       padding: 10px; text-align: center; cursor: pointer;
@@ -174,8 +177,8 @@
     .pick-area {
       display: flex; flex-direction: row; align-items: center; justify-content: center;
       gap: 12px;
-      background: var(--surface);
-      border: 1.5px dashed rgba(255,255,255,0.22);
+      background: var(--input-bg);
+      border: 1.5px dashed var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r-xl);
       padding: 18px 20px; cursor: pointer; width: 100%;
@@ -207,8 +210,8 @@
     .rm-btn:hover { background: rgba(255,59,48,0.4); }
     .caption-input {
       width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--hairline-hi);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r-lg);
       color: var(--text); font-size: 15px; font-family: inherit;
@@ -294,8 +297,8 @@
     }
     .team-input {
       width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--hairline-hi);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r-lg);
       color: var(--text); font-size: 15px; font-family: inherit;
