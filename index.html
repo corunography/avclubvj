@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Keep GitHub Pages / mobile browser caches from serving stale HTML. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Phasion Live</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1164,6 +1168,19 @@
         _sseConnected = true;
         _sseFailCount = 0;
         if (_sseReconnectTimer) { clearTimeout(_sseReconnectTimer); _sseReconnectTimer = null; }
+        // Belt-and-suspenders: explicitly pull /status on every (re)connect in
+        // case the initial 'state' SSE frame was lost in a buffer somewhere.
+        // Route the snapshot through the same handlers the SSE stream uses so
+        // the AI prompt tab / poll / trivia state catch up immediately.
+        fetchWithTimeout(`${tunnelBase}/status`, {}, 4000)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            if (!d) return;
+            _handleTriviaState(d);
+            _handlePollState(d);
+            _handleAppState(d);
+          })
+          .catch(() => {});
       };
       _sseSource.onmessage = (ev) => {
         _sseFailCount = 0; // data received = connection healthy
