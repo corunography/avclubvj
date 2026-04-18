@@ -528,9 +528,9 @@
 
   <!-- Mini nav: message/photo access during trivia & poll (replaces tall header) -->
   <div id="mode-nav">
-    <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
-    <button class="mode-nav-btn" onclick="gotoPhoto()">📸 Photo</button>
-    <button class="mode-nav-btn" id="nav-ai" onclick="gotoAi()" style="display:none">✨ Prompt</button>
+    <button class="mode-nav-btn" id="nav-msg"   onclick="gotoMessages()">💬 Message</button>
+    <button class="mode-nav-btn" id="nav-photo" onclick="gotoPhoto()">📸 Photo</button>
+    <button class="mode-nav-btn" id="nav-ai"    onclick="gotoAi()" style="display:none">✨ Prompt</button>
   </div>
 
   <div class="icon" id="page-icon">🎶</div>
@@ -542,6 +542,13 @@
     <button class="tab-btn active" id="tab-msg"   onclick="switchTab('msg')">💬 Message</button>
     <button class="tab-btn"        id="tab-photo" onclick="switchTab('photo')">📸 Photo</button>
     <button class="tab-btn"        id="tab-ai"    onclick="switchTab('ai')" style="display:none">✨ Prompt</button>
+  </div>
+
+  <!-- Shown when host has turned off all audience submissions (message, photo, AI) -->
+  <div id="submissions-off" style="display:none;width:100%;max-width:440px;text-align:center;padding:40px 20px;color:var(--text-muted);flex-direction:column;align-items:center;gap:12px">
+    <div style="font-size:48px">🔇</div>
+    <div style="font-size:18px;font-weight:600;color:var(--text)">Submissions paused</div>
+    <div style="font-size:13px;line-height:1.5;max-width:320px">The host has temporarily turned off audience submissions. You can still react with emoji below — check back in a bit!</div>
   </div>
 
   <!-- Normal message form -->
@@ -699,7 +706,7 @@
           try {
             const sr = await fetchWithTimeout(`${tunnelBase}/status`, {}, 4000);
             const sd = await sr.json();
-            if (sd.aiActive && !aiActive) { aiActive = true; setAiTabVisible(true); }
+            _handleAppState(sd || {});
           } catch(_) {}
         }
       } catch(_) {}
@@ -1153,7 +1160,7 @@
     function hideAllForms() {
       triviaUIVisible = false;
       stopTriviaCountdown();
-      ['msg-form','photo-form','ai-prompt-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
+      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -1242,9 +1249,19 @@
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
-      // Restore tabs + active tab (fall back to msg if AI tab is active but AI is off)
-      const restoreTab = (activeTab === 'ai' && !aiActive) ? 'msg' : activeTab;
-      if (restoreTab !== activeTab) { activeTab = 'msg'; }
+      // Pick a valid tab. If the active tab is disallowed, fall back in order.
+      let restoreTab = activeTab;
+      const tabAllowed = t =>
+        (t === 'msg'   && msgAudienceAllowed) ||
+        (t === 'photo' && photoAudienceAllowed) ||
+        (t === 'ai'    && aiActive);
+      if (!tabAllowed(restoreTab)) {
+        if (msgAudienceAllowed)        restoreTab = 'msg';
+        else if (photoAudienceAllowed) restoreTab = 'photo';
+        else if (aiActive)             restoreTab = 'ai';
+        else                           restoreTab = null; // all off — empty state handles UI
+      }
+      if (restoreTab) activeTab = restoreTab;
       document.getElementById('tabs').style.display = 'flex';
       document.getElementById('tab-msg').classList.toggle('active', restoreTab === 'msg');
       document.getElementById('tab-photo').classList.toggle('active', restoreTab === 'photo');
@@ -1259,12 +1276,17 @@
         document.getElementById('page-icon').textContent    = '📸';
         document.getElementById('page-title').textContent   = 'Share a Photo';
         document.getElementById('page-sub').textContent     = 'Your photo could appear on screen!';
-      } else {
+      } else if (restoreTab === 'ai') {
         document.getElementById('ai-prompt-form').style.display = 'flex';
         document.getElementById('page-icon').textContent  = '✨';
         document.getElementById('page-title').textContent = 'AI Prompt';
         document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
+      // Re-sync tab visibility + empty state (handles "all off" case).
+      setMsgTabVisible(msgAudienceAllowed);
+      setPhotoTabVisible(photoAudienceAllowed);
+      setAiTabVisible(aiActive);
+      updateSubmissionsOffState();
     }
 
     async function joinTrivia() {
@@ -1741,13 +1763,75 @@
       aiPhotoDrop.addEventListener('drop', e => { e.preventDefault(); aiPhotoDrop.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleAiPhoto(e.dataTransfer.files[0]); });
     }
 
+    // Track each audience-submission channel independently. Defaults to true
+    // so older DJ builds (which don't broadcast these flags) keep working.
+    let msgAudienceAllowed   = true;
+    let photoAudienceAllowed = true;
+
     function setAiTabVisible(show) {
       const tab = document.getElementById('tab-ai');
       const nav = document.getElementById('nav-ai');
       if (tab) tab.style.display = show ? '' : 'none';
       if (nav) nav.style.display = show ? '' : 'none';
-      // If AI tab was active and AI just turned off, switch back to messages
-      if (!show && activeTab === 'ai') switchTab('msg');
+      if (!show && activeTab === 'ai') _pickFallbackTab();
+    }
+    function setMsgTabVisible(show) {
+      const tab = document.getElementById('tab-msg');
+      const nav = document.getElementById('nav-msg');
+      if (tab) tab.style.display = show ? '' : 'none';
+      if (nav) nav.style.display = show ? '' : 'none';
+      if (!show && activeTab === 'msg') _pickFallbackTab();
+    }
+    function setPhotoTabVisible(show) {
+      const tab = document.getElementById('tab-photo');
+      const nav = document.getElementById('nav-photo');
+      if (tab) tab.style.display = show ? '' : 'none';
+      if (nav) nav.style.display = show ? '' : 'none';
+      if (!show && activeTab === 'photo') _pickFallbackTab();
+    }
+
+    // Pick the first still-visible tab, in order: msg → photo → ai.
+    // If none are visible, the empty-state handles the UI.
+    function _pickFallbackTab() {
+      if (msgAudienceAllowed)        switchTab('msg');
+      else if (photoAudienceAllowed) switchTab('photo');
+      else if (aiActive)             switchTab('ai');
+      // Otherwise leave activeTab alone — updateSubmissionsOffState() hides forms.
+    }
+
+    function updateSubmissionsOffState() {
+      const anyAllowed = msgAudienceAllowed || photoAudienceAllowed || aiActive;
+      const off    = document.getElementById('submissions-off');
+      const tabs   = document.getElementById('tabs');
+      const msgF   = document.getElementById('msg-form');
+      const photoF = document.getElementById('photo-form');
+      const aiF    = document.getElementById('ai-prompt-form');
+      // Only touch the UI if the user is currently in the messages/photo/AI view.
+      // Detect by whether any of those forms (or the empty state) is showing.
+      // Leaves trivia/poll/registration screens alone.
+      const inMsgView =
+        (tabs   && tabs.style.display   !== 'none') ||
+        (msgF   && msgF.style.display   !== 'none') ||
+        (photoF && photoF.style.display !== 'none') ||
+        (aiF    && aiF.style.display    !== 'none') ||
+        (off    && off.style.display    !== 'none');
+      if (!inMsgView) return;
+      if (!anyAllowed) {
+        if (off) off.style.display = 'flex';
+        if (tabs) tabs.style.display = 'none';
+        if (msgF) msgF.style.display = 'none';
+        if (photoF) photoF.style.display = 'none';
+        if (aiF) aiF.style.display = 'none';
+        document.getElementById('page-icon').textContent  = '🎶';
+        document.getElementById('page-title').textContent = 'Standby';
+        document.getElementById('page-sub').textContent   = '';
+      } else {
+        if (off) off.style.display = 'none';
+        if (tabs) tabs.style.display = 'flex';
+        if (activeTab === 'msg'   && msgF)   msgF.style.display   = 'flex';
+        if (activeTab === 'photo' && photoF) photoF.style.display = 'flex';
+        if (activeTab === 'ai'    && aiF)    aiF.style.display    = 'flex';
+      }
     }
 
     async function sendAiPrompt() {
@@ -1801,11 +1885,18 @@
     }
 
     function _handleAppState(d) {
-      const nowActive = !!d.aiActive;
-      if (nowActive !== aiActive) {
-        aiActive = nowActive;
-        setAiTabVisible(aiActive);
-      }
+      // Each audience-submission channel has its own "Accept audience submissions"
+      // toggle on the DJ side. Absent flags default to true so older app builds
+      // (which don't broadcast these) keep working unchanged.
+      const aiAllowed    = d.aiAudienceAllowed    !== false;
+      const msgAllowed   = d.msgAudienceAllowed   !== false;
+      const photoAllowed = d.photoAudienceAllowed !== false;
+      const aiNowActive  = !!d.aiActive && aiAllowed;
+
+      if (aiNowActive !== aiActive) { aiActive = aiNowActive; setAiTabVisible(aiActive); }
+      if (msgAllowed   !== msgAudienceAllowed)   { msgAudienceAllowed   = msgAllowed;   setMsgTabVisible(msgAllowed); }
+      if (photoAllowed !== photoAudienceAllowed) { photoAudienceAllowed = photoAllowed; setPhotoTabVisible(photoAllowed); }
+      updateSubmissionsOffState();
     }
 
     // ── Init — resolve tunnel URL first, then connect SSE ──────────────────────
