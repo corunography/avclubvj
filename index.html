@@ -609,8 +609,8 @@
     });
 
     function sendPhoto() {
-      if (!resizedDataUrl || !topic || !workerBase) {
-        photoStatus.innerHTML = '<span class="error">Photo uploads require a worker URL — please use the venue QR code.</span>';
+      if (!resizedDataUrl || !topic) {
+        photoStatus.innerHTML = '<span class="error">Photo uploads need a venue — please use the venue QR code.</span>';
         return;
       }
       const caption     = (document.getElementById('photo-caption')?.value || '').trim();
@@ -624,22 +624,16 @@
       progressWrap.style.display = 'block';
       progressBar.style.width = '0%';
 
+      // Photos submit directly to the tunnel (zero Cloudflare Worker cost).
+      // If the tunnel is unreachable — e.g. DJ's laptop briefly offline —
+      // we fall back to POSTing to the worker, which stores in R2; the
+      // Electron app picks those up on its slow photo poll when it reconnects.
       const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName });
-      const xhr     = new XMLHttpRequest();
-      xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.timeout = 25000;
 
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-          progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
-        }
-      };
-
-      xhr.onload = () => {
+      function done(success, errText) {
         progressBar.style.width = '100%';
         setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (success) {
           photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
           resizedDataUrl = null;
           previewImg.src = '';
@@ -649,18 +643,41 @@
           fileInput.value = '';
           setTimeout(() => { photoBtn.disabled = false; }, 15000);
         } else {
-          photoStatus.innerHTML = '<span class="error">✗ Upload failed (error ' + xhr.status + ') — please try again.</span>';
+          photoStatus.innerHTML = '<span class="error">✗ Upload failed' + (errText ? ' (' + errText + ')' : '') + ' — please try again.</span>';
           photoBtn.disabled = false;
         }
-      };
+      }
 
-      xhr.onerror = xhr.ontimeout = () => {
-        progressWrap.style.display = 'none';
-        photoStatus.innerHTML = '<span class="error">✗ Upload failed — check your connection and try again.</span>';
-        photoBtn.disabled = false;
-      };
+      function postTo(url, onFail) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.timeout = 25000;
+        xhr.upload.onprogress = e => {
+          if (e.lengthComputable) {
+            progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) return done(true);
+          onFail('error ' + xhr.status);
+        };
+        xhr.onerror = xhr.ontimeout = () => onFail('network');
+        xhr.send(payload);
+      }
 
-      xhr.send(payload);
+      const tryTunnel = () => {
+        if (!tunnelBase) { tryWorker(); return; }
+        postTo(`${tunnelBase}/photo`, () => tryWorker());
+      };
+      const tryWorker = () => {
+        if (!workerBase) return done(false, 'no server');
+        postTo(
+          `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`,
+          (errText) => done(false, errText),
+        );
+      };
+      tryTunnel();
     }
 
     function resizeImage(file, maxPx, quality) {
