@@ -250,6 +250,7 @@
   <div id="mode-nav">
     <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
     <button class="mode-nav-btn" onclick="gotoPhoto()">📸 Photo</button>
+    <button class="mode-nav-btn" id="nav-ai" onclick="gotoAi()" style="display:none;color:#c084fc">✨ Prompt</button>
   </div>
 
   <div class="icon" id="page-icon">🎶</div>
@@ -741,6 +742,20 @@
       activeTab = 'photo';
       document.getElementById('tab-msg').classList.remove('active');
       document.getElementById('tab-photo').classList.add('active');
+    }
+    function gotoAi() {
+      userManualNav = true; hideContentBanner();
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display        = 'flex';
+      document.getElementById('ai-prompt-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent     = '✨';
+      document.getElementById('page-title').textContent    = 'Submit a Prompt';
+      document.getElementById('page-sub').textContent      = 'Describe the visuals you want to see!';
+      activeTab = 'ai';
+      document.getElementById('tab-msg').classList.remove('active');
+      document.getElementById('tab-photo').classList.remove('active');
+      document.getElementById('tab-ai').classList.add('active');
     }
 
     let reactCooldown = 0;
@@ -1427,8 +1442,9 @@
 
     function setAiTabVisible(show) {
       const tab = document.getElementById('tab-ai');
-      if (!tab) return;
-      tab.style.display = show ? '' : 'none';
+      const nav = document.getElementById('nav-ai');
+      if (tab) tab.style.display = show ? '' : 'none';
+      if (nav) nav.style.display = show ? '' : 'none';
       // If AI tab was active and AI just turned off, switch back to messages
       if (!show && activeTab === 'ai') switchTab('msg');
     }
