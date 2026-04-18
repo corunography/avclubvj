@@ -3,229 +3,523 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kymanaut</title>
+  <!-- Keep GitHub Pages / mobile browser caches from serving stale HTML. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Phasion Live</title>
   <style>
+    :root {
+      --accent:#FF3B30; --accent-light:#FFB8B2;
+      --accent-glow:rgba(255,59,48,0.35); --accent-dim:rgba(255,59,48,0.14);
+      --accent-soft:rgba(255,59,48,0.08);
+      --hairline:rgba(255,255,255,0.08); --hairline-hi:rgba(255,255,255,0.14);
+      --hairline-top:rgba(255,255,255,0.07);
+      --bg:#0B0B0D; --surface:#141416; --surface-hi:#18181B;
+      /* Input chips need extra daylight contrast beyond surface-hi,
+         so they get their own fill (#22222A) and a visible 22% border. */
+      --input-bg:#22222A; --input-border:rgba(255,255,255,0.22);
+      --glass-bg:rgba(20,20,22,0.72); --glass-bg-hi:rgba(20,20,22,0.88);
+      --glass-blur:blur(18px) saturate(180%); --glass-blur-hi:blur(24px) saturate(180%);
+      --text:#F2F2F7; --text-muted:#A1A1A6; --text-dim:#6E6E73;
+      --hig-green:#30D158; --hig-amber:#FF9F0A; --hig-red:#FF3B30; --hig-blue:#0A84FF;
+      --r-sm:8px; --r:10px; --r-lg:14px; --r-xl:18px; --r-xxl:22px;
+      --ease-out:cubic-bezier(0.2,0.8,0.2,1);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0a0a0f; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,59,48,0.09), transparent 60%),
+        radial-gradient(900px 500px at 100% 110%, rgba(255,59,48,0.04), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       padding: 32px 24px 32px;
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums;
     }
-    .icon  { font-size: 48px; margin-bottom: 16px; }
-    h1     { font-size: 22px; font-weight: 700; margin-bottom: 6px; text-align: center; }
-    .sub   { font-size: 14px; color: #888; margin-bottom: 20px; text-align: center; line-height: 1.5; }
+    .icon  { font-size: 44px; margin-bottom: 14px; filter: drop-shadow(0 2px 12px rgba(0,0,0,0.4)); }
+    h1     { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; text-align: center; color: var(--text); }
+    .sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; text-align: center; line-height: 1.5; max-width: 420px; }
 
     /* ── Tab switcher ── */
     .tabs {
-      display: flex; gap: 0; margin-bottom: 24px;
-      background: #1c1c1e; border-radius: 12px; padding: 4px;
+      display: flex; gap: 2px; margin-bottom: 22px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg); padding: 4px;
       width: 100%; max-width: 440px;
     }
     .tab-btn {
-      flex: 1; padding: 10px; border: none; background: transparent;
-      color: #888; font-size: 15px; font-weight: 600; font-family: inherit;
-      border-radius: 9px; cursor: pointer; transition: background 0.15s, color 0.15s;
+      flex: 1; padding: 10px 8px; border: 1px solid transparent; background: transparent;
+      color: var(--text-muted); font-size: 14px; font-weight: 600;
+      letter-spacing: -0.005em; font-family: inherit;
+      border-radius: var(--r); cursor: pointer;
+      transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
       -webkit-tap-highlight-color: transparent;
     }
-    .tab-btn.active { background: #2c2c2e; color: #fff; }
+    .tab-btn.active {
+      background: var(--surface-hi); color: var(--text);
+      border-color: var(--hairline-hi);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+    }
 
     /* ── Message form ── */
     #msg-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; }
+
+    /* ── Legal fine print (shared across tabs) ── */
+    .legal-fineprint {
+      font-size: 10px; color: var(--text-dim);
+      text-align: center; max-width: 380px;
+      line-height: 1.4; margin-top: 4px; letter-spacing: 0.02em;
+    }
+    .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
+    .legal-fineprint a.powered-by-link { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+
+    /* ── Input chips (shared field styling) ──
+       Form fields need higher contrast than cards so they read clearly
+       under bright mobile ambient light. Solid surface + brighter hairline
+       keeps them defined without losing the Pro-Apps aesthetic. */
     .username-row {
       width: 100%; display: flex; align-items: center; gap: 10px;
-      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
-      padding: 10px 16px; margin-bottom: 10px; transition: border-color 0.2s;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      padding: 10px 16px; margin-bottom: 10px;
+      transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
     }
-    .username-row:focus-within { border-color: #3a7bd5; }
-    .username-at { color: #555; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .username-row:focus-within {
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
+    }
+    .username-at { color: var(--text-dim); font-size: 18px; font-weight: 700; flex-shrink: 0; }
     .username-row input {
       flex: 1; background: transparent; border: none; outline: none;
-      color: #fff; font-size: 16px; font-family: inherit; -webkit-appearance: none;
+      color: var(--text); font-size: 16px; font-family: inherit; -webkit-appearance: none;
     }
-    .username-row input::placeholder { color: #555; }
+    .username-row input::placeholder { color: var(--text-dim); }
     textarea {
       width: 100%; height: 110px;
-      background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px;
-      color: #fff; font-size: 16px; font-family: inherit;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 16px; font-family: inherit;
       padding: 14px 16px; resize: none; outline: none;
-      transition: border-color 0.2s; -webkit-appearance: none;
+      transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+      -webkit-appearance: none;
     }
-    textarea:focus { border-color: #3a7bd5; }
-    textarea::placeholder { color: #555; }
-    .char-count { font-size: 11px; color: #555; text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; }
-    .char-count.warn { color: #ff9500; }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
+    }
+    textarea::placeholder { color: var(--text-dim); }
+    .char-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; letter-spacing: 0.02em; }
+    .char-count.warn { color: var(--hig-amber); }
 
     /* ── AI Prompt form ── */
     #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
-    #ai-prompt-form textarea:focus { border-color: #a855f7; }
-    .ai-main-btn { background: #a855f7 !important; }
-    .ai-main-btn:hover { background: #9333ea !important; }
-    .ai-main-btn:disabled { background: #2c2c2e !important; color: #555; }
+    #ai-prompt-form textarea:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
+    }
+    .ai-main-btn {
+      background: var(--accent) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 18px var(--accent-glow) !important;
+    }
+    .ai-main-btn:hover { filter: brightness(1.06); }
+    .ai-main-btn:disabled {
+      background: var(--surface) !important; color: var(--text-dim) !important;
+      box-shadow: inset 0 1px 0 var(--hairline-top) !important;
+    }
+
+    /* ── AI Photo upload ── */
+    .ai-photo-section { width: 100%; margin-top: 8px; margin-bottom: 12px; }
+    .ai-photo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; display: block; }
+    .ai-photo-drop {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1.5px dashed var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r);
+      padding: 10px; text-align: center; cursor: pointer;
+      transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
+      position: relative; overflow: hidden;
+    }
+    .ai-photo-drop:hover, .ai-photo-drop.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .ai-photo-drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .ai-photo-drop .placeholder { font-size: 12px; color: var(--text-muted); pointer-events: none; }
+    .ai-photo-preview { max-width: 100%; max-height: 80px; border-radius: 6px; display: none; }
+    .ai-photo-remove {
+      position: absolute; top: 4px; right: 6px;
+      background: rgba(0,0,0,.72); border: 1px solid var(--hairline);
+      color: var(--hig-red); font-size: 14px;
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+      display: none; line-height: 1;
+    }
+    .ai-weight-row { width: 100%; display: none; align-items: center; gap: 8px; margin-top: 6px; margin-bottom: 6px; }
+    .ai-weight-row label { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-weight: 600; letter-spacing: 0.02em; }
+    .ai-weight-row input[type="range"] { flex: 1; accent-color: var(--accent); height: 4px; }
+    .ai-weight-row .val { font-size: 11px; color: var(--text-muted); min-width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
 
     /* ── Photo form ── */
-    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 6px; }
+    #photo-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; gap: 8px; }
     #photo-form .username-row { margin-bottom: 0; }
     .pick-area {
       display: flex; flex-direction: row; align-items: center; justify-content: center;
-      gap: 12px; background: #1c1c1e; border: 1.5px dashed #333;
-      border-radius: 16px; padding: 16px 20px; cursor: pointer; width: 100%;
-      transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
+      gap: 12px;
+      background: var(--input-bg);
+      border: 1.5px dashed var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-xl);
+      padding: 18px 20px; cursor: pointer; width: 100%;
+      transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
     }
-    .pick-area:active { border-color: #3a7bd5; }
-    .pick-area .pick-icon { font-size: 32px; flex-shrink: 0; }
-    .pick-area .pick-txt  { font-size: 14px; color: #888; text-align: left; }
+    .pick-area:active, .pick-area:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .pick-area .pick-icon { font-size: 30px; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
+    .pick-area .pick-txt  { font-size: 14px; color: var(--text-muted); text-align: left; font-weight: 500; }
     #photo-preview-wrap { display: none; position: relative; }
     #photo-preview {
-      width: 100%; border-radius: 12px; display: block;
+      width: 100%; border-radius: var(--r-lg); display: block;
       object-fit: contain; max-height: min(180px, 24vh); background: #000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 0 0 1px var(--hairline);
     }
     .rm-btn {
       position: absolute; top: 8px; right: 8px;
-      background: rgba(0,0,0,0.75); border: none; color: #fff;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--hairline); color: var(--text);
       border-radius: 50%; width: 30px; height: 30px; font-size: 16px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s var(--ease-out);
     }
+    .rm-btn:hover { background: rgba(255,59,48,0.4); }
     .caption-input {
-      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
-      border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit;
-      padding: 12px 16px; outline: none; transition: border-color 0.2s;
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 15px; font-family: inherit;
+      padding: 12px 16px; outline: none;
+      transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
       -webkit-appearance: none;
     }
-    .caption-input:focus { border-color: #3a7bd5; }
-    .caption-input::placeholder { color: #555; }
+    .caption-input:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
+    }
+    .caption-input::placeholder { color: var(--text-dim); }
     #file-input { display: none; }
 
     /* ── Trivia form ── */
     #trivia-form { width: 100%; max-width: 480px; display: none; flex-direction: column; gap: 12px; }
     .trivia-question-box {
-      background: #1c1c1e; border-radius: 16px; padding: 18px 20px;
-      font-size: 17px; font-weight: 700; line-height: 1.4; text-align: center; color: #fff;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 4px 18px rgba(0,0,0,0.2);
+      border-radius: var(--r-xl);
+      padding: 20px 22px;
+      font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+      line-height: 1.4; text-align: center; color: var(--text);
     }
-    .trivia-category { font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .trivia-category {
+      font-size: 10px; color: var(--text-dim); text-align: center;
+      text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+      margin-bottom: 4px;
+    }
     /* ── Trivia countdown ── */
-    #trivia-countdown-wrap { display: none; align-items: center; gap: 8px; padding: 0 2px; }
-    #trivia-countdown-bar  { flex: 1; height: 5px; background: #2c2c2e; border-radius: 3px; overflow: hidden; }
-    #trivia-countdown-fill { height: 100%; width: 100%; background: #3a7bd5; border-radius: 3px; transition: width 0.9s linear, background 0.3s; }
-    #trivia-countdown-num  { font-size: 13px; font-weight: 700; min-width: 28px; text-align: right; color: #aaa; font-variant-numeric: tabular-nums; }
+    #trivia-countdown-wrap { display: none; align-items: center; gap: 10px; padding: 0 2px; }
+    #trivia-countdown-bar  {
+      flex: 1; height: 5px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--hairline);
+      border-radius: 3px; overflow: hidden;
+    }
+    #trivia-countdown-fill {
+      height: 100%; width: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      box-shadow: 0 0 12px var(--accent-glow);
+      transition: width 0.9s linear, background 0.3s;
+    }
+    #trivia-countdown-num  { font-size: 13px; font-weight: 700; min-width: 28px; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-    .trivia-opts-grid { display: flex; flex-direction: column; gap: 8px; }
+    .trivia-opts-grid { display: flex; flex-direction: column; gap: 10px; }
     .trivia-opt-btn {
-      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
-      border-radius: 12px; color: #fff; font-size: 15px; font-weight: 500;
-      font-family: inherit; padding: 14px 16px; cursor: pointer;
+      width: 100%;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 15px; font-weight: 500;
+      letter-spacing: -0.005em; font-family: inherit;
+      padding: 14px 16px; cursor: pointer;
       display: flex; align-items: center; gap: 12px;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.18s var(--ease-out), border-color 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), transform 0.12s var(--ease-out);
       -webkit-tap-highlight-color: transparent; text-align: left;
     }
-    .trivia-opt-btn:active { transform: scale(0.98); }
-    .trivia-opt-btn.selected { background: #1a3a6e; border-color: #3a7bd5; }
+    .trivia-opt-btn:active { transform: scale(0.985); }
+    .trivia-opt-btn.selected {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow);
+    }
     .trivia-opt-letter {
       width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(255,255,255,0.1); color: #aaa;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--hairline);
+      color: var(--text-muted);
       font-size: 13px; font-weight: 800; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
+      transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
     }
-    .trivia-opt-btn.selected .trivia-opt-letter { background: #3a7bd5; color: #fff; }
+    .trivia-opt-btn.selected .trivia-opt-letter {
+      background: var(--accent); color: #fff;
+      border-color: rgba(0,0,0,0.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+    }
     .team-input {
-      width: 100%; background: #1c1c1e; border: 1.5px solid #333;
-      border-radius: 12px; color: #fff; font-size: 15px; font-family: inherit;
-      padding: 12px 16px; outline: none; transition: border-color 0.2s;
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 15px; font-family: inherit;
+      padding: 12px 16px; outline: none;
+      transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
     }
-    .team-input:focus { border-color: #3a7bd5; }
-    .team-input::placeholder { color: #555; }
-    #trivia-status { font-size: 13px; text-align: center; min-height: 18px; }
-    #trivia-waiting { font-size: 13px; color: #666; text-align: center; margin-top: 8px; }
+    .team-input:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
+    }
+    .team-input::placeholder { color: var(--text-dim); }
+    #trivia-status { font-size: 13px; text-align: center; min-height: 18px; letter-spacing: -0.005em; }
+    #trivia-waiting { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 8px; }
 
     /* ── Trivia scoreboard ── */
-    #trivia-scores-wrap { display: none; width: 100%; max-width: 480px; margin-top: 16px; }
+    #trivia-scores-wrap { display: none; width: 100%; max-width: 480px; margin-top: 18px; }
     .scores-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .scores-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .08em; }
-    .scores-toggle { margin-left: auto; font-size: 11px; color: #3a7bd5; background: none; border: none; cursor: pointer; font-family: inherit; padding: 2px 0; -webkit-tap-highlight-color: transparent; }
+    .scores-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; }
+    .scores-toggle {
+      margin-left: auto; font-size: 11px; color: var(--accent);
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      padding: 2px 0; font-weight: 600; letter-spacing: 0.02em;
+      -webkit-tap-highlight-color: transparent;
+    }
     .scores-list { display: flex; flex-direction: column; gap: 5px; }
-    .scores-row { display: flex; align-items: center; gap: 10px; background: #1c1c1e; border-radius: 10px; padding: 8px 12px; }
+    .scores-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r);
+      padding: 8px 12px;
+    }
     .scores-rank { font-size: 14px; min-width: 24px; text-align: center; flex-shrink: 0; }
-    .scores-team { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .scores-pts  { font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .scores-team { flex: 1; font-size: 14px; font-weight: 600; letter-spacing: -0.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scores-pts  { font-size: 14px; font-weight: 700; color: var(--text); flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
     /* ── Poll form ── */
     #poll-wrap { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
-    .poll-badge { display: inline-flex; align-items: center; gap: 6px; background: #ff375f; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .08em; border-radius: 20px; padding: 4px 12px; margin-bottom: 20px; text-transform: uppercase; }
-    .poll-blink { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: blink 1s ease-in-out infinite; }
-    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: .3 } }
-    .poll-question { font-size: 20px; font-weight: 700; text-align: center; line-height: 1.35; margin-bottom: 24px; max-width: 400px; }
+    .poll-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 800; letter-spacing: .1em;
+      border-radius: 20px; padding: 5px 14px; margin-bottom: 20px;
+      text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px var(--accent-glow);
+    }
+    .poll-blink { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(0.85); } }
+    .poll-question { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; text-align: center; line-height: 1.35; margin-bottom: 24px; max-width: 400px; color: var(--text); }
     .poll-opts { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-    .poll-opt-btn { width: 100%; background: #1c1c1e; border: 1.5px solid #333; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 600; font-family: inherit; padding: 16px 18px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background .15s, border-color .15s; -webkit-tap-highlight-color: transparent; text-align: left; }
-    .poll-opt-btn:active { transform: scale(.98); }
-    .poll-opt-btn.selected { background: #1a2a40; border-color: #3a7bd5; }
-    .poll-opt-btn.voted { background: #2a0e17; border-color: #ff375f; cursor: default; }
-    .poll-opt-btn.my-vote { background: #3a0f1e; border-color: #ff375f; }
-    .poll-opt-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #3a7bd5; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: 0; transition: opacity .15s; color: #3a7bd5; background: #1a2a40; }
+    .poll-opt-btn {
+      width: 100%;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 16px; font-weight: 600;
+      letter-spacing: -0.005em; font-family: inherit;
+      padding: 16px 18px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      transition: background 0.18s var(--ease-out), border-color 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), transform 0.12s var(--ease-out);
+      -webkit-tap-highlight-color: transparent; text-align: left;
+    }
+    .poll-opt-btn:active { transform: scale(.985); }
+    .poll-opt-btn.selected {
+      background: var(--accent-dim); border-color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow);
+    }
+    .poll-opt-btn.voted { background: var(--accent-soft); border-color: rgba(255,59,48,0.32); cursor: default; }
+    .poll-opt-btn.my-vote { background: var(--accent-dim); border-color: var(--accent); box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 22px var(--accent-glow); }
+    .poll-opt-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--accent); background: var(--accent);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+      opacity: 0; transition: opacity .18s var(--ease-out);
+      color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+    }
     .poll-opt-text { flex: 1; }
-    .poll-opt-pct { font-size: 14px; color: #888; font-weight: 700; min-width: 38px; text-align: right; flex-shrink: 0; }
-    .poll-bar-wrap { position: absolute; inset: 0; border-radius: 12px; overflow: hidden; pointer-events: none; }
-    .poll-bar-fill { height: 100%; background: rgba(255,55,95,.15); transition: width .5s ease; }
+    .poll-opt-pct { font-size: 14px; color: var(--text-muted); font-weight: 700; min-width: 38px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .poll-bar-wrap { position: absolute; inset: 0; border-radius: var(--r); overflow: hidden; pointer-events: none; }
+    .poll-bar-fill { height: 100%; background: var(--accent-dim); transition: width .5s var(--ease-out); }
     .poll-opt-inner { position: relative; width: 100%; display: flex; align-items: center; gap: 12px; }
-    .poll-submit-btn { width: 100%; padding: 15px; background: #3a7bd5; color: #fff; border: none; border-radius: 14px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s, opacity .15s; margin-top: 12px; -webkit-tap-highlight-color: transparent; }
-    .poll-submit-btn:active { opacity: .8; }
-    .poll-submit-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; }
-    .poll-total { font-size: 12px; color: #555; text-align: center; margin-top: 14px; }
-    .poll-closed { font-size: 13px; color: #f5a623; text-align: center; margin-top: 10px; font-weight: 600; }
-    .poll-waiting { text-align: center; color: #aaa; font-size: 15px; max-width: 320px; line-height: 1.6; }
+    .poll-submit-btn {
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #fff;
+      border: 1px solid rgba(0,0,0,0.25);
+      border-radius: var(--r-lg);
+      font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+      font-family: inherit; cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 18px var(--accent-glow);
+      transition: filter .15s var(--ease-out), transform .12s var(--ease-out);
+      margin-top: 14px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .poll-submit-btn:hover { filter: brightness(1.06); }
+    .poll-submit-btn:active { transform: translateY(1px); }
+    .poll-submit-btn:disabled {
+      background: var(--surface); color: var(--text-dim);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      cursor: not-allowed; filter: none; transform: none;
+    }
+    .poll-total { font-size: 12px; color: var(--text-dim); text-align: center; margin-top: 14px; letter-spacing: 0.02em; }
+    .poll-closed { font-size: 13px; color: var(--hig-amber); text-align: center; margin-top: 10px; font-weight: 600; }
+    .poll-waiting { text-align: center; color: var(--text-muted); font-size: 15px; max-width: 320px; line-height: 1.6; }
     .poll-waiting-icon { font-size: 40px; margin-bottom: 14px; }
 
     /* ── Shared button ── */
     button.main-btn {
       width: 100%; max-width: 440px;
-      padding: 16px; background: #3a7bd5; color: #fff;
-      border: none; border-radius: 14px;
-      font-size: 17px; font-weight: 700; font-family: inherit;
-      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      padding: 16px;
+      background: var(--accent); color: #fff;
+      border: 1px solid rgba(0,0,0,0.25);
+      border-radius: var(--r-lg);
+      font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+      font-family: inherit; cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 18px var(--accent-glow);
+      transition: filter 0.15s var(--ease-out), transform 0.12s var(--ease-out);
       -webkit-tap-highlight-color: transparent;
     }
-    button.main-btn:hover  { background: #2d6bc4; }
-    button.main-btn:active { transform: scale(0.98); }
-    button.main-btn:disabled { background: #2c2c2e; color: #555; cursor: not-allowed; transform: none; }
+    button.main-btn:hover  { filter: brightness(1.06); }
+    button.main-btn:active { transform: translateY(1px); }
+    button.main-btn:disabled {
+      background: var(--surface); color: var(--text-dim);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      cursor: not-allowed; filter: none; transform: none;
+    }
     #status       { margin-top: 18px; font-size: 14px; text-align: center; min-height: 20px; max-width: 440px; line-height: 1.5; }
     #photo-status { font-size: 14px; text-align: center; min-height: 20px; line-height: 1.5; }
-    .success { color: #34c759; font-weight: 600; }
-    .error   { color: #ff453a; }
-    .error-setup { color: #ff9500; font-size: 13px; line-height: 1.6; }
+    .success { color: var(--hig-green); font-weight: 600; }
+    .error   { color: var(--hig-red); }
+    .error-setup { color: var(--hig-amber); font-size: 13px; line-height: 1.6; }
 
     /* ── Live content banner (non-intrusive alert when user is on messages/photos) ── */
-    #content-banner { display: none; width: 100%; max-width: 440px; padding: 12px 16px; background: #1a2a40; border: 1.5px solid #3a7bd5; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; margin-bottom: 12px; animation: bannerPulse 2s ease-in-out infinite; }
-    #content-banner:active { opacity: 0.8; }
-    @keyframes bannerPulse { 0%, 100% { border-color: #3a7bd5; } 50% { border-color: #5a9bf5; box-shadow: 0 0 12px rgba(58,123,213,0.35); } }
+    #content-banner {
+      display: none; width: 100%; max-width: 440px;
+      padding: 12px 16px;
+      background: var(--accent-dim);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--accent);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow);
+      border-radius: var(--r-lg);
+      color: var(--text); font-size: 14px; font-weight: 600;
+      letter-spacing: -0.005em;
+      text-align: center; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      margin-bottom: 14px; animation: bannerPulse 2s ease-in-out infinite;
+    }
+    #content-banner:active { opacity: 0.85; }
+    @keyframes bannerPulse {
+      0%, 100% { box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow); }
+      50% { box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 28px var(--accent-glow), 0 0 0 3px var(--accent-dim); }
+    }
 
     /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
-    #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 14px; }
-    .mode-nav-btn { flex: 1; padding: 9px 12px; background: #1c1c1e; border: 1.5px solid #333; border-radius: 10px; color: #888; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; text-align: center; }
-    .mode-nav-btn:active { background: #2c2c2e; color: #fff; }
+    #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 16px; }
+    .mode-nav-btn {
+      flex: 1; padding: 10px 12px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r);
+      color: var(--text-muted); font-size: 14px; font-weight: 600;
+      letter-spacing: -0.005em; font-family: inherit;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
+      text-align: center;
+    }
+    .mode-nav-btn:active, .mode-nav-btn:hover {
+      background: var(--surface-hi); color: var(--text);
+      border-color: var(--hairline-hi);
+    }
 
     /* ── Powered-by footer ── */
     #powered-by {
-      text-align: center; padding: 22px 0 10px; font-size: 12px; color: #666;
+      text-align: center; padding: 24px 0 12px;
+      font-size: 11px; color: var(--text-dim);
+      letter-spacing: 0.03em; text-transform: uppercase; font-weight: 500;
     }
-    #powered-by a { color: #888; text-decoration: none; font-weight: 600; transition: color 0.2s; }
-    #powered-by a:hover { color: #bbb; }
+    #powered-by a { color: var(--text-muted); text-decoration: none; font-weight: 600; transition: color 0.2s var(--ease-out); }
+    #powered-by a:hover { color: var(--text); }
 
     /* ── Emoji Applause bar ── */
     #emoji-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(10,10,15,0.97);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      background: var(--glass-bg-hi);
+      backdrop-filter: var(--glass-blur-hi); -webkit-backdrop-filter: var(--glass-blur-hi);
       padding: 10px 16px env(safe-area-inset-bottom, 14px);
-      border-top: 1px solid #222; z-index: 100; display: none;
+      border-top: 1px solid var(--hairline-hi);
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.4), inset 0 1px 0 var(--hairline-top);
+      z-index: 100; display: none;
     }
-    #emoji-bar-label { text-align: center; font-size: 10px; color: #444; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+    #emoji-bar-label {
+      text-align: center; font-size: 10px; color: var(--text-dim);
+      font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: 8px;
+    }
     .react-row { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .react-row::-webkit-scrollbar { display: none; }
-    .react-btn { flex-shrink: 0; width: 72px; background: #1c1c1e; border: none; border-radius: 14px; font-size: 52px; padding: 14px 4px 10px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, background .1s; display: block; }
-    .react-btn:active { transform: scale(.8); background: #2c2c2e; }
-    .react-btn.fired { background: #2a2a2e; animation: reactPop .25s ease-out; }
-    @keyframes reactPop { 0% { transform: scale(.7) } 60% { transform: scale(1.15) } 100% { transform: scale(1) } }
+    .react-btn {
+      flex-shrink: 0; width: 72px;
+      background: var(--glass-bg);
+      border: 1px solid var(--hairline);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+      border-radius: var(--r-lg);
+      font-size: 52px; padding: 14px 4px 10px; line-height: 1;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform .12s var(--ease-out), background .15s var(--ease-out), border-color .15s var(--ease-out);
+      display: block;
+    }
+    .react-btn:active { transform: scale(.82); background: var(--surface-hi); }
+    .react-btn.fired {
+      background: var(--accent-dim); border-color: var(--accent);
+      animation: reactPop .28s var(--ease-out);
+    }
+    @keyframes reactPop { 0% { transform: scale(.7); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
@@ -236,6 +530,7 @@
   <div id="mode-nav">
     <button class="mode-nav-btn" onclick="gotoMessages()">💬 Message</button>
     <button class="mode-nav-btn" onclick="gotoPhoto()">📸 Photo</button>
+    <button class="mode-nav-btn" id="nav-ai" onclick="gotoAi()" style="display:none">✨ Prompt</button>
   </div>
 
   <div class="icon" id="page-icon">🎶</div>
@@ -246,7 +541,7 @@
   <div class="tabs" id="tabs">
     <button class="tab-btn active" id="tab-msg"   onclick="switchTab('msg')">💬 Message</button>
     <button class="tab-btn"        id="tab-photo" onclick="switchTab('photo')">📸 Photo</button>
-    <button class="tab-btn"        id="tab-ai"    onclick="switchTab('ai')" style="display:none;color:#c084fc">✨ Prompt</button>
+    <button class="tab-btn"        id="tab-ai"    onclick="switchTab('ai')" style="display:none">✨ Prompt</button>
   </div>
 
   <!-- Normal message form -->
@@ -259,7 +554,7 @@
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
-    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.4;margin-top:4px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by Kymanaut</a></div>
+    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Photo form -->
@@ -279,47 +574,54 @@
     </div>
     <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
     <!-- Progress bar -->
-    <div id="photo-progress-wrap" style="display:none;width:100%;background:#1c1c1e;border-radius:99px;height:8px;overflow:hidden">
-      <div id="photo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7bd5,#5b9cf6);border-radius:99px;transition:width 0.2s ease"></div>
+    <div id="photo-progress-wrap" style="display:none;width:100%;background:var(--surface);border:1px solid var(--hairline);border-radius:99px;height:8px;overflow:hidden">
+      <div id="photo-progress-bar" style="height:100%;width:0%;background:var(--accent);box-shadow:0 0 12px var(--accent-glow);border-radius:99px;transition:width 0.2s ease"></div>
     </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled style="width:100%">Send Photo!</button>
     <div id="photo-status"></div>
-    <div style="font-size:10px;color:#555;text-align:center;line-height:1.4;margin-top:2px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by Kymanaut</a></div>
+    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- AI Prompt form -->
   <div id="ai-prompt-form">
-    <div class="username-row" style="border-color:#333">
-      <span class="username-at" style="color:#a855f7">✨</span>
+    <div class="username-row">
+      <span class="username-at" style="color:var(--accent)">✨</span>
       <input type="text" id="ai-name" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
-    <div class="char-count" id="ai-char-count">0 / 200</div>
+    <div class="char-count" id="ai-char-count" style="margin-bottom:2px">0 / 200</div>
+    <div class="ai-photo-section">
+      <span class="ai-photo-label">📷 Reference photo <span style="color:var(--text-dim);text-transform:none;letter-spacing:0;font-weight:400">(optional — influences the style)</span></span>
+      <div class="ai-weight-row" id="ai-weight-row">
+        <label>Photo influence</label>
+        <input type="range" id="ai-photo-weight" min="10" max="90" value="50" step="5">
+        <span class="val" id="ai-photo-weight-val">50%</span>
+      </div>
+      <div class="ai-photo-drop" id="ai-photo-drop">
+        <input type="file" id="ai-photo-input" accept="image/*">
+        <div class="placeholder" id="ai-photo-placeholder">Tap to add a photo</div>
+        <img class="ai-photo-preview" id="ai-photo-preview">
+        <button class="ai-photo-remove" id="ai-photo-remove" type="button">✕</button>
+      </div>
+    </div>
     <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
     <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
-    <div style="font-size:10px;color:#555;text-align:center;max-width:320px;line-height:1.4;margin-top:4px">By submitting, you agree your content may be displayed publicly. <a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank" style="color:#555;text-decoration:underline">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" style="color:#888;text-decoration:none;font-weight:600">Powered by Kymanaut</a></div>
-  </div>
-
-  <!-- Shown when host has turned off all audience submissions (message, photo, AI) -->
-  <div id="submissions-off" style="display:none;width:100%;max-width:440px;text-align:center;padding:40px 20px;color:#888;flex-direction:column;align-items:center;gap:12px">
-    <div style="font-size:48px">🔇</div>
-    <div style="font-size:18px;font-weight:600;color:#ccc">Submissions paused</div>
-    <div style="font-size:13px;line-height:1.5;max-width:320px">The host has temporarily turned off audience submissions. You can still react with emoji below — check back in a bit!</div>
+    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Trivia: registration -->
   <div id="trivia-register-wrap" style="display:none;width:100%;max-width:440px;flex-direction:column;gap:12px">
-    <div style="text-align:center;font-size:14px;color:#888;line-height:1.6">Enter your team name to join the game.<br>You'll be locked in for the session.</div>
-    <input type="text" id="team-name-reg-input" class="team-input" placeholder="Team name…" maxlength="30" style="text-align:center;font-size:18px;font-weight:700">
+    <div style="text-align:center;font-size:14px;color:var(--text-muted);line-height:1.6">Enter your team name to join the game.<br>You'll be locked in for the session.</div>
+    <input type="text" id="team-name-reg-input" class="team-input" placeholder="Team name…" maxlength="30" style="text-align:center;font-size:18px;font-weight:700;letter-spacing:-0.01em">
     <button class="main-btn" id="btn-join-trivia" onclick="joinTrivia()">Join Game</button>
-    <div id="join-status" style="font-size:13px;color:#ff453a;text-align:center;min-height:18px"></div>
-    <div id="known-teams-list" style="display:none;font-size:11px;color:#666;text-align:center;line-height:1.8"></div>
+    <div id="join-status" style="font-size:13px;color:var(--hig-red);text-align:center;min-height:18px"></div>
+    <div id="known-teams-list" style="display:none;font-size:11px;color:var(--text-dim);text-align:center;line-height:1.8;letter-spacing:0.02em"></div>
   </div>
 
   <!-- Trivia: registered / waiting -->
-  <div id="trivia-playing-badge" style="display:none;font-size:13px;color:#888;text-align:center;margin-bottom:8px;max-width:440px">
-    Playing as <strong style="color:#fff" id="trivia-playing-name"></strong>
-    <span style="color:#3a7bd5;cursor:pointer;margin-left:8px;font-size:11px" onclick="changeTeam()">Change</span>
+  <div id="trivia-playing-badge" style="display:none;font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:10px;max-width:440px">
+    Playing as <strong style="color:var(--text);letter-spacing:-0.005em" id="trivia-playing-name"></strong>
+    <span style="color:var(--accent);cursor:pointer;margin-left:8px;font-size:11px;font-weight:600;letter-spacing:0.02em" onclick="changeTeam()">Change</span>
   </div>
 
   <!-- Trivia form -->
@@ -391,6 +693,14 @@
             const ping = await fetchWithTimeout(`${candidate}/ping`, {}, 4000);
             if (ping.ok) tunnelBase = candidate;
           } catch(_) { /* tunnel stale — stay on worker fallback */ }
+        }
+        // Immediately fetch app state so AI prompt tab appears without waiting for poll cycle
+        if (tunnelBase) {
+          try {
+            const sr = await fetchWithTimeout(`${tunnelBase}/status`, {}, 4000);
+            const sd = await sr.json();
+            if (sd.aiActive && !aiActive) { aiActive = true; setAiTabVisible(true); }
+          } catch(_) {}
         }
       } catch(_) {}
     }
@@ -580,8 +890,8 @@
     });
 
     function sendPhoto() {
-      if (!resizedDataUrl || !topic || !workerBase) {
-        photoStatus.innerHTML = '<span class="error">Photo uploads require a worker URL — please use the venue QR code.</span>';
+      if (!resizedDataUrl || !topic) {
+        photoStatus.innerHTML = '<span class="error">Photo uploads need a venue — please use the venue QR code.</span>';
         return;
       }
       const caption     = (document.getElementById('photo-caption')?.value || '').trim();
@@ -595,22 +905,16 @@
       progressWrap.style.display = 'block';
       progressBar.style.width = '0%';
 
+      // Photos submit directly to the tunnel (zero Cloudflare Worker cost).
+      // If the tunnel is unreachable — e.g. DJ's laptop briefly offline —
+      // we fall back to POSTing to the worker, which stores in R2; the
+      // Electron app picks those up on its slow photo poll when it reconnects.
       const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName });
-      const xhr     = new XMLHttpRequest();
-      xhr.open('POST', `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.timeout = 25000;
 
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-          progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
-        }
-      };
-
-      xhr.onload = () => {
+      function done(success, errText) {
         progressBar.style.width = '100%';
         setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (success) {
           photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
           resizedDataUrl = null;
           previewImg.src = '';
@@ -620,18 +924,41 @@
           fileInput.value = '';
           setTimeout(() => { photoBtn.disabled = false; }, 15000);
         } else {
-          photoStatus.innerHTML = '<span class="error">✗ Upload failed (error ' + xhr.status + ') — please try again.</span>';
+          photoStatus.innerHTML = '<span class="error">✗ Upload failed' + (errText ? ' (' + errText + ')' : '') + ' — please try again.</span>';
           photoBtn.disabled = false;
         }
-      };
+      }
 
-      xhr.onerror = xhr.ontimeout = () => {
-        progressWrap.style.display = 'none';
-        photoStatus.innerHTML = '<span class="error">✗ Upload failed — check your connection and try again.</span>';
-        photoBtn.disabled = false;
-      };
+      function postTo(url, onFail) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.timeout = 25000;
+        xhr.upload.onprogress = e => {
+          if (e.lengthComputable) {
+            progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) return done(true);
+          onFail('error ' + xhr.status);
+        };
+        xhr.onerror = xhr.ontimeout = () => onFail('network');
+        xhr.send(payload);
+      }
 
-      xhr.send(payload);
+      const tryTunnel = () => {
+        if (!tunnelBase) { tryWorker(); return; }
+        postTo(`${tunnelBase}/photo`, () => tryWorker());
+      };
+      const tryWorker = () => {
+        if (!workerBase) return done(false, 'no server');
+        postTo(
+          `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`,
+          (errText) => done(false, errText),
+        );
+      };
+      tryTunnel();
     }
 
     function resizeImage(file, maxPx, quality) {
@@ -695,6 +1022,20 @@
       activeTab = 'photo';
       document.getElementById('tab-msg').classList.remove('active');
       document.getElementById('tab-photo').classList.add('active');
+    }
+    function gotoAi() {
+      userManualNav = true; hideContentBanner();
+      currentQ = null; selectedAnswer = -1;
+      hideAllForms(); hideModeNav();
+      document.getElementById('tabs').style.display        = 'flex';
+      document.getElementById('ai-prompt-form').style.display = 'flex';
+      document.getElementById('page-icon').textContent     = '✨';
+      document.getElementById('page-title').textContent    = 'Submit a Prompt';
+      document.getElementById('page-sub').textContent      = 'Describe the visuals you want to see!';
+      activeTab = 'ai';
+      document.getElementById('tab-msg').classList.remove('active');
+      document.getElementById('tab-photo').classList.remove('active');
+      document.getElementById('tab-ai').classList.add('active');
     }
 
     let reactCooldown = 0;
@@ -784,11 +1125,11 @@
       list.style.display = 'flex';
       const medals = ['🥇','🥈','🥉'];
       list.innerHTML = lastScores.map((s, i) => {
-        const rankColor = i === 0 ? '#ffd60a' : i === 1 ? '#aaa' : i === 2 ? '#cd7f32' : '#555';
+        const rankColor = i === 0 ? '#ffd60a' : i === 1 ? '#aaa' : i === 2 ? '#cd7f32' : 'var(--text-dim)';
         const myRow = s.team === myTeam;
-        return `<div class="scores-row" style="${myRow ? 'border:1.5px solid #3a7bd5;' : ''}">
+        return `<div class="scores-row" style="${myRow ? 'border-color:var(--accent);box-shadow:inset 0 1px 0 var(--hairline-top),0 0 18px var(--accent-glow);background:var(--accent-dim);' : ''}">
           <span class="scores-rank">${i < 3 ? medals[i] : (i+1)+'.'}</span>
-          <span class="scores-team" style="color:${myRow ? '#5a9bf5' : rankColor}">${s.team.replace(/</g,'&lt;')}</span>
+          <span class="scores-team" style="color:${myRow ? 'var(--accent-light)' : rankColor}">${s.team.replace(/</g,'&lt;')}</span>
           <span class="scores-pts">${s.score} pt${s.score !== 1 ? 's' : ''}</span>
         </div>`;
       }).join('');
@@ -812,7 +1153,7 @@
     function hideAllForms() {
       triviaUIVisible = false;
       stopTriviaCountdown();
-      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
+      ['msg-form','photo-form','ai-prompt-form','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -901,19 +1242,9 @@
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
-      // Pick a valid tab. If the active tab is disallowed, fall back in order.
-      let restoreTab = activeTab;
-      const tabAllowed = t =>
-        (t === 'msg'   && msgAudienceAllowed) ||
-        (t === 'photo' && photoAudienceAllowed) ||
-        (t === 'ai'    && aiActive);
-      if (!tabAllowed(restoreTab)) {
-        if (msgAudienceAllowed)        restoreTab = 'msg';
-        else if (photoAudienceAllowed) restoreTab = 'photo';
-        else if (aiActive)             restoreTab = 'ai';
-        else                           restoreTab = null; // all off — empty state handles UI
-      }
-      if (restoreTab) activeTab = restoreTab;
+      // Restore tabs + active tab (fall back to msg if AI tab is active but AI is off)
+      const restoreTab = (activeTab === 'ai' && !aiActive) ? 'msg' : activeTab;
+      if (restoreTab !== activeTab) { activeTab = 'msg'; }
       document.getElementById('tabs').style.display = 'flex';
       document.getElementById('tab-msg').classList.toggle('active', restoreTab === 'msg');
       document.getElementById('tab-photo').classList.toggle('active', restoreTab === 'photo');
@@ -928,17 +1259,12 @@
         document.getElementById('page-icon').textContent    = '📸';
         document.getElementById('page-title').textContent   = 'Share a Photo';
         document.getElementById('page-sub').textContent     = 'Your photo could appear on screen!';
-      } else if (restoreTab === 'ai') {
+      } else {
         document.getElementById('ai-prompt-form').style.display = 'flex';
         document.getElementById('page-icon').textContent  = '✨';
         document.getElementById('page-title').textContent = 'AI Prompt';
         document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
-      // Re-sync tab button visibility + empty state in case all submissions are off.
-      setMsgTabVisible(msgAudienceAllowed);
-      setPhotoTabVisible(photoAudienceAllowed);
-      setAiTabVisible(aiActive);
-      updateSubmissionsOffState();
     }
 
     async function joinTrivia() {
@@ -992,24 +1318,27 @@
 
       document.querySelectorAll('.trivia-opt-btn').forEach((btn, i) => {
         btn.disabled = true;
-        btn.style.transition = 'background 0.3s, border-color 0.3s, color 0.3s';
+        btn.style.transition = 'background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s';
         if (i === correctIndex) {
-          btn.style.background   = '#0d3a1a';
-          btn.style.borderColor  = '#30d158';
-          btn.style.color        = '#30d158';
+          btn.style.background   = 'rgba(48,209,88,0.12)';
+          btn.style.borderColor  = 'var(--hig-green)';
+          btn.style.color        = 'var(--hig-green)';
+          btn.style.boxShadow    = 'inset 0 1px 0 var(--hairline-top), 0 0 18px rgba(48,209,88,0.35)';
         } else if (i === selectedAnswer) {
-          btn.style.background   = '#3a0d0d';
-          btn.style.borderColor  = '#ff453a';
-          btn.style.color        = '#ff453a';
+          btn.style.background   = 'rgba(255,59,48,0.12)';
+          btn.style.borderColor  = 'var(--hig-red)';
+          btn.style.color        = 'var(--hig-red)';
+          btn.style.boxShadow    = 'inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow)';
         }
       });
 
       const statusEl = document.getElementById('trivia-status');
       if (statusEl) {
         statusEl.textContent  = isCorrect ? '✓ Correct!' : '✗ Wrong!';
-        statusEl.style.color  = isCorrect ? '#30d158' : '#ff453a';
+        statusEl.style.color  = isCorrect ? 'var(--hig-green)' : 'var(--hig-red)';
         statusEl.style.fontSize   = '22px';
         statusEl.style.fontWeight = '700';
+        statusEl.style.letterSpacing = '-0.01em';
         statusEl.style.marginTop  = '12px';
       }
 
@@ -1036,8 +1365,13 @@
         if (numEl) numEl.textContent = remaining;
         if (fill)  fill.style.width  = Math.max(0, (remaining / total) * 100) + '%';
         const urgent = remaining <= 10;
-        if (fill)  fill.style.background  = urgent ? '#ff453a' : '#3a7bd5';
-        if (numEl) numEl.style.color      = urgent ? '#ff453a' : '#aaa';
+        if (fill)  {
+          fill.style.background = 'var(--accent)';
+          fill.style.boxShadow  = urgent
+            ? '0 0 16px var(--accent-glow), 0 0 4px var(--accent)'
+            : '0 0 12px var(--accent-glow)';
+        }
+        if (numEl) numEl.style.color = urgent ? 'var(--accent)' : 'var(--text-muted)';
       }
       wrap.style.display = 'flex';
       update();
@@ -1076,7 +1410,7 @@
         );
         if (!res.ok) throw new Error('HTTP ' + res.status);
         triviaAnswered = true;
-        document.getElementById('trivia-status').innerHTML = '<span style="color:#34c759;font-weight:600">✓ Answer submitted! Good luck!</span>';
+        document.getElementById('trivia-status').innerHTML = '<span style="color:var(--hig-green);font-weight:600">✓ Answer submitted! Good luck!</span>';
         btn.textContent = 'Submitted!';
       } catch(e) {
         const msg = e.name === 'AbortError' ? '✗ Timed out — try again.' : '✗ Failed — check your connection.';
@@ -1093,12 +1427,22 @@
     let _sseConnected = false;
     let _sseReconnectTimer = null;
     let _sseFailCount = 0;
+    let _resolveAttempt = 0; // drives backoff when the tunnel isn't registered yet
 
     function _connectSSE() {
       if (!tunnelBase) {
-        // No tunnel — try to resolve one, then retry
+        // No tunnel — try to resolve one, then retry.  On first-page-load
+        // the DJ's laptop may still be booting cloudflared, so the first few
+        // attempts often fail; back off exponentially from 2s up to 30s.
         resolveTunnel().catch(() => {}).then(() => {
-          _sseReconnectTimer = setTimeout(_connectSSE, tunnelBase ? 1000 : 30000);
+          if (tunnelBase) {
+            _resolveAttempt = 0;
+            _sseReconnectTimer = setTimeout(_connectSSE, 0);
+          } else {
+            _resolveAttempt++;
+            const wait = Math.min(30000, 2000 * Math.pow(2, Math.min(4, _resolveAttempt - 1)));
+            _sseReconnectTimer = setTimeout(_connectSSE, wait);
+          }
         });
         return;
       }
@@ -1108,6 +1452,19 @@
         _sseConnected = true;
         _sseFailCount = 0;
         if (_sseReconnectTimer) { clearTimeout(_sseReconnectTimer); _sseReconnectTimer = null; }
+        // Belt-and-suspenders: explicitly pull /status on every (re)connect in
+        // case the initial 'state' SSE frame was lost in a buffer somewhere.
+        // Route the snapshot through the same handlers the SSE stream uses so
+        // the AI prompt tab / poll / trivia state catch up immediately.
+        fetchWithTimeout(`${tunnelBase}/status`, {}, 4000)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            if (!d) return;
+            _handleTriviaState(d);
+            _handlePollState(d);
+            _handleAppState(d);
+          })
+          .catch(() => {});
       };
       _sseSource.onmessage = (ev) => {
         _sseFailCount = 0; // data received = connection healthy
@@ -1319,73 +1676,78 @@
       if (el) { el.textContent = len + ' / 200'; el.className = 'char-count' + (len > 160 ? ' warn' : ''); }
     }
 
-    // Track each audience-submission channel independently. Defaults to true
-    // so older DJ builds (which don't broadcast these flags) keep working.
-    let msgAudienceAllowed   = true;
-    let photoAudienceAllowed = true;
+    // ── AI Photo upload handling ──
+    let aiPhotoDataUrl = null;
+    const aiPhotoDrop    = document.getElementById('ai-photo-drop');
+    const aiPhotoInput   = document.getElementById('ai-photo-input');
+    const aiPhotoPreview = document.getElementById('ai-photo-preview');
+    const aiPhotoRemove  = document.getElementById('ai-photo-remove');
+    const aiWeightRow    = document.getElementById('ai-weight-row');
+    const aiWeightSlider = document.getElementById('ai-photo-weight');
+    const aiWeightVal    = document.getElementById('ai-photo-weight-val');
+
+    function resizeImage(file, maxPx, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxPx || h > maxPx) {
+              const s = maxPx / Math.max(w, h);
+              w = Math.round(w * s); h = Math.round(h * s);
+            }
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleAiPhoto(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      try {
+        aiPhotoDataUrl = await resizeImage(file, 768, 0.7);
+        aiPhotoPreview.src = aiPhotoDataUrl;
+        aiPhotoPreview.style.display = 'block';
+        aiPhotoRemove.style.display = 'block';
+        document.getElementById('ai-photo-placeholder').style.display = 'none';
+        aiWeightRow.style.display = 'flex';
+      } catch(_) {}
+    }
+
+    function clearAiPhoto() {
+      aiPhotoDataUrl = null;
+      aiPhotoPreview.style.display = 'none';
+      aiPhotoPreview.src = '';
+      aiPhotoRemove.style.display = 'none';
+      document.getElementById('ai-photo-placeholder').style.display = '';
+      aiWeightRow.style.display = 'none';
+      if (aiPhotoInput) aiPhotoInput.value = '';
+    }
+
+    if (aiPhotoInput) aiPhotoInput.addEventListener('change', e => { if (e.target.files[0]) handleAiPhoto(e.target.files[0]); });
+    if (aiPhotoRemove) aiPhotoRemove.addEventListener('click', e => { e.stopPropagation(); clearAiPhoto(); });
+    if (aiWeightSlider) aiWeightSlider.addEventListener('input', () => { if (aiWeightVal) aiWeightVal.textContent = aiWeightSlider.value + '%'; });
+    if (aiPhotoDrop) {
+      aiPhotoDrop.addEventListener('dragover', e => { e.preventDefault(); aiPhotoDrop.classList.add('dragover'); });
+      aiPhotoDrop.addEventListener('dragleave', () => aiPhotoDrop.classList.remove('dragover'));
+      aiPhotoDrop.addEventListener('drop', e => { e.preventDefault(); aiPhotoDrop.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleAiPhoto(e.dataTransfer.files[0]); });
+    }
 
     function setAiTabVisible(show) {
       const tab = document.getElementById('tab-ai');
-      if (!tab) return;
-      tab.style.display = show ? '' : 'none';
-      if (!show && activeTab === 'ai') _pickFallbackTab();
-    }
-    function setMsgTabVisible(show) {
-      const tab = document.getElementById('tab-msg');
-      if (!tab) return;
-      tab.style.display = show ? '' : 'none';
-      if (!show && activeTab === 'msg') _pickFallbackTab();
-    }
-    function setPhotoTabVisible(show) {
-      const tab = document.getElementById('tab-photo');
-      if (!tab) return;
-      tab.style.display = show ? '' : 'none';
-      if (!show && activeTab === 'photo') _pickFallbackTab();
-    }
-
-    // Pick the first still-visible tab, in order: msg → photo → ai.
-    // If none are visible, the empty-state handles the UI.
-    function _pickFallbackTab() {
-      if (msgAudienceAllowed)        switchTab('msg');
-      else if (photoAudienceAllowed) switchTab('photo');
-      else if (aiActive)             switchTab('ai');
-      // Otherwise leave activeTab alone — updateSubmissionsOffState() hides forms.
-    }
-
-    function updateSubmissionsOffState() {
-      const anyAllowed = msgAudienceAllowed || photoAudienceAllowed || aiActive;
-      const off    = document.getElementById('submissions-off');
-      const tabs   = document.getElementById('tabs');
-      const msgF   = document.getElementById('msg-form');
-      const photoF = document.getElementById('photo-form');
-      const aiF    = document.getElementById('ai-prompt-form');
-      // Only touch the UI if the user is currently in the messages/photo/AI view.
-      // Detect by checking whether any of those forms (or the empty state) is
-      // currently showing. Leaves trivia/poll/registration screens alone.
-      const inMsgView =
-        (tabs   && tabs.style.display   !== 'none') ||
-        (msgF   && msgF.style.display   !== 'none') ||
-        (photoF && photoF.style.display !== 'none') ||
-        (aiF    && aiF.style.display    !== 'none') ||
-        (off    && off.style.display    !== 'none');
-      if (!inMsgView) return;
-      if (!anyAllowed) {
-        if (off) off.style.display = 'flex';
-        if (tabs) tabs.style.display = 'none';
-        if (msgF) msgF.style.display = 'none';
-        if (photoF) photoF.style.display = 'none';
-        if (aiF) aiF.style.display = 'none';
-        document.getElementById('page-icon').textContent  = '🎶';
-        document.getElementById('page-title').textContent = 'Standby';
-        document.getElementById('page-sub').textContent   = '';
-      } else {
-        if (off) off.style.display = 'none';
-        if (tabs) tabs.style.display = 'flex';
-        // Re-show the active form if we were previously hidden.
-        if (activeTab === 'msg'   && msgF)   msgF.style.display   = 'flex';
-        if (activeTab === 'photo' && photoF) photoF.style.display = 'flex';
-        if (activeTab === 'ai'    && aiF)    aiF.style.display    = 'flex';
-      }
+      const nav = document.getElementById('nav-ai');
+      if (tab) tab.style.display = show ? '' : 'none';
+      if (nav) nav.style.display = show ? '' : 'none';
+      // If AI tab was active and AI just turned off, switch back to messages
+      if (!show && activeTab === 'ai') switchTab('msg');
     }
 
     async function sendAiPrompt() {
@@ -1399,9 +1761,14 @@
       status.textContent = ''; status.className = '';
       try {
         if (!tunnelBase) throw Object.assign(new Error('No venue connection'), { noTunnel: true });
+        const payload = { prompt: promptText, name: name || '' };
+        if (aiPhotoDataUrl) {
+          payload.photoDataUrl = aiPhotoDataUrl;
+          payload.photoWeight = parseInt(aiWeightSlider?.value || '50', 10);
+        }
         const res = await fetchWithTimeout(
           `${tunnelBase}/ai-prompt`,
-          { method: 'POST', body: JSON.stringify({ prompt: promptText, name: name || '' }),
+          { method: 'POST', body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: b.error || '' }); }
@@ -1409,6 +1776,7 @@
         status.className = 'success';
         document.getElementById('ai-prompt-text').value = '';
         onAiPromptInput();
+        clearAiPhoto();
         // 15s cooldown
         let remaining = 15;
         btn.textContent = `Wait ${remaining}s…`;
@@ -1433,18 +1801,11 @@
     }
 
     function _handleAppState(d) {
-      // Each audience-submission channel has its own "Accept audience submissions"
-      // toggle on the DJ side. Absent flags default to true so older app builds
-      // (which don't broadcast these) keep working unchanged.
-      const aiAllowed    = d.aiAudienceAllowed    !== false;
-      const msgAllowed   = d.msgAudienceAllowed   !== false;
-      const photoAllowed = d.photoAudienceAllowed !== false;
-      const aiNowActive  = !!d.aiActive && aiAllowed;
-
-      if (aiNowActive !== aiActive) { aiActive = aiNowActive; setAiTabVisible(aiActive); }
-      if (msgAllowed   !== msgAudienceAllowed)   { msgAudienceAllowed   = msgAllowed;   setMsgTabVisible(msgAllowed); }
-      if (photoAllowed !== photoAudienceAllowed) { photoAudienceAllowed = photoAllowed; setPhotoTabVisible(photoAllowed); }
-      updateSubmissionsOffState();
+      const nowActive = !!d.aiActive;
+      if (nowActive !== aiActive) {
+        aiActive = nowActive;
+        setAiTabVisible(aiActive);
+      }
     }
 
     // ── Init — resolve tunnel URL first, then connect SSE ──────────────────────
