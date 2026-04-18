@@ -88,8 +88,8 @@
       <li>A breadcrumb log of the last ~100 state transitions (e.g. "tunnel connected", "Syphon started", "moderation toggled") — no submission content is included</li>
       <li>A random anonymous venue ID (e.g. <code>avclubvj-a1b2c3d4</code>) so multiple reports from the same installation can be grouped together. This ID is generated on first run and stored locally; it is not linked to your identity, email, account, or IP address.</li>
     </ul>
-    <p>Reports do <strong>not</strong> include audience submissions, passwords, authentication tokens, network URLs, file paths outside short log snippets, usernames, or IP addresses.</p>
-    <p>Crash reporting can be disabled in the desktop app under <strong>Settings → Privacy → Share crash reports</strong>. Disabling takes effect after the next app restart. Reports already sent cannot be recalled.</p>
+    <p>Reports do <strong>not</strong> include audience submissions, passwords, authentication tokens, network URLs, file paths outside short log snippets, usernames, or IP addresses. Before transmission, error messages and stack traces pass through a scrubber that redacts email addresses, IP addresses, bearer tokens in URLs, and <code>/Users/&lt;name&gt;</code> paths as a defense-in-depth measure.</p>
+    <p><strong>Legal basis (GDPR Art. 6(1)(f)):</strong> legitimate interest in diagnosing software defects and maintaining application stability. You may opt out at any time via <strong>Settings → Privacy → Share crash reports</strong> in the desktop app. Disabling takes effect after the next app restart. Reports already sent cannot be recalled.</p>
 
     <h2>Changes</h2>
     <p>We may update this policy from time to time. The "last updated" date at the top reflects the most recent revision.</p>
