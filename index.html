@@ -1454,6 +1454,12 @@
       document.getElementById('tab-ai').classList.toggle('active', tab === 'ai');
       document.getElementById('msg-form').style.display        = tab === 'msg'   ? 'flex' : 'none';
       document.getElementById('photo-form').style.display      = tab === 'photo' ? 'flex' : 'none';
+      // Caption is only hidden inside photocontest mode; any tab switch back
+      // to the generic compose photo tab should restore it.
+      if (tab === 'photo') {
+        const capEl = document.getElementById('photo-caption');
+        if (capEl) capEl.style.display = '';
+      }
       document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
       // Keep the big header hidden in compose mode — tab bar is self-labeling.
       document.getElementById('page-icon').style.display  = 'none';
@@ -2826,6 +2832,10 @@
         if (promptText2) promptText2.textContent = activity.prompt || '';
         if (promptBox2) promptBox2.style.display = 'none';
         document.getElementById('photo-form').style.display = 'flex';
+        // Photo Contest has no winner caption — hide the caption input so the
+        // form isn't cluttered with a field that'll never be read.
+        const pcCap = document.getElementById('photo-caption');
+        if (pcCap) { pcCap.value = ''; pcCap.style.display = 'none'; }
         const pcWrap = document.getElementById('photocontest-wrap');
         if (pcWrap) pcWrap.style.display = 'flex';
         _pcLoadEntries(activity.slug || '');
@@ -2835,6 +2845,9 @@
       // Leaving photocontest view → hide entries list.
       const pcWrapHide = document.getElementById('photocontest-wrap');
       if (pcWrapHide) pcWrapHide.style.display = 'none';
+      // Restore caption input for generic photo tab.
+      const pcCapRestore = document.getElementById('photo-caption');
+      if (pcCapRestore) pcCapRestore.style.display = '';
       document.getElementById('page-icon').textContent  = '💭';
       document.getElementById('page-title').textContent = activity.name || 'Word Cloud';
       document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Add a word to the crowd\u2019s cloud!';
