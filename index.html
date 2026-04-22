@@ -3072,6 +3072,11 @@
     }
 
     function updateSubmissionsOffState() {
+      // Bail when the user is currently inside a WC/trivia/poll activity view —
+      // those screens manage their own form visibility and photocontest reuses
+      // the shared photo-form, which would otherwise trip the inMsgView check
+      // below and re-show msg-form + tabs on top of the activity UI.
+      if (currentActivity && currentActivity.kind) return;
       // Live WC / trivia / poll activities also count as "submissions available"
       // — if any are live, the user has something to do even when msg/photo/AI
       // are all gated off. This keeps the 🔇 "Submissions paused" state from
