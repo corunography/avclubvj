@@ -113,31 +113,7 @@
     }
     .brand-band img.logo { max-height: 22px; max-width: 60%; object-fit: contain; }
 
-    /* ── Anonymous toggle ── */
-    .anon-row {
-      width: 100%; display: flex; align-items: center; justify-content: flex-end;
-      gap: 8px; margin: -4px 2px 6px; font-size: 12px; color: var(--text-dim);
-      letter-spacing: 0.02em;
-    }
-    .anon-row label { cursor: pointer; user-select: none; }
-    .anon-toggle {
-      appearance: none; -webkit-appearance: none;
-      width: 34px; height: 20px; border-radius: 999px;
-      background: var(--surface); border: 1px solid var(--input-border);
-      position: relative; cursor: pointer;
-      transition: background 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
-    }
-    .anon-toggle::before {
-      content: ''; position: absolute; top: 1px; left: 1px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: var(--text-muted);
-      transition: transform 0.18s var(--ease-out), background 0.18s var(--ease-out);
-    }
-    .anon-toggle:checked { background: var(--accent); border-color: var(--accent); }
-    .anon-toggle:checked::before { transform: translateX(14px); background: #fff; }
-    .username-row.anon-dim { opacity: 0.42; pointer-events: none; filter: grayscale(1); }
-
-    /* ── Connection indicator dot (top-right) ── */
+/* ── Connection indicator dot (top-right) ── */
     #conn-dot {
       position: fixed; top: 10px; right: 12px; z-index: 9997;
       width: 8px; height: 8px; border-radius: 50%;
@@ -185,16 +161,7 @@
     }
     #debug-modal button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* ── Share button (footer) ── */
-    .share-btn {
-      background: none; border: 1px solid var(--hairline);
-      color: var(--text-dim); font-size: 11px; padding: 6px 12px;
-      border-radius: 999px; cursor: pointer; margin-top: 8px;
-      letter-spacing: 0.04em; transition: border-color 0.15s, color 0.15s;
-    }
-    .share-btn:hover, .share-btn:active { border-color: var(--accent); color: var(--accent); }
-
-    /* ── Dedupe nudge toast ── */
+/* ── Dedupe nudge toast ── */
     #dedupe-toast {
       position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%);
       background: var(--surface); border: 1px solid var(--hig-amber);
@@ -908,19 +875,15 @@
 
   <!-- Normal message form -->
   <div id="msg-form">
-    <div class="anon-row">
-      <label for="anon-msg">🔒 hide my name</label>
-      <input type="checkbox" class="anon-toggle" id="anon-msg" onchange="toggleAnon('msg')">
-    </div>
     <div class="username-row" id="username-row-msg">
       <span class="username-at">@</span>
-      <input type="text" id="username" placeholder="your username (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="text" id="username" placeholder="username — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <textarea id="msg" placeholder="Type your message here…" maxlength="240" oninput="onInput()"></textarea>
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Photo form -->
@@ -934,13 +897,9 @@
       <img id="photo-preview" alt="Preview">
       <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
     </div>
-    <div class="anon-row">
-      <label for="anon-photo">🔒 hide my name</label>
-      <input type="checkbox" class="anon-toggle" id="anon-photo" onchange="toggleAnon('photo')">
-    </div>
     <div class="username-row" id="username-row-photo">
       <span class="username-at">@</span>
-      <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="text" id="photo-username" placeholder="name — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
     <!-- Progress bar -->
@@ -949,18 +908,14 @@
     </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled style="width:100%">Send Photo!</button>
     <div id="photo-status"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- AI Prompt form -->
   <div id="ai-prompt-form">
-    <div class="anon-row">
-      <label for="anon-ai">🔒 hide my name</label>
-      <input type="checkbox" class="anon-toggle" id="anon-ai" onchange="toggleAnon('ai')">
-    </div>
     <div class="username-row" id="username-row-ai">
       <span class="username-at" style="color:var(--accent)">✨</span>
-      <input type="text" id="ai-name" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="text" id="ai-name" placeholder="name — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
     <div class="char-count" id="ai-char-count" style="margin-bottom:2px">0 / 200</div>
@@ -980,7 +935,7 @@
     </div>
     <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
     <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -1044,7 +999,7 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;margin:0 2px 6px">Recent submissions · tap to upvote</div>
       <div id="wc-recent-list" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Emoji Applause bar (fixed bottom) -->
@@ -1073,9 +1028,11 @@
       logoUrl:     null,              // If set, replaces the 🎶 icon + h1 title.
       accentColor: null,              // If set, overrides --accent + --accent-glow.
       accentGlow:  null,              // Optional rgba() glow color.
-      // HTML shown in the band below each send button. Default: understated
-      // wordmark + tagline. Venues with branded tier see their own content.
-      buttonBandHtml: '<span class="mark">PHASION LIVE</span><span class="divider"></span><span class="tagline">make the crowd the visuals</span>',
+      // HTML shown in the band below each send button. Empty by default
+      // (the footer "Powered by…" already carries brand) — venues with a
+      // branded tier inject logos/sponsor strips here. The applyBranding()
+      // pipeline treats empty buttonBandHtml as "don't render the band".
+      buttonBandHtml: '',
       // HTML injected into the "Powered by…" slot of each legal-fineprint.
       poweredByHtml: '<a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a>',
       faviconUrl:  null,
@@ -1216,34 +1173,11 @@
       });
     }
 
-    // ── Anonymous toggle (per-mode) ──────────────────────────────────────────
-    // When a user flips the "hide my name" switch, we dim + disable the
-    // matching username input and send the mode's name/username param as empty
-    // string. State is sticky in localStorage so the pref survives reloads.
-    const _anonState = {
-      msg:   !!localStorage.getItem('anon-msg'),
-      photo: !!localStorage.getItem('anon-photo'),
-      ai:    !!localStorage.getItem('anon-ai'),
-    };
-    function _applyAnonState(which) {
-      const row = document.getElementById('username-row-' + which);
-      const cb  = document.getElementById('anon-' + which);
-      const on  = !!_anonState[which];
-      if (cb) cb.checked = on;
-      if (row) row.classList.toggle('anon-dim', on);
-    }
-    function toggleAnon(which) {
-      const cb = document.getElementById('anon-' + which);
-      _anonState[which] = !!(cb && cb.checked);
-      if (_anonState[which]) localStorage.setItem('anon-' + which, '1');
-      else localStorage.removeItem('anon-' + which);
-      _applyAnonState(which);
-    }
-    function _effectiveName(which, rawName) {
-      return _anonState[which] ? '' : rawName;
-    }
+    // Leaving the name field blank IS the anonymous path — no toggle needed.
+    // Kept as a one-liner so existing call sites don't need conditional logic.
+    function _effectiveName(_which, rawName) { return rawName; }
 
-    // ── Recent-submit dedupe (30s, per-mode) ─────────────────────────────────
+// ── Recent-submit dedupe (30s, per-mode) ─────────────────────────────────
     const _recentSends = { msg: [], ai: [], wc: [] };
     const DEDUPE_WINDOW_MS = 30000;
     function _isDuplicate(mode, text) {
@@ -1393,26 +1327,7 @@
     window.addEventListener('online', () => { flushOfflineQueue(); });
     setInterval(() => { if (navigator.onLine) flushOfflineQueue(); }, 15000);
 
-    // ── Share button ─────────────────────────────────────────────────────────
-    async function shareLink(e) {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      const url = window.location.href;
-      const text = 'Join the show!';
-      try {
-        if (navigator.share) {
-          await navigator.share({ title: 'Phasion Live', text, url });
-          return;
-        }
-      } catch(_) { /* user cancelled or failed — fall back */ }
-      try {
-        await navigator.clipboard.writeText(url);
-        showDedupeNudge('Link copied to clipboard');
-      } catch(_) {
-        showDedupeNudge('Couldn\u2019t copy — long-press the URL');
-      }
-    }
-
-    // ── Audio click fallback (iPhones don't support navigator.vibrate) ───────
+// ── Audio click fallback (iPhones don't support navigator.vibrate) ───────
     let _clickAudioCtx = null;
     function _playClickBlip() {
       try {
@@ -2929,12 +2844,7 @@
         }
       }).catch(() => { /* silent — defaults are already live */ });
 
-      // Restore sticky anonymous-mode preferences across reloads.
-      _applyAnonState('msg');
-      _applyAnonState('photo');
-      _applyAnonState('ai');
-
-      // Deep-link: ?mode=msg|photo|ai|wc — auto-navigate to the requested
+// Deep-link: ?mode=msg|photo|ai|wc — auto-navigate to the requested
       // compose mode after page boot. 'trivia'/'poll' are handled elsewhere
       // by the existing mode-gating logic so we don't touch those here.
       const deepMode = (params.get('mode') || '').toLowerCase();
