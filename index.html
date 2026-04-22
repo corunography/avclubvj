@@ -2682,6 +2682,23 @@
       currentWcActivity = activity;
       showModeNav();
       hideAllForms();
+      // Photo Contest activities reuse the generic photo-form (camera/upload
+      // + caption), but the payload carries the activity slug so submissions
+      // land scoped to the contest. No text-cloud inputs shown.
+      // NB: `mode` carries the preset *key* ('photocontest'), not the
+      // render mode ('photos') — that's what the controls side publishes.
+      if (activity.mode === 'photocontest') {
+        document.getElementById('page-icon').textContent  = '🏆';
+        document.getElementById('page-title').textContent = activity.name || 'Photo Contest';
+        document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Submit a photo for the crowd to vote on!';
+        const promptBox2 = document.getElementById('wc-prompt-box');
+        const promptText2 = document.getElementById('wc-prompt-text');
+        if (promptText2) promptText2.textContent = activity.prompt || '';
+        if (promptBox2) promptBox2.style.display = 'none';
+        document.getElementById('photo-form').style.display = 'flex';
+        try { renderLiveNow(liveActivities); } catch(_) {}
+        return;
+      }
       document.getElementById('page-icon').textContent  = '💭';
       document.getElementById('page-title').textContent = activity.name || 'Word Cloud';
       document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Add a word to the crowd\u2019s cloud!';
