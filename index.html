@@ -1606,7 +1606,13 @@
       // If the tunnel is unreachable — e.g. DJ's laptop briefly offline —
       // we fall back to POSTing to the worker, which stores in R2; the
       // Electron app picks those up on its slow photo poll when it reconnects.
-      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName });
+      // `slug` scopes the photo to a specific WC activity (Photo Contest);
+      // empty when the user is on the generic Share-a-Photo tab. `voterId`
+      // mirrors the WC voter identity so per-photo voting can de-dup later.
+      const slug = (currentActivity && currentActivity.kind === 'wc') ? (currentActivity.slug || '') : '';
+      let voterId = '';
+      try { voterId = _wcGetVoterId(); } catch (_) {}
+      const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName, slug, voterId });
 
       function done(success, errText) {
         progressBar.style.width = '100%';
