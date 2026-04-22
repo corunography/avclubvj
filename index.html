@@ -47,7 +47,7 @@
 
     /* ── Tab switcher ── */
     .tabs {
-      display: flex; gap: 2px; margin-bottom: 22px;
+      display: flex; gap: 2px; margin-bottom: 14px;
       background: var(--glass-bg);
       backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid var(--hairline);
@@ -866,6 +866,10 @@
       document.getElementById('msg-form').style.display        = tab === 'msg'   ? 'flex' : 'none';
       document.getElementById('photo-form').style.display      = tab === 'photo' ? 'flex' : 'none';
       document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
+      // Keep the big header hidden in compose mode — tab bar is self-labeling.
+      document.getElementById('page-icon').style.display  = 'none';
+      document.getElementById('page-title').style.display = 'none';
+      document.getElementById('page-sub').style.display   = 'none';
       if (tab === 'msg') {
         document.getElementById('page-icon').textContent  = '🎶';
         document.getElementById('page-title').textContent = 'Send a Message';
@@ -1123,6 +1127,12 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display    = 'flex';
       document.getElementById('msg-form').style.display = 'flex';
+      // In compose mode the tab bar is its own label — reclaim vertical space
+      // by hiding the icon/title/sub header. Trivia/poll/WC modes re-show them
+      // via hideModeNav() resetting display:''.
+      document.getElementById('page-icon').style.display  = 'none';
+      document.getElementById('page-title').style.display = 'none';
+      document.getElementById('page-sub').style.display   = 'none';
       document.getElementById('page-icon').textContent  = '🎶';
       document.getElementById('page-title').textContent = 'Send a Message';
       document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
@@ -1139,6 +1149,9 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display      = 'flex';
       document.getElementById('photo-form').style.display = 'flex';
+      document.getElementById('page-icon').style.display  = 'none';
+      document.getElementById('page-title').style.display = 'none';
+      document.getElementById('page-sub').style.display   = 'none';
       document.getElementById('page-icon').textContent   = '📸';
       document.getElementById('page-title').textContent  = 'Share a Photo';
       document.getElementById('page-sub').textContent    = 'Your photo could appear on screen!';
@@ -1155,6 +1168,9 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display        = 'flex';
       document.getElementById('ai-prompt-form').style.display = 'flex';
+      document.getElementById('page-icon').style.display   = 'none';
+      document.getElementById('page-title').style.display  = 'none';
+      document.getElementById('page-sub').style.display    = 'none';
       document.getElementById('page-icon').textContent     = '✨';
       document.getElementById('page-title').textContent    = 'Submit a Prompt';
       document.getElementById('page-sub').textContent      = 'Describe the visuals you want to see!';
