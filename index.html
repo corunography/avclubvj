@@ -911,6 +911,13 @@
     <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
+  <!-- Photo Contest entries list — shown only in photocontest mode. -->
+  <div id="photocontest-wrap" style="display:none;width:100%;max-width:440px;flex-direction:column;gap:10px;margin-top:6px">
+    <div style="font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;margin:0 2px">Entries · tap ❤️ to vote</div>
+    <div id="photocontest-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px"></div>
+    <div id="photocontest-empty" style="padding:18px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);color:var(--text-dim);font-size:13px;text-align:center">No entries yet — be the first to submit a photo!</div>
+  </div>
+
   <!-- AI Prompt form -->
   <div id="ai-prompt-form">
     <div class="username-row" id="username-row-ai">
@@ -2070,7 +2077,7 @@
     function hideAllForms() {
       triviaUIVisible = false;
       stopTriviaCountdown();
-      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap','wc-wrap'].forEach(id => {
+      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap','wc-wrap','photocontest-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -2429,6 +2436,10 @@
             _wcOnLiveVote(d);
           } else if (d.type === 'wordcloud-submission-deleted') {
             _wcOnLiveDelete(d);
+          } else if (d.type === 'photocontest-entry') {
+            _pcOnLiveEntry(d);
+          } else if (d.type === 'photo-vote') {
+            _pcOnLiveVote(d);
           }
         } catch(_) {}
       };
@@ -2677,6 +2688,92 @@
       return v;
     }
 
+    // ── Photo Contest entries + voting (Phase 4b) ────────────────────────────
+    // Session-local cache of approved entries for the current contest slug.
+    // Populated by _pcLoadEntries on entry and kept fresh by SSE events.
+    let _pcSlug = '';
+    let _pcEntries = [];               // [{id, dataUrl, caption, username, votes}]
+    const _pcVotedIds = (() => {
+      try { return new Set(JSON.parse(localStorage.getItem('pc_voted_v1') || '[]')); }
+      catch (_) { return new Set(); }
+    })();
+    function _pcSaveVoted() {
+      try { localStorage.setItem('pc_voted_v1', JSON.stringify(Array.from(_pcVotedIds))); } catch (_) {}
+    }
+    async function _pcLoadEntries(slug) {
+      _pcSlug = slug || '';
+      _pcEntries = [];
+      _pcRender();
+      if (!_pcSlug || !tunnelBase) return;
+      try {
+        const r = await fetchWithTimeout(`${tunnelBase}/photo-contest/entries?slug=${encodeURIComponent(_pcSlug)}`, {}, 5000);
+        if (!r.ok) return;
+        const data = await r.json();
+        _pcEntries = Array.isArray(data?.entries) ? data.entries.slice() : [];
+        _pcRender();
+      } catch (_) {}
+    }
+    function _pcOnLiveEntry(d) {
+      if (!d || d.slug !== _pcSlug || !d.entry) return;
+      if (_pcEntries.some(e => String(e.id) === String(d.entry.id))) return;
+      _pcEntries.push({ ...d.entry, votes: 0 });
+      _pcRender();
+    }
+    function _pcOnLiveVote(d) {
+      if (!d || d.slug !== _pcSlug || !d.photoId) return;
+      const e = _pcEntries.find(x => String(x.id) === String(d.photoId));
+      if (!e) return;
+      e.votes = d.count || 0;
+      _pcRender();
+    }
+    function _pcRender() {
+      const wrap = document.getElementById('photocontest-wrap');
+      const list = document.getElementById('photocontest-list');
+      const empty = document.getElementById('photocontest-empty');
+      if (!wrap || !list) return;
+      if (!_pcEntries.length) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      const sorted = _pcEntries.slice().sort((a, b) => (b.votes || 0) - (a.votes || 0) || (b.ts || 0) - (a.ts || 0));
+      list.innerHTML = sorted.map(e => {
+        const voted = _pcVotedIds.has(`${_pcSlug}|${e.id}`);
+        const heart = voted ? '❤️' : '🤍';
+        const captionHtml = e.caption ? `<div style="font-size:12px;color:var(--text);padding:0 6px;line-height:1.3;max-height:32px;overflow:hidden">${_esc(e.caption)}</div>` : '';
+        const nameHtml = e.username ? `<div style="font-size:11px;color:var(--text-dim);padding:0 6px">@${_esc(e.username)}</div>` : '';
+        return `<div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;gap:6px;padding-bottom:8px">
+          <img src="${e.dataUrl}" alt="" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--bg)">
+          ${captionHtml}
+          ${nameHtml}
+          <button data-pc-id="${_esc(e.id)}" style="margin:0 6px;padding:8px;background:${voted?'var(--accent)':'var(--bg)'};border:1px solid var(--hairline);border-radius:8px;color:${voted?'#fff':'var(--text)'};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent">${heart} ${e.votes || 0}</button>
+        </div>`;
+      }).join('');
+      Array.from(list.querySelectorAll('button[data-pc-id]')).forEach(btn => {
+        btn.onclick = () => _pcVote(btn.getAttribute('data-pc-id'));
+      });
+    }
+    async function _pcVote(photoId) {
+      if (!_pcSlug || !photoId || !tunnelBase) return;
+      const key = `${_pcSlug}|${photoId}`;
+      if (_pcVotedIds.has(key)) return;
+      _pcVotedIds.add(key); _pcSaveVoted();
+      // Optimistic bump — server will reconcile via photo-vote SSE.
+      const e = _pcEntries.find(x => String(x.id) === String(photoId));
+      if (e) e.votes = (e.votes || 0) + 1;
+      _pcRender();
+      try {
+        let voterId = '';
+        try { voterId = _wcGetVoterId(); } catch (_) {}
+        await fetchWithTimeout(`${tunnelBase}/photo-vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: _pcSlug, photoId, voterId }),
+        }, 5000);
+      } catch (_) {}
+    }
+
     function showWordCloudMode(activity) {
       currentActivity = { kind: 'wc', slug: activity.slug };
       currentWcActivity = activity;
@@ -2696,9 +2793,15 @@
         if (promptText2) promptText2.textContent = activity.prompt || '';
         if (promptBox2) promptBox2.style.display = 'none';
         document.getElementById('photo-form').style.display = 'flex';
+        const pcWrap = document.getElementById('photocontest-wrap');
+        if (pcWrap) pcWrap.style.display = 'flex';
+        _pcLoadEntries(activity.slug || '');
         try { renderLiveNow(liveActivities); } catch(_) {}
         return;
       }
+      // Leaving photocontest view → hide entries list.
+      const pcWrapHide = document.getElementById('photocontest-wrap');
+      if (pcWrapHide) pcWrapHide.style.display = 'none';
       document.getElementById('page-icon').textContent  = '💭';
       document.getElementById('page-title').textContent = activity.name || 'Word Cloud';
       document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Add a word to the crowd\u2019s cloud!';
