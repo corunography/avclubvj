@@ -547,6 +547,39 @@
     }
     .live-card { position: relative; }
 
+    /* ── Send-success checkmark overlay ──
+       Brief fullscreen confirmation that the audience member's submission
+       landed. Tiny, satisfying, unmistakable. Fades in, scales up, fades
+       out over ~900ms so it never blocks the next interaction. */
+    #send-success-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+    #send-success-overlay.show { display: flex; animation: sendSuccessFade 0.9s ease-out forwards; }
+    #send-success-overlay .check {
+      width: 92px; height: 92px; border-radius: 50%;
+      background: #32d74b;
+      box-shadow: 0 0 40px rgba(50,215,75,0.6), 0 0 0 6px rgba(50,215,75,0.18);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 56px; font-weight: 800;
+      animation: sendSuccessPop 0.55s cubic-bezier(0.2,0.8,0.25,1.25) forwards;
+      transform: scale(0);
+    }
+    @keyframes sendSuccessPop {
+      0%   { transform: scale(0) rotate(-12deg); }
+      60%  { transform: scale(1.15) rotate(4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes sendSuccessFade {
+      0%   { opacity: 0; }
+      15%  { opacity: 1; }
+      75%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
     /* Slide-in for newly-appeared cards. Only cards with .is-new get the
        animation so existing cards don't re-animate on SSE state updates. */
     @keyframes liveCardSlideIn {
@@ -665,6 +698,9 @@
   </style>
 </head>
 <body>
+  <!-- Send-success checkmark overlay (fires on successful submit in any compose mode) -->
+  <div id="send-success-overlay"><div class="check">✓</div></div>
+
   <!-- Live Now card stack — one card per active trivia / poll / WC activity.
        Tapping a card enters that activity's mode. Pinned at top across all
        modes so users can switch between activities without losing context. -->
@@ -896,6 +932,20 @@
       });
     }
 
+    // Send-success checkmark overlay — reassuring confirmation after any submit.
+    let _sendSuccessTimer = null;
+    function showSendSuccess() {
+      const el = document.getElementById('send-success-overlay');
+      if (!el) return;
+      el.classList.remove('show');
+      // Force reflow so the animation restarts even on rapid repeat sends.
+      void el.offsetWidth;
+      el.classList.add('show');
+      if (_sendSuccessTimer) clearTimeout(_sendSuccessTimer);
+      _sendSuccessTimer = setTimeout(() => { el.classList.remove('show'); }, 950);
+      try { navigator.vibrate && navigator.vibrate([10, 40, 20]); } catch(_) {}
+    }
+
     // Fetch with a hard timeout so requests never hang indefinitely
     function fetchWithTimeout(url, options, ms = 10000) {
       const ctrl = new AbortController();
@@ -1020,6 +1070,7 @@
         document.getElementById('msg').value = '';
         onInput();
         startCooldown();
+        showSendSuccess();
       } catch(e) {
         const isTimeout = e.name === 'AbortError';
         status.textContent = isTimeout
@@ -1098,6 +1149,7 @@
         setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
         if (success) {
           photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
+          showSendSuccess();
           resizedDataUrl = null;
           previewImg.src = '';
           previewWrap.style.display = 'none';
@@ -2238,6 +2290,7 @@
             if (_wcMyRecentTexts.length > 20) _wcMyRecentTexts.shift();
           }
           try { navigator.vibrate && navigator.vibrate(15); } catch (_) {}
+          showSendSuccess();
           ta.value = ''; _wcUpdateCharCount();
           _wcRenderRecent();
         }
@@ -2489,6 +2542,7 @@
         if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: b.error || '' }); }
         status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
         status.className = 'success';
+        showSendSuccess();
         document.getElementById('ai-prompt-text').value = '';
         onAiPromptInput();
         clearAiPhoto();
