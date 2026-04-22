@@ -520,6 +520,32 @@
       vertical-align: 2px;
     }
 
+    /* Trivia countdown bar — thin accent strip along the bottom of the
+       card that fills from 100% → 0% over the question's timeLimit.
+       Turns amber under 10s, red under 5s. Drives entirely off CSS
+       animation seeded with the remaining seconds, so no JS ticks. */
+    .live-card-countdown {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 3px; border-radius: 0 0 var(--r-lg) var(--r-lg);
+      overflow: hidden; pointer-events: none;
+    }
+    .live-card-countdown::before {
+      content: ''; display: block; height: 100%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+      transform-origin: left center;
+      animation: liveCountdownShrink linear forwards;
+      animation-duration: var(--cd-total, 30s);
+      animation-delay: var(--cd-elapsed, 0s);
+    }
+    .live-card-countdown.warn::before { background: #ff9f0a; box-shadow: 0 0 8px rgba(255,159,10,0.5); }
+    .live-card-countdown.crit::before { background: var(--hig-red); box-shadow: 0 0 8px rgba(255,69,58,0.6); }
+    @keyframes liveCountdownShrink {
+      from { transform: scaleX(1); }
+      to   { transform: scaleX(0); }
+    }
+    .live-card { position: relative; }
+
     /* ── Activity-ended splash (2s overlay when user's activity stops) ── */
     #activity-ended-splash {
       display: none; position: fixed; inset: 0;
@@ -1266,6 +1292,21 @@
       const cls = 'live-card' + (current ? ' current' : '');
       if (a.kind === 'trivia') {
         const meta = (a.responseCount || 0) + ' answer' + (a.responseCount === 1 ? '' : 's');
+        // Countdown bar: remaining = timeLimit - (now - questionStartTime).
+        // Seeded once per render; the CSS keyframe does the shrink. If the
+        // question gets republished, questionStartTime changes and the next
+        // renderLiveNow() rebuilds this node, restarting the animation.
+        const total = Math.max(1, Number(a.timeLimit) || 30);
+        const elapsed = Math.max(0, (Date.now() - (Number(a.questionStartTime) || Date.now())) / 1000);
+        const remaining = Math.max(0, total - elapsed);
+        let bar = '';
+        if (remaining > 0) {
+          const urg = remaining < 5 ? ' crit' : (remaining < 10 ? ' warn' : '');
+          // Seed the keyframe via CSS custom properties. `--cd-elapsed` is
+          // negative so the ::before animation resumes partway through,
+          // matching the real remaining time without JS ticking.
+          bar = '<div class="live-card-countdown' + urg + '" style="--cd-total:' + total.toFixed(2) + 's;--cd-elapsed:-' + elapsed.toFixed(2) + 's"></div>';
+        }
         return '<button class="' + cls + '">' +
           '<div class="live-card-icon">🧠</div>' +
           '<div class="live-card-body">' +
@@ -1274,6 +1315,7 @@
             '<div class="live-card-meta">' + _esc(meta) + '</div>' +
           '</div>' +
           '<div class="live-card-go">→</div>' +
+          bar +
         '</button>';
       }
       if (a.kind === 'poll') {
