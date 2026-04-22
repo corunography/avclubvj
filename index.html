@@ -1260,6 +1260,10 @@
     // Cached last activities array from the server — used by renderLiveNow()
     // and by end-detection logic in _handleTriviaState/_handlePollState.
     let liveActivities = [];
+    // Deep-link from the activity QR: ?wc=<slug> → auto-tap into that WC
+    // card on the first Live Now update that contains it. Consumed once so
+    // later navigations don't re-yank the user back in.
+    let pendingWcAutoTap = params.get('wc') || '';
 
     function _esc(s) {
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1285,6 +1289,20 @@
       Array.from(cards.querySelectorAll('.live-card')).forEach((el, i) => {
         el.onclick = () => tapLiveCard(liveActivities[i]);
       });
+      // Deep-link: if the page was loaded with ?wc=<slug>, auto-tap into that
+      // activity on the first render that contains it. Consume the pending
+      // slug so we don't keep hijacking the user after they navigate away.
+      if (pendingWcAutoTap && !currentActivity) {
+        const target = liveActivities.find(
+          a => a.kind === 'wc' && a.slug === pendingWcAutoTap
+        );
+        if (target) {
+          const slug = pendingWcAutoTap;
+          pendingWcAutoTap = '';
+          // Defer one frame so the cards are in the DOM before we switch modes.
+          setTimeout(() => tapLiveCard(target), 0);
+        }
+      }
     }
 
     function _renderLiveCard(a, idx) {
