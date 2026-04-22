@@ -88,6 +88,31 @@
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
     .legal-fineprint a.powered-by-link { color: var(--text-muted); text-decoration: none; font-weight: 600; }
 
+    /* ── Brand band (below each compose send button) ──
+       Consistent venue-branding strip beneath Send It! / Send Photo! /
+       Submit Prompt! — the space carved out by shared form min-height.
+       Defaults to a subtle Phasion Live wordmark; replaced at runtime by
+       applyBranding() when a venue config is present. */
+    .brand-band {
+      width: 100%; max-width: 440px; margin-top: 14px;
+      padding: 10px 14px; display: flex; align-items: center; justify-content: center;
+      gap: 10px; min-height: 36px;
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: var(--r);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+    }
+    .brand-band .mark {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.22em;
+      color: var(--text-dim); text-transform: uppercase;
+    }
+    .brand-band .tagline {
+      font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em;
+    }
+    .brand-band .divider {
+      width: 1px; height: 14px; background: var(--hairline);
+    }
+    .brand-band img.logo { max-height: 22px; max-width: 60%; object-fit: contain; }
+
     /* ── Anonymous toggle ── */
     .anon-row {
       width: 100%; display: flex; align-items: center; justify-content: flex-end;
@@ -1033,6 +1058,112 @@
     const topic     = params.get('t');
     const mode      = params.get('mode') || '';  // 'trivia' or 'poll'
     const workerUrl = (params.get('w') || '').replace(/\/$/, '');
+
+    // ── Venue branding config ────────────────────────────────────────────────
+    // Single source of truth for every user-visible brand surface on the
+    // audience page. Tier-1/2 license features (logo, accent color, sponsor
+    // strip, custom "Powered by") swap values in this object at runtime.
+    // Defaults below are the Phasion Live house brand — what audiences see
+    // when a venue hasn't purchased a branded license.
+    //
+    // Schema mirrors the future `/v1/branding/<venueId>` worker endpoint.
+    // Any field set to null/empty uses the hardcoded CSS/HTML default.
+    const DEFAULT_BRANDING = {
+      brandName:   'Phasion Live',
+      logoUrl:     null,              // If set, replaces the 🎶 icon + h1 title.
+      accentColor: null,              // If set, overrides --accent + --accent-glow.
+      accentGlow:  null,              // Optional rgba() glow color.
+      // HTML shown in the band below each send button. Default: understated
+      // wordmark + tagline. Venues with branded tier see their own content.
+      buttonBandHtml: '<span class="mark">PHASION LIVE</span><span class="divider"></span><span class="tagline">make the crowd the visuals</span>',
+      // HTML injected into the "Powered by…" slot of each legal-fineprint.
+      poweredByHtml: '<a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a>',
+      faviconUrl:  null,
+      ogImageUrl:  null,
+      privacyUrl:  'https://corunography.github.io/avclubvj/privacy.html',
+    };
+    let venueBranding = { ...DEFAULT_BRANDING };
+
+    // Stubbed loader. Today returns defaults immediately. The signature is
+    // ready for a future worker fetch:
+    //   const r = await fetch(`${workerBase}/v1/branding/${venueId}`);
+    //   if (r.ok) return { ...DEFAULT_BRANDING, ...await r.json() };
+    async function loadVenueBranding(venueId) {
+      if (!venueId) return { ...DEFAULT_BRANDING };
+      return { ...DEFAULT_BRANDING };
+    }
+
+    function applyBranding(cfg) {
+      if (!cfg) return;
+      venueBranding = { ...DEFAULT_BRANDING, ...cfg };
+
+      // 1. Accent color — a single CSS var swap cascades through buttons,
+      //    links, focus rings, the connection dot's "ok" state, etc.
+      const root = document.documentElement;
+      if (venueBranding.accentColor) {
+        root.style.setProperty('--accent', venueBranding.accentColor);
+        if (venueBranding.accentGlow) {
+          root.style.setProperty('--accent-glow', venueBranding.accentGlow);
+        }
+      }
+
+      // 2. Header logo / title swap
+      const iconEl  = document.getElementById('page-icon');
+      const titleEl = document.getElementById('page-title');
+      if (venueBranding.logoUrl && iconEl && titleEl) {
+        iconEl.innerHTML = `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName}" style="max-height:48px;max-width:180px;object-fit:contain">`;
+        // Hide the text title when a logo is present to avoid double-branding.
+        titleEl.style.display = 'none';
+      }
+
+      // 3. Inject the brand band under every primary send button. Each
+      //    compose form's main-btn is direct child of #msg-form / #photo-form /
+      //    #ai-prompt-form, so we insert after it once. Also under the WC form.
+      const bandHtml = venueBranding.buttonBandHtml || '';
+      const formIds  = ['msg-form', 'photo-form', 'ai-prompt-form', 'wc-wrap'];
+      formIds.forEach(fid => {
+        const form = document.getElementById(fid);
+        if (!form) return;
+        const btn = form.querySelector('.main-btn');
+        if (!btn) return;
+        // Idempotent — remove any existing band first so repeated calls
+        // during config updates don't duplicate the element.
+        let existing = form.querySelector(':scope > .brand-band');
+        if (existing) existing.remove();
+        if (!bandHtml) return;
+        const band = document.createElement('div');
+        band.className = 'brand-band';
+        band.innerHTML = bandHtml;
+        btn.insertAdjacentElement('afterend', band);
+      });
+
+      // 4. "Powered by" line in each fineprint footer.
+      if (venueBranding.poweredByHtml) {
+        document.querySelectorAll('.legal-fineprint a.powered-by-link').forEach(a => {
+          // Replace the anchor with the configured HTML (preserve the
+          // surrounding <br> spacing).
+          const wrap = document.createElement('span');
+          wrap.innerHTML = venueBranding.poweredByHtml;
+          a.replaceWith(...wrap.childNodes);
+        });
+      }
+
+      // 5. Favicon + privacy policy link
+      if (venueBranding.faviconUrl) {
+        let link = document.querySelector('link[rel="icon"]');
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = venueBranding.faviconUrl;
+      }
+      if (venueBranding.privacyUrl) {
+        document.querySelectorAll('.legal-fineprint a[href*="privacy"]').forEach(a => {
+          a.href = venueBranding.privacyUrl;
+        });
+      }
+    }
 
     // Worker handles R2 storage only (photos, messages, AI prompts)
     const workerBase = workerUrl
@@ -2786,6 +2917,17 @@
     document.addEventListener('DOMContentLoaded', () => {
       const ta = document.getElementById('wc-text');
       if (ta) ta.addEventListener('input', _wcUpdateCharCount);
+
+      // Apply branding ASAP so the default Phasion Live band is visible on
+      // first paint. Kick off async venue-specific fetch in parallel — if it
+      // returns a custom config, applyBranding() runs again and swaps in.
+      applyBranding(DEFAULT_BRANDING);
+      loadVenueBranding(topic).then(cfg => {
+        // Only reapply if the fetched config actually differs from defaults.
+        if (cfg && JSON.stringify(cfg) !== JSON.stringify(DEFAULT_BRANDING)) {
+          applyBranding(cfg);
+        }
+      }).catch(() => { /* silent — defaults are already live */ });
 
       // Restore sticky anonymous-mode preferences across reloads.
       _applyAnonState('msg');
