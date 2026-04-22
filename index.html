@@ -120,8 +120,9 @@
       box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
     }
     textarea::placeholder { color: var(--text-dim); }
-    .char-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; letter-spacing: 0.02em; }
+    .char-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; letter-spacing: 0.02em; transition: color 0.15s ease; }
     .char-count.warn { color: var(--hig-amber); }
+    .char-count.crit { color: var(--hig-red); font-weight: 700; }
 
     /* ── AI Prompt form ── */
     #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
@@ -546,6 +547,40 @@
     }
     .live-card { position: relative; }
 
+    /* Slide-in for newly-appeared cards. Only cards with .is-new get the
+       animation so existing cards don't re-animate on SSE state updates. */
+    @keyframes liveCardSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .live-card.is-new { animation: liveCardSlideIn 0.28s var(--ease-out) both; }
+
+    /* Urgent pulse on the topmost card's icon — breathes subtly so the eye
+       catches it as the primary tap target. Applied to the first card in
+       the stack; skipped on .current so the user's own activity doesn't
+       distract. */
+    @keyframes liveCardIconPulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.12); }
+    }
+    .live-card.urgent:not(.current) .live-card-icon {
+      animation: liveCardIconPulse 1.6s ease-in-out infinite;
+    }
+
+    /* "You" badge on the user's own WC submissions in the Recent list. */
+    .wc-recent-row.mine {
+      border-color: var(--accent) !important;
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 1px var(--accent-dim) !important;
+    }
+    .wc-mine-badge {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 1px 5px; border-radius: 4px;
+      background: var(--accent-dim); color: var(--accent-light);
+      letter-spacing: 0.06em; margin-right: 6px; text-transform: uppercase;
+      border: 1px solid var(--accent);
+      flex-shrink: 0;
+    }
+
     /* ── Activity-ended splash (2s overlay when user's activity stops) ── */
     #activity-ended-splash {
       display: none; position: fixed; inset: 0;
@@ -932,7 +967,7 @@
       const len = document.getElementById('msg').value.length;
       const el  = document.getElementById('char-count');
       el.textContent = len + ' / 240';
-      el.className   = 'char-count' + (len > 200 ? ' warn' : '');
+      el.className   = 'char-count' + (len >= 240 ? ' crit' : (len > 200 ? ' warn' : ''));
     }
 
     const COOLDOWN_SEC = 12;
@@ -1233,6 +1268,7 @@
       const now = Date.now();
       if (now - reactCooldown < 1200 || !topic || !tunnelBase) return;
       reactCooldown = now;
+      try { navigator.vibrate && navigator.vibrate(12); } catch (_) {}
       fetch(`${tunnelBase}/react`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1264,6 +1300,24 @@
     // card on the first Live Now update that contains it. Consumed once so
     // later navigations don't re-yank the user back in.
     let pendingWcAutoTap = params.get('wc') || '';
+    // Track activity keys we've already rendered so we only animate newly
+    // appearing cards. Keys combine kind + slug/questionId so a trivia
+    // question change counts as "new" and slides in again.
+    const _knownActivityKeys = new Set();
+    function _activityKey(a) {
+      if (!a) return '';
+      if (a.kind === 'wc') return 'wc:' + (a.slug || 'main');
+      if (a.kind === 'trivia') return 'trivia:' + (a.questionId || 'q');
+      if (a.kind === 'poll') return 'poll:' + (a.question || '');
+      return a.kind;
+    }
+    // Short list of texts the user just submitted this session — used to
+    // mark their own WC entries with a "You" badge in the Recent list.
+    const _wcMyRecentTexts = [];
+    function _wcIsMine(text) {
+      const t = String(text || '').trim().toLowerCase();
+      return !!t && _wcMyRecentTexts.some(x => x === t);
+    }
 
     function _esc(s) {
       return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1285,10 +1339,22 @@
       if (liveActivities.length === 0) { wrap.style.display = 'none'; cards.innerHTML = ''; return; }
       wrap.style.display = 'block';
       cards.innerHTML = liveActivities.map((a, i) => _renderLiveCard(a, i)).join('');
-      // Bind click handlers (can't inline onclick easily across types)
+      // Post-render pass: mark the first card urgent (breathes), flag newly-
+      // appeared keys for slide-in, and bind click handlers. Known-keys set
+      // is updated AFTER rendering so the first render gets the animation too.
+      const nowKeys = liveActivities.map(_activityKey);
       Array.from(cards.querySelectorAll('.live-card')).forEach((el, i) => {
-        el.onclick = () => tapLiveCard(liveActivities[i]);
+        const a = liveActivities[i];
+        const key = nowKeys[i];
+        if (i === 0) el.classList.add('urgent');
+        if (key && !_knownActivityKeys.has(key)) el.classList.add('is-new');
+        el.onclick = () => tapLiveCard(a);
       });
+      // Prune the known set to only keys still visible, then add current keys.
+      for (const k of Array.from(_knownActivityKeys)) {
+        if (!nowKeys.includes(k)) _knownActivityKeys.delete(k);
+      }
+      nowKeys.forEach(k => _knownActivityKeys.add(k));
       // Deep-link: if the page was loaded with ?wc=<slug>, auto-tap into that
       // activity on the first render that contains it. Consume the pending
       // slug so we don't keep hijacking the user after they navigate away.
@@ -1368,6 +1434,7 @@
       if (!a) return;
       // Tapping the card the user is already inside is a no-op.
       if (_isCurrentCard(a)) return;
+      try { navigator.vibrate && navigator.vibrate(10); } catch (_) {}
       userManualNav = false;
       if (a.kind === 'trivia') {
         currentActivity = { kind: 'trivia' };
@@ -2098,7 +2165,7 @@
       if (!ta || !el) return;
       const n = (ta.value || '').length;
       el.textContent = n + ' / 140';
-      el.className = 'char-count' + (n > 120 ? ' warn' : '');
+      el.className = 'char-count' + (n >= 140 ? ' crit' : (n > 120 ? ' warn' : ''));
     }
 
     async function _wcRefreshRecent() {
@@ -2118,15 +2185,28 @@
       const wrap = document.getElementById('wc-recent-wrap');
       const list = document.getElementById('wc-recent-list');
       if (!wrap || !list) return;
-      const items = (wcLocalRecent || []).slice().sort((a, b) => (b.votes || 0) - (a.votes || 0) || (b.ts || 0) - (a.ts || 0)).slice(0, 12);
+      // Sort: user's own submissions pinned to top (most recent of mine first),
+      // then by votes desc, then by ts desc. Cap to 12 visible rows so the
+      // recent list doesn't eat the whole screen.
+      const all = (wcLocalRecent || []).slice();
+      const mine = [];
+      const others = [];
+      for (const e of all) (_wcIsMine(e.text) ? mine : others).push(e);
+      mine.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      others.sort((a, b) => (b.votes || 0) - (a.votes || 0) || (b.ts || 0) - (a.ts || 0));
+      const items = mine.concat(others).slice(0, 12);
       if (!items.length) { wrap.style.display = 'none'; list.innerHTML = ''; return; }
       wrap.style.display = 'block';
-      list.innerHTML = items.map((e, i) =>
-        `<button class="wc-recent-row" data-phrase="${_esc(e.text || '')}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);box-shadow:inset 0 1px 0 var(--hairline-top);color:var(--text);font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">` +
+      list.innerHTML = items.map((e) => {
+        const isMine = _wcIsMine(e.text);
+        const cls = 'wc-recent-row' + (isMine ? ' mine' : '');
+        const badge = isMine ? `<span class="wc-mine-badge">You</span>` : '';
+        return `<button class="${cls}" data-phrase="${_esc(e.text || '')}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);box-shadow:inset 0 1px 0 var(--hairline-top);color:var(--text);font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">` +
+          badge +
           `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(e.text || '')}</span>` +
           `<span style="font-size:12px;color:${(e.votes||0)>0?'var(--accent-light)':'var(--text-dim)'};font-weight:600;flex-shrink:0">♥ ${e.votes || 0}</span>` +
-        `</button>`
-      ).join('');
+        `</button>`;
+      }).join('');
       Array.from(list.querySelectorAll('.wc-recent-row')).forEach(btn => {
         btn.onclick = () => sendWcVote(btn.getAttribute('data-phrase'), btn);
       });
@@ -2148,7 +2228,19 @@
           status.textContent = ok ? 'Sent! 💭' : 'Couldn\u2019t send — try again in a sec.';
           status.className = ok ? 'success' : 'error';
         }
-        if (ok) { ta.value = ''; _wcUpdateCharCount(); }
+        if (ok) {
+          // Remember this text so the entry gets a "You" badge + pinned
+          // position when it shows up in the Recent list (server broadcast
+          // may arrive a tick later; we want the badge on first paint).
+          const mineKey = text.trim().toLowerCase();
+          if (mineKey && !_wcMyRecentTexts.includes(mineKey)) {
+            _wcMyRecentTexts.push(mineKey);
+            if (_wcMyRecentTexts.length > 20) _wcMyRecentTexts.shift();
+          }
+          try { navigator.vibrate && navigator.vibrate(15); } catch (_) {}
+          ta.value = ''; _wcUpdateCharCount();
+          _wcRenderRecent();
+        }
       } catch (_) {
         if (status) { status.textContent = 'Network error — try again.'; status.className = 'error'; }
       } finally {
@@ -2229,7 +2321,7 @@
     function onAiPromptInput() {
       const len = document.getElementById('ai-prompt-text')?.value.length || 0;
       const el  = document.getElementById('ai-char-count');
-      if (el) { el.textContent = len + ' / 200'; el.className = 'char-count' + (len > 160 ? ' warn' : ''); }
+      if (el) { el.textContent = len + ' / 200'; el.className = 'char-count' + (len >= 200 ? ' crit' : (len > 160 ? ' warn' : '')); }
     }
 
     // ── AI Photo upload handling ──
