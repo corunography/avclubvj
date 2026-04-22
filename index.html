@@ -1035,6 +1035,26 @@
     const mode      = params.get('mode') || '';  // 'trivia' or 'poll'
     const workerUrl = (params.get('w') || '').replace(/\/$/, '');
 
+    // Deep-link pre-hide: when the QR link points at a specific activity
+    // (?wc=<slug>, ?mode=wc|trivia|poll), the default Messages/Photo/Prompt
+    // compose view flashes briefly between DOM paint and the SSE live-update
+    // that triggers auto-routing. Hide those elements synchronously here so
+    // the user only ever sees the correct view. The activity-specific
+    // show*Mode() call later un-hides exactly what it needs.
+    const _hasActivityDeepLink = !!(params.get('wc') || mode === 'wc' || mode === 'poll' || mode === 'trivia');
+    if (_hasActivityDeepLink) {
+      ['msg-form','photo-form','ai-prompt-form','tabs','submissions-off'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      const icon  = document.getElementById('page-icon');
+      const title = document.getElementById('page-title');
+      const sub   = document.getElementById('page-sub');
+      if (icon)  icon.textContent  = '⏳';
+      if (title) title.textContent = 'Connecting…';
+      if (sub)   sub.textContent   = 'Loading the activity';
+    }
+
     // ── Venue branding config ────────────────────────────────────────────────
     // Single source of truth for every user-visible brand surface on the
     // audience page. Tier-1/2 license features (logo, accent color, sponsor
