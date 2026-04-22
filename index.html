@@ -436,25 +436,106 @@
     .error   { color: var(--hig-red); }
     .error-setup { color: var(--hig-amber); font-size: 13px; line-height: 1.6; }
 
-    /* ── Live content banner (non-intrusive alert when user is on messages/photos) ── */
-    #content-banner {
+    /* ── Live Now card stack ──
+       Unified "what's happening right now" list. Replaces the single-purpose
+       live-content banner. Shows a card per live trivia / poll / WC activity;
+       tapping a card enters that activity's mode without leaving the page. */
+    #live-now-wrap {
       display: none; width: 100%; max-width: 440px;
-      padding: 12px 16px;
+      margin-bottom: 14px;
+    }
+    .live-now-title {
+      font-size: 11px; color: var(--text-dim);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      font-weight: 600; margin: 0 2px 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .live-now-title::before {
+      content: ''; display: inline-block;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--hig-red);
+      box-shadow: 0 0 8px var(--hig-red);
+      animation: liveNowBlink 1.4s ease-in-out infinite;
+    }
+    @keyframes liveNowBlink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    #live-now-cards {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .live-card {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 12px 14px;
       background: var(--accent-dim);
       backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid var(--accent);
-      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow);
+      box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 14px var(--accent-glow);
       border-radius: var(--r-lg);
-      color: var(--text); font-size: 14px; font-weight: 600;
-      letter-spacing: -0.005em;
-      text-align: center; cursor: pointer;
+      color: var(--text); font-family: inherit;
+      cursor: pointer; text-align: left;
       -webkit-tap-highlight-color: transparent;
-      margin-bottom: 14px; animation: bannerPulse 2s ease-in-out infinite;
+      transition: transform 0.12s var(--ease-out), box-shadow 0.2s var(--ease-out);
     }
-    #content-banner:active { opacity: 0.85; }
-    @keyframes bannerPulse {
-      0%, 100% { box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 18px var(--accent-glow); }
-      50% { box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 28px var(--accent-glow), 0 0 0 3px var(--accent-dim); }
+    .live-card:active { transform: scale(0.98); }
+    .live-card.current {
+      background: var(--surface-hi);
+      border-color: var(--hairline-hi);
+      box-shadow: inset 0 1px 0 var(--hairline-top);
+    }
+    .live-card-icon {
+      font-size: 22px; line-height: 1;
+      flex-shrink: 0; width: 32px; text-align: center;
+    }
+    .live-card-body { flex: 1; min-width: 0; }
+    .live-card-title {
+      font-size: 14px; font-weight: 700;
+      letter-spacing: -0.01em; color: var(--text);
+      line-height: 1.25;
+    }
+    .live-card-sub {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 2px; line-height: 1.35;
+      overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .live-card-meta {
+      font-size: 11px; color: var(--text-dim);
+      margin-top: 3px; letter-spacing: 0.02em;
+    }
+    .live-card-go {
+      font-size: 18px; color: var(--accent-light);
+      flex-shrink: 0; opacity: 0.8;
+    }
+    .live-card.current .live-card-go { display: none; }
+    .live-card.current .live-card-title::after {
+      content: " \00B7  You\2019re here";
+      font-size: 11px; color: var(--accent-light);
+      font-weight: 500; letter-spacing: 0;
+    }
+    .live-card-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+      background: var(--hig-red); color: #fff;
+      letter-spacing: 0.04em; margin-left: 6px;
+      vertical-align: 2px;
+    }
+
+    /* ── Activity-ended splash (2s overlay when user's activity stops) ── */
+    #activity-ended-splash {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: var(--glass-blur-hi); -webkit-backdrop-filter: var(--glass-blur-hi);
+      z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 24px; text-align: center;
+    }
+    #activity-ended-splash .icon { font-size: 54px; }
+    #activity-ended-splash .title {
+      font-size: 22px; font-weight: 700; color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    #activity-ended-splash .sub {
+      font-size: 14px; color: var(--text-muted); max-width: 320px;
     }
 
     /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
@@ -523,8 +604,20 @@
   </style>
 </head>
 <body>
-  <!-- Non-intrusive live-content alert (shown when user manually went to messages/photos) -->
-  <div id="content-banner" onclick="joinLiveContent()"></div>
+  <!-- Live Now card stack — one card per active trivia / poll / WC activity.
+       Tapping a card enters that activity's mode. Pinned at top across all
+       modes so users can switch between activities without losing context. -->
+  <div id="live-now-wrap">
+    <div class="live-now-title">Live now</div>
+    <div id="live-now-cards"></div>
+  </div>
+
+  <!-- Activity-ended splash (2s overlay when a user's current activity stops) -->
+  <div id="activity-ended-splash">
+    <div class="icon">✨</div>
+    <div class="title" id="activity-ended-title">Activity ended</div>
+    <div class="sub" id="activity-ended-sub">Thanks for playing!</div>
+  </div>
 
   <!-- Mini nav: message/photo access during trivia & poll (replaces tall header) -->
   <div id="mode-nav">
@@ -661,6 +754,23 @@
       <div class="poll-waiting-icon">⏳</div>
       <div class="poll-waiting">Connecting…</div>
     </div>
+  </div>
+
+  <!-- Word Cloud inline mode — populated by showWordCloudMode(slug). -->
+  <div id="wc-wrap" style="display:none;width:100%;max-width:440px;flex-direction:column;gap:12px">
+    <div id="wc-prompt-box" style="padding:14px 16px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);box-shadow:inset 0 1px 0 var(--hairline-top);text-align:center">
+      <div id="wc-prompt-label" style="font-size:11px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:4px">Prompt</div>
+      <div id="wc-prompt-text" style="font-size:16px;font-weight:600;color:var(--text);line-height:1.35;letter-spacing:-0.01em"></div>
+    </div>
+    <textarea id="wc-text" placeholder="Drop a word or short phrase…" maxlength="140" style="width:100%"></textarea>
+    <div class="char-count" id="wc-char-count">0 / 140</div>
+    <button class="main-btn" id="wc-btn" onclick="sendWcSubmission()">Send It!</button>
+    <div id="wc-status"></div>
+    <div id="wc-recent-wrap" style="display:none;width:100%;margin-top:6px">
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;margin:0 2px 6px">Recent submissions · tap to upvote</div>
+      <div id="wc-recent-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Emoji Applause bar (fixed bottom) -->
@@ -1006,6 +1116,9 @@
     }
     function gotoMessages() {
       userManualNav = true; hideContentBanner();
+      // Leaving any live activity → clear current-card highlight.
+      currentActivity = null;
+      try { renderLiveNow(liveActivities); } catch(_) {}
       currentQ = null; selectedAnswer = -1;
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display    = 'flex';
@@ -1019,6 +1132,9 @@
     }
     function gotoPhoto() {
       userManualNav = true; hideContentBanner();
+      // Leaving any live activity → clear current-card highlight.
+      currentActivity = null;
+      try { renderLiveNow(liveActivities); } catch(_) {}
       currentQ = null; selectedAnswer = -1;
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display      = 'flex';
@@ -1032,6 +1148,9 @@
     }
     function gotoAi() {
       userManualNav = true; hideContentBanner();
+      // Leaving any live activity → clear current-card highlight.
+      currentActivity = null;
+      try { renderLiveNow(liveActivities); } catch(_) {}
       currentQ = null; selectedAnswer = -1;
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display        = 'flex';
@@ -1085,35 +1204,143 @@
 
     // Applause state is now fetched by resolveTunnel() on page load
 
-    // ── Live-content banner (non-intrusive alert when user manually navigated away) ──
-    let userManualNav = false;  // true when user intentionally went to messages/photos
-    let pendingBannerType = null; // 'trivia' or 'poll'
+    // ── Live Now card stack ──
+    // userManualNav retained for backward-compat with trivia/poll flow: when
+    // true, a newly-starting trivia/poll doesn't auto-switch — the Live Now
+    // card + tap is the only way in. Auto-switch only fires on very first
+    // activity of a session when user hasn't touched any nav yet.
+    let userManualNav = false;
+    // The activity the audience member is currently "inside." Shape:
+    //   { kind: 'trivia' | 'poll' | 'wc', slug?: string }
+    // null = default message mode. Used to mark the current card + to detect
+    // when the operator ended the user's current activity (show splash).
+    let currentActivity = null;
+    // Cached last activities array from the server — used by renderLiveNow()
+    // and by end-detection logic in _handleTriviaState/_handlePollState.
+    let liveActivities = [];
 
-    function showContentBanner(type) {
-      pendingBannerType = type;
-      const el = document.getElementById('content-banner');
-      if (!el) return;
-      el.textContent = type === 'trivia' ? '🧠 Trivia question is live — tap to play!' : '📊 Live poll is open — tap to vote!';
-      el.style.display = 'block';
+    function _esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function hideContentBanner() {
-      pendingBannerType = null;
-      const el = document.getElementById('content-banner');
-      if (el) el.style.display = 'none';
+    function _truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+    function _isCurrentCard(a) {
+      if (!currentActivity) return false;
+      if (a.kind !== currentActivity.kind) return false;
+      if (a.kind === 'wc') return a.slug === currentActivity.slug;
+      return true;
     }
-    function joinLiveContent() {
-      const type = pendingBannerType;
+
+    function renderLiveNow(activities) {
+      liveActivities = Array.isArray(activities) ? activities : [];
+      const wrap = document.getElementById('live-now-wrap');
+      const cards = document.getElementById('live-now-cards');
+      if (!wrap || !cards) return;
+      if (liveActivities.length === 0) { wrap.style.display = 'none'; cards.innerHTML = ''; return; }
+      wrap.style.display = 'block';
+      cards.innerHTML = liveActivities.map((a, i) => _renderLiveCard(a, i)).join('');
+      // Bind click handlers (can't inline onclick easily across types)
+      Array.from(cards.querySelectorAll('.live-card')).forEach((el, i) => {
+        el.onclick = () => tapLiveCard(liveActivities[i]);
+      });
+    }
+
+    function _renderLiveCard(a, idx) {
+      const current = _isCurrentCard(a);
+      const cls = 'live-card' + (current ? ' current' : '');
+      if (a.kind === 'trivia') {
+        const meta = (a.responseCount || 0) + ' answer' + (a.responseCount === 1 ? '' : 's');
+        return '<button class="' + cls + '">' +
+          '<div class="live-card-icon">🧠</div>' +
+          '<div class="live-card-body">' +
+            '<div class="live-card-title">Trivia<span class="live-card-badge">LIVE</span></div>' +
+            '<div class="live-card-sub">' + _esc(_truncate(a.question, 60)) + '</div>' +
+            '<div class="live-card-meta">' + _esc(meta) + '</div>' +
+          '</div>' +
+          '<div class="live-card-go">→</div>' +
+        '</button>';
+      }
+      if (a.kind === 'poll') {
+        const meta = (a.totalVotes || 0) + ' vote' + (a.totalVotes === 1 ? '' : 's') + (a.votingClosed ? ' · closed' : '');
+        return '<button class="' + cls + '">' +
+          '<div class="live-card-icon">📊</div>' +
+          '<div class="live-card-body">' +
+            '<div class="live-card-title">Live Poll<span class="live-card-badge">LIVE</span></div>' +
+            '<div class="live-card-sub">' + _esc(_truncate(a.question, 60)) + '</div>' +
+            '<div class="live-card-meta">' + _esc(meta) + '</div>' +
+          '</div>' +
+          '<div class="live-card-go">→</div>' +
+        '</button>';
+      }
+      if (a.kind === 'wc') {
+        const onScreen = a.onScreen ? '🎥 on screen · ' : '';
+        const meta = onScreen + (a.submissionCount || 0) + ' submission' + (a.submissionCount === 1 ? '' : 's');
+        return '<button class="' + cls + '">' +
+          '<div class="live-card-icon">💭</div>' +
+          '<div class="live-card-body">' +
+            '<div class="live-card-title">' + _esc(_truncate(a.name || 'Word Cloud', 40)) + '</div>' +
+            '<div class="live-card-sub">' + _esc(_truncate(a.prompt || 'Tap to add your word', 60)) + '</div>' +
+            '<div class="live-card-meta">' + _esc(meta) + '</div>' +
+          '</div>' +
+          '<div class="live-card-go">→</div>' +
+        '</button>';
+      }
+      return '';
+    }
+
+    function tapLiveCard(a) {
+      if (!a) return;
+      // Tapping the card the user is already inside is a no-op.
+      if (_isCurrentCard(a)) return;
       userManualNav = false;
-      hideContentBanner();
-      if (type === 'poll') {
+      if (a.kind === 'trivia') {
+        currentActivity = { kind: 'trivia' };
+        if (currentQ) doShowTriviaUi(currentQ); else showWaiting();
+      } else if (a.kind === 'poll') {
+        currentActivity = { kind: 'poll' };
         showPollMode();
         if (currentPoll) renderPoll(currentPoll);
-      } else {
-        // trivia — show question UI directly (bypass banner logic)
-        if (currentQ) { doShowTriviaUi(currentQ); }
-        else { showWaiting(); }
+      } else if (a.kind === 'wc') {
+        currentActivity = { kind: 'wc', slug: a.slug };
+        showWordCloudMode(a);
       }
+      renderLiveNow(liveActivities); // refresh "current" highlight
     }
+
+    // Detect when the user's current activity disappears from the live list.
+    // Shows a 2s "ended" splash, then returns them to default message mode
+    // (or, if other activities are still live, to the Live Now card stack).
+    function _detectActivityEnd() {
+      if (!currentActivity) return;
+      const stillLive = liveActivities.some(a => _isCurrentCard(a));
+      if (stillLive) return;
+      // The user's activity just ended.
+      const wasKind = currentActivity.kind;
+      currentActivity = null;
+      showActivityEndedSplash(wasKind);
+    }
+
+    function showActivityEndedSplash(kind) {
+      const splash = document.getElementById('activity-ended-splash');
+      const title = document.getElementById('activity-ended-title');
+      const sub = document.getElementById('activity-ended-sub');
+      if (!splash) { showMessageMode(); return; }
+      if (title) title.textContent = kind === 'trivia' ? 'Trivia ended' : kind === 'poll' ? 'Poll closed' : 'Activity ended';
+      if (sub) sub.textContent = 'Thanks for playing!';
+      splash.style.display = 'flex';
+      setTimeout(() => {
+        splash.style.display = 'none';
+        // Return gracefully — to Live Now cards if others are live, else main.
+        userManualNav = false;
+        showMessageMode();
+      }, 2000);
+    }
+
+    // Legacy stubs kept so any stray call sites don't crash. Replaced by the
+    // Live Now card stack.
+    function showContentBanner(_type) { /* no-op — Live Now card covers this */ }
+    function hideContentBanner() { /* no-op */ }
+    function joinLiveContent() { /* no-op */ }
 
     // ── Trivia scoreboard ─────────────────────────────────────────────────────
     let scoresCollapsed = true;
@@ -1160,7 +1387,7 @@
     function hideAllForms() {
       triviaUIVisible = false;
       stopTriviaCountdown();
-      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap'].forEach(id => {
+      ['msg-form','photo-form','ai-prompt-form','submissions-off','trivia-register-wrap','trivia-form','trivia-waiting','tabs','poll-wrap','trivia-scores-wrap','wc-wrap'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -1189,6 +1416,8 @@
     // Internal: actually render the trivia UI (called after user taps banner or on dedicated trivia page)
     function doShowTriviaUi(q) {
       if (!myToken) { showRegister(); return; }
+      currentActivity = { kind: 'trivia' };
+      try { renderLiveNow(liveActivities); } catch(_) {}
       showModeNav();
       currentQ       = q;
       selectedAnswer = -1;
@@ -1246,6 +1475,9 @@
     function showMessageMode() {
       // mode=poll with no manual nav → stay on poll view
       if (mode === 'poll' && !userManualNav) { showPollMode(); renderPoll(currentPoll); return; }
+      // Leaving activity view → clear current-card highlight.
+      currentActivity = null;
+      try { renderLiveNow(liveActivities); } catch(_) {}
       hideModeNav();
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
@@ -1485,6 +1717,12 @@
             _handleTriviaState(d);
             _handlePollState(d);
             _handleAppState(d);
+            // First-paint Live Now from the /status response so cards appear
+            // immediately, without waiting for the first SSE frame.
+            if (Array.isArray(d.activities)) {
+              renderLiveNow(d.activities);
+              _detectActivityEnd();
+            }
           })
           .catch(() => {});
       };
@@ -1496,6 +1734,18 @@
             _handleTriviaState(d);
             _handlePollState(d);
             _handleAppState(d);
+          } else if (d.type === 'live-update') {
+            // Unified Live Now feed — WC + trivia + poll activity presence.
+            renderLiveNow(d.activities);
+            _detectActivityEnd();
+            // Also refresh empty-state since it now considers activities.
+            try { updateSubmissionsOffState(); } catch(_) {}
+          } else if (d.type === 'wordcloud-submission') {
+            _wcOnLiveSubmission(d);
+          } else if (d.type === 'wordcloud-vote') {
+            _wcOnLiveVote(d);
+          } else if (d.type === 'wordcloud-submission-deleted') {
+            _wcOnLiveDelete(d);
           }
         } catch(_) {}
       };
@@ -1535,8 +1785,29 @@
         renderKnownTeams();
       }
       renderScores(data.scores || []);
+      // Keep the trivia Live Now card's responseCount live without asking
+      // the server to re-broadcast activities on every answer. We patch
+      // liveActivities in place and re-render.
+      if (Array.isArray(liveActivities)) {
+        const tc = liveActivities.find(a => a.kind === 'trivia');
+        if (tc && typeof raw.triviaResponseCount === 'number' && tc.responseCount !== raw.triviaResponseCount) {
+          tc.responseCount = raw.triviaResponseCount;
+          renderLiveNow(liveActivities);
+        }
+      }
       if (!data.active) {
-        if (currentQ) { userManualNav = false; hideContentBanner(); showMessageMode(); triviaRevealHandled = false; }
+        if (currentQ) {
+          triviaRevealHandled = false;
+          // If user is currently inside trivia, let the live-update handler
+          // drive the splash + return transition. Otherwise jump straight back.
+          if (currentActivity && currentActivity.kind === 'trivia') {
+            // noop — _detectActivityEnd() will show the splash + showMessageMode.
+          } else {
+            userManualNav = false;
+            showMessageMode();
+          }
+          currentQ = null;
+        }
       } else if (data.question) {
         if (!currentQ || currentQ.id !== data.id) {
           showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
@@ -1658,6 +1929,19 @@
         currentPoll = poll;
         const isActive = !!(currentPoll && currentPoll.active);
         if (!isActive) { pollMyVote = null; pollSelected = null; }
+        // Keep the poll Live Now card's vote count live without server chatter.
+        if (Array.isArray(liveActivities)) {
+          const pc = liveActivities.find(a => a.kind === 'poll');
+          if (pc && poll) {
+            const nextVotes = poll.totalVotes || 0;
+            const nextClosed = !!poll.votingClosed;
+            if (pc.totalVotes !== nextVotes || pc.votingClosed !== nextClosed) {
+              pc.totalVotes = nextVotes;
+              pc.votingClosed = nextClosed;
+              renderLiveNow(liveActivities);
+            }
+          }
+        }
         if (isActive) {
           if (!wasActive) {
             if (mode === '' || userManualNav) { showContentBanner('poll'); }
@@ -1665,8 +1949,14 @@
           }
           renderPoll(currentPoll);
         } else if (wasActive) {
-          userManualNav = false; hideContentBanner();
-          showMessageMode();
+          // Poll just ended. If user is inside the poll, let the live-update
+          // handler run the splash; otherwise jump back to the default view.
+          if (currentActivity && currentActivity.kind === 'poll') {
+            // noop — _detectActivityEnd() will handle it.
+          } else {
+            userManualNav = false;
+            showMessageMode();
+          }
         } else if (mode === 'poll') {
           renderPoll(currentPoll);
         }
@@ -1675,6 +1965,8 @@
     }
 
     function showPollMode() {
+      currentActivity = { kind: 'poll' };
+      try { renderLiveNow(liveActivities); } catch(_) {}
       showModeNav();
       hideAllForms();
       document.getElementById('page-icon').textContent  = '📊';
@@ -1683,6 +1975,172 @@
       const wrap = document.getElementById('poll-wrap');
       if (wrap) wrap.style.display = 'flex';
     }
+
+    // ── Word Cloud inline mode ────────────────────────────────────────────────
+    // Activity-scoped submit + upvote UI. Reuses the /wordcloud/submit +
+    // /wordcloud/vote + /wordcloud/recent endpoints that the standalone
+    // /wc/<slug> tunnel page already uses. Identity is the voterId stored in
+    // localStorage — same value that drives vote de-dup + device-ban.
+    let currentWcActivity = null;  // last activity descriptor while in WC mode
+    let wcLocalRecent = [];        // cached recent list for the current slug
+
+    const WC_VOTER_KEY = 'wc_voter_id_v1';
+    function _wcGetVoterId() {
+      let v = null;
+      try { v = localStorage.getItem(WC_VOTER_KEY); } catch (_) {}
+      if (v) return v;
+      v = 'v-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+      try { localStorage.setItem(WC_VOTER_KEY, v); } catch (_) {}
+      return v;
+    }
+
+    function showWordCloudMode(activity) {
+      currentActivity = { kind: 'wc', slug: activity.slug };
+      currentWcActivity = activity;
+      showModeNav();
+      hideAllForms();
+      document.getElementById('page-icon').textContent  = '💭';
+      document.getElementById('page-title').textContent = activity.name || 'Word Cloud';
+      document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Add a word to the crowd\u2019s cloud!';
+      const promptBox = document.getElementById('wc-prompt-box');
+      const promptText = document.getElementById('wc-prompt-text');
+      if (promptText) promptText.textContent = activity.prompt || '';
+      if (promptBox) promptBox.style.display = activity.prompt ? 'block' : 'none';
+      const wrap = document.getElementById('wc-wrap');
+      if (wrap) wrap.style.display = 'flex';
+      const ta = document.getElementById('wc-text');
+      if (ta) { ta.value = ''; _wcUpdateCharCount(); }
+      const status = document.getElementById('wc-status');
+      if (status) status.textContent = '';
+      try { renderLiveNow(liveActivities); } catch(_) {}
+      _wcRefreshRecent();
+    }
+
+    function _wcUpdateCharCount() {
+      const ta = document.getElementById('wc-text');
+      const el = document.getElementById('wc-char-count');
+      if (!ta || !el) return;
+      const n = (ta.value || '').length;
+      el.textContent = n + ' / 140';
+      el.className = 'char-count' + (n > 120 ? ' warn' : '');
+    }
+
+    async function _wcRefreshRecent() {
+      if (!currentWcActivity || !tunnelBase) return;
+      const slug = currentWcActivity.slug || '';
+      try {
+        const url = `${tunnelBase}/wordcloud/recent` + (slug && slug !== 'main' ? `?slug=${encodeURIComponent(slug)}` : '');
+        const r = await fetchWithTimeout(url, {}, 5000);
+        if (!r.ok) return;
+        const data = await r.json();
+        wcLocalRecent = Array.isArray(data?.entries) ? data.entries.slice() : [];
+        _wcRenderRecent();
+      } catch (_) {}
+    }
+
+    function _wcRenderRecent() {
+      const wrap = document.getElementById('wc-recent-wrap');
+      const list = document.getElementById('wc-recent-list');
+      if (!wrap || !list) return;
+      const items = (wcLocalRecent || []).slice().sort((a, b) => (b.votes || 0) - (a.votes || 0) || (b.ts || 0) - (a.ts || 0)).slice(0, 12);
+      if (!items.length) { wrap.style.display = 'none'; list.innerHTML = ''; return; }
+      wrap.style.display = 'block';
+      list.innerHTML = items.map((e, i) =>
+        `<button class="wc-recent-row" data-phrase="${_esc(e.text || '')}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);box-shadow:inset 0 1px 0 var(--hairline-top);color:var(--text);font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">` +
+          `<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(e.text || '')}</span>` +
+          `<span style="font-size:12px;color:${(e.votes||0)>0?'var(--accent-light)':'var(--text-dim)'};font-weight:600;flex-shrink:0">♥ ${e.votes || 0}</span>` +
+        `</button>`
+      ).join('');
+      Array.from(list.querySelectorAll('.wc-recent-row')).forEach(btn => {
+        btn.onclick = () => sendWcVote(btn.getAttribute('data-phrase'), btn);
+      });
+    }
+
+    async function sendWcSubmission() {
+      const ta = document.getElementById('wc-text');
+      const btn = document.getElementById('wc-btn');
+      const status = document.getElementById('wc-status');
+      if (!ta || !currentWcActivity || !tunnelBase) return;
+      const text = (ta.value || '').trim();
+      if (!text) return;
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      try {
+        const body = JSON.stringify({ text, slug: currentWcActivity.slug || undefined, voterId: _wcGetVoterId() });
+        const r = await fetchWithTimeout(`${tunnelBase}/wordcloud/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }, 8000);
+        const ok = r.ok;
+        if (status) {
+          status.textContent = ok ? 'Sent! 💭' : 'Couldn\u2019t send — try again in a sec.';
+          status.className = ok ? 'success' : 'error';
+        }
+        if (ok) { ta.value = ''; _wcUpdateCharCount(); }
+      } catch (_) {
+        if (status) { status.textContent = 'Network error — try again.'; status.className = 'error'; }
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Send It!'; }
+        setTimeout(() => { if (status && (status.textContent || '').startsWith('Sent')) status.textContent = ''; }, 2500);
+      }
+    }
+
+    async function sendWcVote(phrase, btnEl) {
+      if (!currentWcActivity || !tunnelBase || !phrase) return;
+      try {
+        const body = JSON.stringify({ slug: currentWcActivity.slug || undefined, phrase, voterId: _wcGetVoterId() });
+        const r = await fetchWithTimeout(`${tunnelBase}/wordcloud/vote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }, 6000);
+        if (!r.ok) return;
+        const data = await r.json();
+        // Optimistic bump of local list; SSE wordcloud-vote will also update.
+        if (data && typeof data.count === 'number') {
+          for (const e of wcLocalRecent) {
+            if ((e.text || '').trim().toLowerCase() === phrase.trim().toLowerCase()) {
+              e.votes = data.count; break;
+            }
+          }
+          _wcRenderRecent();
+        }
+        if (btnEl) { btnEl.style.transform = 'scale(0.96)'; setTimeout(() => { btnEl.style.transform = ''; }, 140); }
+      } catch (_) {}
+    }
+
+    // ── WC SSE event handlers ──
+    // Keep the inline recent list live without polling. Called from the SSE
+    // onmessage handler when the user is inside the WC mode; cheap no-op when
+    // not in WC mode since the wcLocalRecent list isn't being rendered.
+    function _wcOnLiveSubmission(d) {
+      if (!currentWcActivity) return;
+      const mySlug = currentWcActivity.slug || 'main';
+      const theirSlug = d.slug || 'main';
+      if (theirSlug !== mySlug) return;
+      wcLocalRecent.push({ id: d.id, text: d.text, ts: d.ts, votes: 0, slug: theirSlug });
+      if (wcLocalRecent.length > 60) wcLocalRecent.splice(0, wcLocalRecent.length - 60);
+      _wcRenderRecent();
+    }
+    function _wcOnLiveVote(d) {
+      if (!currentWcActivity) return;
+      const mySlug = currentWcActivity.slug || 'main';
+      const theirSlug = d.slug || 'main';
+      if (theirSlug !== mySlug) return;
+      const phrase = String(d.phrase || '').trim().toLowerCase();
+      for (const e of wcLocalRecent) {
+        if ((e.text || '').trim().toLowerCase() === phrase) {
+          e.votes = typeof d.count === 'number' ? d.count : ((e.votes || 0) + 1);
+          break;
+        }
+      }
+      _wcRenderRecent();
+    }
+    function _wcOnLiveDelete(d) {
+      if (!currentWcActivity || !d.id) return;
+      const before = wcLocalRecent.length;
+      wcLocalRecent = wcLocalRecent.filter(e => e.id !== d.id);
+      if (wcLocalRecent.length !== before) _wcRenderRecent();
+    }
+
+    // Char count binding — attach once DOM is parsed (we're inside an inline script
+    // below the wc-wrap block, so the element already exists).
+    document.addEventListener('DOMContentLoaded', () => {
+      const ta = document.getElementById('wc-text');
+      if (ta) ta.addEventListener('input', _wcUpdateCharCount);
+    });
 
     // ── AI Prompt tab ────────────────────────────────────────────────────────
     let aiActive = false;
@@ -1800,7 +2258,12 @@
     }
 
     function updateSubmissionsOffState() {
-      const anyAllowed = msgAudienceAllowed || photoAudienceAllowed || aiActive;
+      // Live WC / trivia / poll activities also count as "submissions available"
+      // — if any are live, the user has something to do even when msg/photo/AI
+      // are all gated off. This keeps the 🔇 "Submissions paused" state from
+      // showing falsely while an activity is running.
+      const hasLiveActivity = Array.isArray(liveActivities) && liveActivities.length > 0;
+      const anyAllowed = msgAudienceAllowed || photoAudienceAllowed || aiActive || hasLiveActivity;
       const off    = document.getElementById('submissions-off');
       const tabs   = document.getElementById('tabs');
       const msgF   = document.getElementById('msg-form');
