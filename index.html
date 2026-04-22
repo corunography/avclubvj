@@ -71,6 +71,13 @@
 
     /* ── Message form ── */
     #msg-form { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; }
+    /* Lock msg / photo / prompt compose forms to the same min-height so the
+       primary send button sits on the same vertical line across all three
+       modes — frees up predictable space below for a venue-branding band. */
+    #msg-form, #photo-form, #ai-prompt-form { min-height: 340px; }
+    #msg-form > .main-btn,
+    #photo-form > .main-btn,
+    #ai-prompt-form > .main-btn { margin-top: auto; }
 
     /* ── Legal fine print (shared across tabs) ── */
     .legal-fineprint {
@@ -126,6 +133,10 @@
 
     /* ── AI Prompt form ── */
     #ai-prompt-form { width: 100%; max-width: 440px; display: none; flex-direction: column; align-items: center; }
+    /* Prompt textarea is one line shorter than the generic 110px so the
+       ai-photo-section fits above the button without pushing the button
+       down below where msg/photo forms place theirs. */
+    #ai-prompt-form textarea { height: 78px; }
     #ai-prompt-form textarea:focus {
       border-color: var(--accent);
       box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
@@ -141,15 +152,15 @@
     }
 
     /* ── AI Photo upload ── */
-    .ai-photo-section { width: 100%; margin-top: 8px; margin-bottom: 12px; }
-    .ai-photo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 6px; display: block; }
+    .ai-photo-section { width: 100%; margin-top: 4px; margin-bottom: 8px; }
+    .ai-photo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 4px; display: block; }
     .ai-photo-drop {
       width: 100%;
       background: var(--input-bg);
       border: 1.5px dashed var(--input-border);
       box-shadow: inset 0 1px 0 var(--hairline-top);
       border-radius: var(--r);
-      padding: 10px; text-align: center; cursor: pointer;
+      padding: 8px; text-align: center; cursor: pointer;
       transition: border-color .18s var(--ease-out), background .18s var(--ease-out);
       position: relative; overflow: hidden;
     }
