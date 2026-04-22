@@ -88,6 +88,111 @@
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
     .legal-fineprint a.powered-by-link { color: var(--text-muted); text-decoration: none; font-weight: 600; }
 
+    /* ── Anonymous toggle ── */
+    .anon-row {
+      width: 100%; display: flex; align-items: center; justify-content: flex-end;
+      gap: 8px; margin: -4px 2px 6px; font-size: 12px; color: var(--text-dim);
+      letter-spacing: 0.02em;
+    }
+    .anon-row label { cursor: pointer; user-select: none; }
+    .anon-toggle {
+      appearance: none; -webkit-appearance: none;
+      width: 34px; height: 20px; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--input-border);
+      position: relative; cursor: pointer;
+      transition: background 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
+    }
+    .anon-toggle::before {
+      content: ''; position: absolute; top: 1px; left: 1px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--text-muted);
+      transition: transform 0.18s var(--ease-out), background 0.18s var(--ease-out);
+    }
+    .anon-toggle:checked { background: var(--accent); border-color: var(--accent); }
+    .anon-toggle:checked::before { transform: translateX(14px); background: #fff; }
+    .username-row.anon-dim { opacity: 0.42; pointer-events: none; filter: grayscale(1); }
+
+    /* ── Connection indicator dot (top-right) ── */
+    #conn-dot {
+      position: fixed; top: 10px; right: 12px; z-index: 9997;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #888; box-shadow: 0 0 0 2px rgba(0,0,0,0.35);
+      transition: background 0.25s var(--ease-out);
+      cursor: pointer;
+    }
+    #conn-dot.ok    { background: #32d74b; box-shadow: 0 0 6px rgba(50,215,75,0.55), 0 0 0 2px rgba(0,0,0,0.3); }
+    #conn-dot.warn  { background: #ffb020; box-shadow: 0 0 6px rgba(255,176,32,0.55), 0 0 0 2px rgba(0,0,0,0.3); }
+    #conn-dot.fail  { background: #ff453a; box-shadow: 0 0 6px rgba(255,69,58,0.55), 0 0 0 2px rgba(0,0,0,0.3); }
+    #conn-tooltip {
+      position: fixed; top: 26px; right: 12px; z-index: 9997;
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: 8px; padding: 6px 10px; font-size: 11px; color: var(--text);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      max-width: 220px; line-height: 1.35;
+    }
+    #conn-dot:hover + #conn-tooltip, #conn-tooltip.show { opacity: 1; }
+
+    /* ── Debug info modal (5-tap footer reveal) ── */
+    #debug-modal {
+      position: fixed; inset: 0; z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    }
+    #debug-modal.show { display: flex; }
+    #debug-modal .debug-card {
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: var(--r-lg); padding: 20px; width: 92%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    #debug-modal h3 { margin: 0 0 12px; font-size: 15px; letter-spacing: -0.01em; }
+    #debug-modal .debug-row {
+      font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text); padding: 8px 10px; background: var(--input-bg);
+      border: 1px solid var(--input-border); border-radius: 6px;
+      margin-bottom: 6px; word-break: break-all; line-height: 1.4;
+    }
+    #debug-modal .debug-row .lbl { color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; font-size: 9px; display: block; margin-bottom: 2px; }
+    #debug-modal .debug-actions { display: flex; gap: 8px; margin-top: 14px; }
+    #debug-modal button {
+      flex: 1; padding: 10px; font-size: 13px; font-weight: 600;
+      background: var(--surface); border: 1px solid var(--hairline);
+      color: var(--text); border-radius: 8px; cursor: pointer;
+    }
+    #debug-modal button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Share button (footer) ── */
+    .share-btn {
+      background: none; border: 1px solid var(--hairline);
+      color: var(--text-dim); font-size: 11px; padding: 6px 12px;
+      border-radius: 999px; cursor: pointer; margin-top: 8px;
+      letter-spacing: 0.04em; transition: border-color 0.15s, color 0.15s;
+    }
+    .share-btn:hover, .share-btn:active { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Dedupe nudge toast ── */
+    #dedupe-toast {
+      position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--hig-amber);
+      color: var(--text); padding: 10px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      z-index: 9998; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+    }
+    #dedupe-toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    /* ── Offline queue toast ── */
+    #queue-toast {
+      position: fixed; left: 50%; bottom: 110px; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--accent);
+      color: var(--text); padding: 10px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      z-index: 9998; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s var(--ease-out);
+    }
+    #queue-toast.show { opacity: 1; }
+
     /* ── Input chips (shared field styling) ──
        Form fields need higher contrast than cards so they read clearly
        under bright mobile ambient light. Solid surface + brighter hairline
@@ -712,6 +817,30 @@
   <!-- Send-success checkmark overlay (fires on successful submit in any compose mode) -->
   <div id="send-success-overlay"><div class="check">✓</div></div>
 
+  <!-- Connection indicator dot (top-right). Tap reveals debug info. -->
+  <div id="conn-dot" title="Connection status"></div>
+  <div id="conn-tooltip"></div>
+
+  <!-- Debug info modal (reveal via 5 taps on "Powered by…" footer) -->
+  <div id="debug-modal">
+    <div class="debug-card">
+      <h3>Debug info</h3>
+      <div class="debug-row"><span class="lbl">Venue</span><span id="dbg-venue">—</span></div>
+      <div class="debug-row"><span class="lbl">Voter ID</span><span id="dbg-voter">—</span></div>
+      <div class="debug-row"><span class="lbl">Tunnel</span><span id="dbg-tunnel">—</span></div>
+      <div class="debug-row"><span class="lbl">Conn status</span><span id="dbg-conn">—</span></div>
+      <div class="debug-row"><span class="lbl">Queued</span><span id="dbg-queue">0</span></div>
+      <div class="debug-actions">
+        <button onclick="copyDebugInfo()">Copy</button>
+        <button class="primary" onclick="closeDebugModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedupe + queue toasts -->
+  <div id="dedupe-toast"></div>
+  <div id="queue-toast"></div>
+
   <!-- Live Now card stack — one card per active trivia / poll / WC activity.
        Tapping a card enters that activity's mode. Pinned at top across all
        modes so users can switch between activities without losing context. -->
@@ -754,7 +883,11 @@
 
   <!-- Normal message form -->
   <div id="msg-form">
-    <div class="username-row">
+    <div class="anon-row">
+      <label for="anon-msg">🔒 hide my name</label>
+      <input type="checkbox" class="anon-toggle" id="anon-msg" onchange="toggleAnon('msg')">
+    </div>
+    <div class="username-row" id="username-row-msg">
       <span class="username-at">@</span>
       <input type="text" id="username" placeholder="your username (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
@@ -762,7 +895,7 @@
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
-    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
   </div>
 
   <!-- Photo form -->
@@ -776,7 +909,11 @@
       <img id="photo-preview" alt="Preview">
       <button class="rm-btn" id="rm-btn" title="Remove photo">✕</button>
     </div>
-    <div class="username-row">
+    <div class="anon-row">
+      <label for="anon-photo">🔒 hide my name</label>
+      <input type="checkbox" class="anon-toggle" id="anon-photo" onchange="toggleAnon('photo')">
+    </div>
+    <div class="username-row" id="username-row-photo">
       <span class="username-at">@</span>
       <input type="text" id="photo-username" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
@@ -787,12 +924,16 @@
     </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled style="width:100%">Send Photo!</button>
     <div id="photo-status"></div>
-    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
   </div>
 
   <!-- AI Prompt form -->
   <div id="ai-prompt-form">
-    <div class="username-row">
+    <div class="anon-row">
+      <label for="anon-ai">🔒 hide my name</label>
+      <input type="checkbox" class="anon-toggle" id="anon-ai" onchange="toggleAnon('ai')">
+    </div>
+    <div class="username-row" id="username-row-ai">
       <span class="username-at" style="color:var(--accent)">✨</span>
       <input type="text" id="ai-name" placeholder="your name (optional)" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
@@ -814,7 +955,7 @@
     </div>
     <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
     <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
-    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -878,7 +1019,7 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;margin:0 2px 6px">Recent submissions · tap to upvote</div>
       <div id="wc-recent-list" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
-    <div class="legal-fineprint">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
+    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a><br><button type="button" class="share-btn" onclick="shareLink(event)">🔗 Share this link</button></div>
   </div>
 
   <!-- Emoji Applause bar (fixed bottom) -->
@@ -916,9 +1057,10 @@
           const candidate = data.tunnelUrl.replace(/\/$/, '');
           try {
             const ping = await fetchWithTimeout(`${candidate}/ping`, {}, 4000);
-            if (ping.ok) tunnelBase = candidate;
+            if (ping.ok) { tunnelBase = candidate; setConnState('ok'); }
           } catch(_) { /* tunnel stale — stay on worker fallback */ }
         }
+        if (!tunnelBase) setConnState('warn', 'No tunnel — venue may be offline');
         // Immediately fetch app state so AI prompt tab appears without waiting for poll cycle
         if (tunnelBase) {
           try {
@@ -943,6 +1085,243 @@
       });
     }
 
+    // ── Anonymous toggle (per-mode) ──────────────────────────────────────────
+    // When a user flips the "hide my name" switch, we dim + disable the
+    // matching username input and send the mode's name/username param as empty
+    // string. State is sticky in localStorage so the pref survives reloads.
+    const _anonState = {
+      msg:   !!localStorage.getItem('anon-msg'),
+      photo: !!localStorage.getItem('anon-photo'),
+      ai:    !!localStorage.getItem('anon-ai'),
+    };
+    function _applyAnonState(which) {
+      const row = document.getElementById('username-row-' + which);
+      const cb  = document.getElementById('anon-' + which);
+      const on  = !!_anonState[which];
+      if (cb) cb.checked = on;
+      if (row) row.classList.toggle('anon-dim', on);
+    }
+    function toggleAnon(which) {
+      const cb = document.getElementById('anon-' + which);
+      _anonState[which] = !!(cb && cb.checked);
+      if (_anonState[which]) localStorage.setItem('anon-' + which, '1');
+      else localStorage.removeItem('anon-' + which);
+      _applyAnonState(which);
+    }
+    function _effectiveName(which, rawName) {
+      return _anonState[which] ? '' : rawName;
+    }
+
+    // ── Recent-submit dedupe (30s, per-mode) ─────────────────────────────────
+    const _recentSends = { msg: [], ai: [], wc: [] };
+    const DEDUPE_WINDOW_MS = 30000;
+    function _isDuplicate(mode, text) {
+      const key = (text || '').trim().toLowerCase();
+      if (!key) return false;
+      const now = Date.now();
+      const arr = _recentSends[mode] || [];
+      // Prune stale
+      while (arr.length && now - arr[0].t > DEDUPE_WINDOW_MS) arr.shift();
+      return arr.some(e => e.k === key);
+    }
+    function _rememberSend(mode, text) {
+      const key = (text || '').trim().toLowerCase();
+      if (!key) return;
+      const arr = _recentSends[mode] = _recentSends[mode] || [];
+      arr.push({ k: key, t: Date.now() });
+      if (arr.length > 10) arr.shift();
+    }
+    let _dedupeToastTimer = null;
+    function showDedupeNudge(msg) {
+      const el = document.getElementById('dedupe-toast');
+      if (!el) return;
+      el.textContent = msg || 'You just sent that — try something new?';
+      el.classList.add('show');
+      if (_dedupeToastTimer) clearTimeout(_dedupeToastTimer);
+      _dedupeToastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    // ── Connection indicator ─────────────────────────────────────────────────
+    // Tracks the outcome of recent POSTs. Dot colors:
+    //   green — last tunnel POST succeeded within the last 60s
+    //   amber — falling back to worker, or tunnel stale
+    //   red   — last attempt failed, or no tunnel at all
+    let _connState = 'idle';   // 'ok' | 'warn' | 'fail' | 'idle'
+    let _lastConnOkTs = 0;
+    function setConnState(state, reason) {
+      _connState = state;
+      const dot = document.getElementById('conn-dot');
+      if (!dot) return;
+      dot.classList.remove('ok', 'warn', 'fail');
+      if (state === 'ok')   { dot.classList.add('ok');   _lastConnOkTs = Date.now(); }
+      if (state === 'warn') { dot.classList.add('warn'); _lastConnOkTs = Date.now(); }
+      if (state === 'fail') { dot.classList.add('fail'); }
+      const tt = document.getElementById('conn-tooltip');
+      if (tt) tt.textContent = {
+        ok:   'Connected to venue',
+        warn: 'Connected via fallback (slower)',
+        fail: reason || 'Not connected — tap for details',
+        idle: 'Connecting…',
+      }[state] || '';
+    }
+    // Dot tap → reveal debug modal (same as 5-tap on footer)
+    document.addEventListener('DOMContentLoaded', () => {
+      const dot = document.getElementById('conn-dot');
+      if (dot) dot.addEventListener('click', () => openDebugModal());
+    });
+
+    // ── Debug info modal (5-tap footer, or tap the dot) ──────────────────────
+    let _debugTapCount = 0;
+    let _debugTapTimer = null;
+    function countDebugTap(e) {
+      // Ignore taps that came from within a link / button (let them navigate).
+      if (e && e.target && e.target.closest && e.target.closest('a, button')) return;
+      _debugTapCount++;
+      if (_debugTapTimer) clearTimeout(_debugTapTimer);
+      _debugTapTimer = setTimeout(() => { _debugTapCount = 0; }, 3000);
+      if (_debugTapCount >= 5) {
+        _debugTapCount = 0;
+        openDebugModal();
+      }
+    }
+    function openDebugModal() {
+      document.getElementById('dbg-venue').textContent  = topic || '—';
+      document.getElementById('dbg-voter').textContent  = (typeof _wcGetVoterId === 'function' ? _wcGetVoterId() : (localStorage.getItem('wc-voter-id') || '—'));
+      document.getElementById('dbg-tunnel').textContent = tunnelBase || '(unresolved)';
+      document.getElementById('dbg-conn').textContent   = _connState + (_lastConnOkTs ? ` · last ok ${Math.round((Date.now()-_lastConnOkTs)/1000)}s ago` : '');
+      document.getElementById('dbg-queue').textContent  = String(_offlineQueue().length);
+      document.getElementById('debug-modal').classList.add('show');
+    }
+    function closeDebugModal() {
+      document.getElementById('debug-modal').classList.remove('show');
+    }
+    function copyDebugInfo() {
+      const lines = [
+        'Venue: '   + (topic || '—'),
+        'VoterID: ' + (typeof _wcGetVoterId === 'function' ? _wcGetVoterId() : '—'),
+        'Tunnel: '  + (tunnelBase || '—'),
+        'Worker: '  + (workerBase || '—'),
+        'Conn: '    + _connState,
+        'Queued: '  + _offlineQueue().length,
+        'UA: '      + navigator.userAgent,
+        'Time: '    + new Date().toISOString(),
+      ].join('\n');
+      try {
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(lines).then(() => showDedupeNudge('Copied debug info'));
+        }
+      } catch(_) {}
+    }
+
+    // ── Offline queue (msg / ai / wc only — photos skipped, too large) ───────
+    const OFFLINE_QUEUE_KEY = 'offline-queue-v1';
+    const OFFLINE_QUEUE_MAX = 10;
+    function _offlineQueue() {
+      try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); }
+      catch(_) { return []; }
+    }
+    function _saveOfflineQueue(arr) {
+      try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(arr.slice(-OFFLINE_QUEUE_MAX))); } catch(_) {}
+    }
+    function enqueueOffline(entry) {
+      const arr = _offlineQueue();
+      arr.push({ ...entry, ts: Date.now() });
+      _saveOfflineQueue(arr);
+    }
+    async function flushOfflineQueue() {
+      if (!tunnelBase) return;
+      const arr = _offlineQueue();
+      if (!arr.length) return;
+      const remaining = [];
+      let flushed = 0;
+      for (const entry of arr) {
+        // Drop entries older than 10 minutes (stale text isn't worth reviving).
+        if (Date.now() - entry.ts > 10 * 60 * 1000) continue;
+        try {
+          const r = await fetchWithTimeout(
+            tunnelBase + entry.path,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry.payload) },
+            6000
+          );
+          if (r.ok) { flushed++; continue; }
+          remaining.push(entry);
+        } catch(_) {
+          remaining.push(entry);
+        }
+      }
+      _saveOfflineQueue(remaining);
+      if (flushed > 0) {
+        const t = document.getElementById('queue-toast');
+        if (t) {
+          t.textContent = `✓ ${flushed} submission${flushed === 1 ? '' : 's'} synced`;
+          t.classList.add('show');
+          setTimeout(() => t.classList.remove('show'), 2400);
+        }
+      }
+    }
+    window.addEventListener('online', () => { flushOfflineQueue(); });
+    setInterval(() => { if (navigator.onLine) flushOfflineQueue(); }, 15000);
+
+    // ── Share button ─────────────────────────────────────────────────────────
+    async function shareLink(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const url = window.location.href;
+      const text = 'Join the show!';
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'Phasion Live', text, url });
+          return;
+        }
+      } catch(_) { /* user cancelled or failed — fall back */ }
+      try {
+        await navigator.clipboard.writeText(url);
+        showDedupeNudge('Link copied to clipboard');
+      } catch(_) {
+        showDedupeNudge('Couldn\u2019t copy — long-press the URL');
+      }
+    }
+
+    // ── Audio click fallback (iPhones don't support navigator.vibrate) ───────
+    let _clickAudioCtx = null;
+    function _playClickBlip() {
+      try {
+        if (!_clickAudioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          _clickAudioCtx = new AC();
+        }
+        const ctx = _clickAudioCtx;
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.09);
+      } catch(_) {}
+    }
+
+    // ── Keyboard-stuck-on-screen fix ─────────────────────────────────────────
+    // Called by each gotoXxx() on mode switch. Blurs whatever was focused
+    // (so iOS drops its virtual keyboard) and then scrolls the new mode's
+    // primary input into view on the next frame.
+    function _modeSwitchFocusReset(nextInputId) {
+      try { document.activeElement && document.activeElement.blur && document.activeElement.blur(); } catch(_) {}
+      requestAnimationFrame(() => {
+        const el = nextInputId ? document.getElementById(nextInputId) : null;
+        if (el && el.scrollIntoView) {
+          try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch(_) { el.scrollIntoView(); }
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+
     // Send-success checkmark overlay — reassuring confirmation after any submit.
     let _sendSuccessTimer = null;
     function showSendSuccess() {
@@ -955,6 +1334,7 @@
       if (_sendSuccessTimer) clearTimeout(_sendSuccessTimer);
       _sendSuccessTimer = setTimeout(() => { el.classList.remove('show'); }, 950);
       try { navigator.vibrate && navigator.vibrate([10, 40, 20]); } catch(_) {}
+      _playClickBlip();
     }
 
     // Fetch with a hard timeout so requests never hang indefinitely
@@ -1059,23 +1439,28 @@
 
     async function sendMsg() {
       const rawText = document.getElementById('msg').value.trim();
-      const username = (document.getElementById('username')?.value || '').trim();
-      if (username) localStorage.setItem('msg-username', username);
+      const rawName = (document.getElementById('username')?.value || '').trim();
+      const username = _effectiveName('msg', rawName);
+      if (rawName) localStorage.setItem('msg-username', rawName);
       if (!rawText || !topic) return;
+      if (_isDuplicate('msg', rawText)) { showDedupeNudge(); return; }
       const btn    = document.getElementById('btn');
       const status = document.getElementById('status');
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
+      const payload = { text: rawText, username: username || '' };
       try {
         if (!tunnelBase) throw Object.assign(new Error('No venue connection'), { noTunnel: true });
         const res = await fetchWithTimeout(
           `${tunnelBase}/message`,
-          { method: 'POST', body: JSON.stringify({ text: rawText, username: username || '' }), headers: { 'Content-Type': 'application/json' } }
+          { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: body.error || '' });
         }
+        setConnState('ok');
+        _rememberSend('msg', rawText);
         status.innerHTML = '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
         document.getElementById('msg').value = '';
@@ -1084,14 +1469,23 @@
         showSendSuccess();
       } catch(e) {
         const isTimeout = e.name === 'AbortError';
-        status.textContent = isTimeout
-          ? '✗ Timed out — the venue screen may be unreachable. Try again in a moment.'
-          : e.noTunnel
-            ? '✗ Not connected to a venue. Scan the QR code at the venue to connect.'
-            : e.status === 429
-              ? '✗ Queue is full — please wait a moment and try again.'
-              : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
-        status.className = 'error';
+        const isNet = isTimeout || e.noTunnel || /NetworkError|Failed to fetch/i.test(e.message || '');
+        if (isNet) {
+          // Queue for retry when connection comes back
+          enqueueOffline({ path: '/message', payload });
+          _rememberSend('msg', rawText);
+          setConnState('fail', 'Saved — will retry when online');
+          status.innerHTML = '⏳ Saved — we\u2019ll send it as soon as you\u2019re back online.';
+          status.className = 'success';
+          document.getElementById('msg').value = '';
+          onInput();
+        } else {
+          setConnState('warn');
+          status.textContent = e.status === 429
+            ? '✗ Queue is full — please wait a moment and try again.'
+            : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
+          status.className = 'error';
+        }
         btn.textContent = 'Send It!'; btn.disabled = false;
       }
     }
@@ -1139,8 +1533,9 @@
         return;
       }
       const caption     = (document.getElementById('photo-caption')?.value || '').trim();
-      const photoName   = (document.getElementById('photo-username')?.value || '').trim();
-      if (photoName) localStorage.setItem('msg-username', photoName);
+      const rawPhotoName = (document.getElementById('photo-username')?.value || '').trim();
+      const photoName   = _effectiveName('photo', rawPhotoName);
+      if (rawPhotoName) localStorage.setItem('msg-username', rawPhotoName);
       const progressWrap = document.getElementById('photo-progress-wrap');
       const progressBar  = document.getElementById('photo-progress-bar');
 
@@ -1159,6 +1554,7 @@
         progressBar.style.width = '100%';
         setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
         if (success) {
+          setConnState('ok');
           photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
           showSendSuccess();
           resizedDataUrl = null;
@@ -1169,6 +1565,7 @@
           fileInput.value = '';
           setTimeout(() => { photoBtn.disabled = false; }, 15000);
         } else {
+          setConnState('fail');
           photoStatus.innerHTML = '<span class="error">✗ Upload failed' + (errText ? ' (' + errText + ')' : '') + ' — please try again.</span>';
           photoBtn.disabled = false;
         }
@@ -1194,10 +1591,12 @@
 
       const tryTunnel = () => {
         if (!tunnelBase) { tryWorker(); return; }
-        postTo(`${tunnelBase}/photo`, () => tryWorker());
+        postTo(`${tunnelBase}/photo`, () => { setConnState('warn'); tryWorker(); });
       };
       const tryWorker = () => {
         if (!workerBase) return done(false, 'no server');
+        // If we're using the worker path, mark as warn — connected but slower.
+        setConnState('warn');
         postTo(
           `${workerBase}/photos?venueId=${encodeURIComponent(topic)}`,
           (errText) => done(false, errText),
@@ -1263,6 +1662,7 @@
       activeTab = 'msg';
       document.getElementById('tab-msg').classList.add('active');
       document.getElementById('tab-photo').classList.remove('active');
+      _modeSwitchFocusReset('msg');
     }
     function gotoPhoto() {
       userManualNav = true; hideContentBanner();
@@ -1282,6 +1682,7 @@
       activeTab = 'photo';
       document.getElementById('tab-msg').classList.remove('active');
       document.getElementById('tab-photo').classList.add('active');
+      _modeSwitchFocusReset('photo-caption');
     }
     function gotoAi() {
       userManualNav = true; hideContentBanner();
@@ -1302,6 +1703,7 @@
       document.getElementById('tab-msg').classList.remove('active');
       document.getElementById('tab-photo').classList.remove('active');
       document.getElementById('tab-ai').classList.add('active');
+      _modeSwitchFocusReset('ai-prompt-text');
     }
 
     let reactCooldown = 0;
@@ -1422,8 +1824,10 @@
       // activity on the first render that contains it. Consume the pending
       // slug so we don't keep hijacking the user after they navigate away.
       if (pendingWcAutoTap && !currentActivity) {
+        // '*' sentinel (set by ?mode=wc without a slug) matches the first
+        // WC activity available. Otherwise exact-match on slug.
         const target = liveActivities.find(
-          a => a.kind === 'wc' && a.slug === pendingWcAutoTap
+          a => a.kind === 'wc' && (pendingWcAutoTap === '*' || a.slug === pendingWcAutoTap)
         );
         if (target) {
           const slug = pendingWcAutoTap;
@@ -2282,11 +2686,15 @@
       if (!ta || !currentWcActivity || !tunnelBase) return;
       const text = (ta.value || '').trim();
       if (!text) return;
+      if (_isDuplicate('wc', text)) { showDedupeNudge(); return; }
       if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      const payload = { text, slug: currentWcActivity.slug || undefined, voterId: _wcGetVoterId() };
       try {
-        const body = JSON.stringify({ text, slug: currentWcActivity.slug || undefined, voterId: _wcGetVoterId() });
+        const body = JSON.stringify(payload);
         const r = await fetchWithTimeout(`${tunnelBase}/wordcloud/submit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }, 8000);
         const ok = r.ok;
+        if (ok) { setConnState('ok'); _rememberSend('wc', text); }
+        else    { setConnState('warn'); }
         if (status) {
           status.textContent = ok ? 'Sent! 💭' : 'Couldn\u2019t send — try again in a sec.';
           status.className = ok ? 'success' : 'error';
@@ -2306,7 +2714,13 @@
           _wcRenderRecent();
         }
       } catch (_) {
-        if (status) { status.textContent = 'Network error — try again.'; status.className = 'error'; }
+        // Queue for retry when the network comes back
+        enqueueOffline({ path: '/wordcloud/submit', payload });
+        _rememberSend('wc', text);
+        setConnState('fail', 'Saved — will retry when online');
+        if (status) { status.textContent = '⏳ Saved — will send when you\u2019re back online.'; status.className = 'success'; }
+        if (ta) ta.value = '';
+        try { _wcUpdateCharCount && _wcUpdateCharCount(); } catch(_) {}
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Send It!'; }
         setTimeout(() => { if (status && (status.textContent || '').startsWith('Sent')) status.textContent = ''; }, 2500);
@@ -2372,6 +2786,30 @@
     document.addEventListener('DOMContentLoaded', () => {
       const ta = document.getElementById('wc-text');
       if (ta) ta.addEventListener('input', _wcUpdateCharCount);
+
+      // Restore sticky anonymous-mode preferences across reloads.
+      _applyAnonState('msg');
+      _applyAnonState('photo');
+      _applyAnonState('ai');
+
+      // Deep-link: ?mode=msg|photo|ai|wc — auto-navigate to the requested
+      // compose mode after page boot. 'trivia'/'poll' are handled elsewhere
+      // by the existing mode-gating logic so we don't touch those here.
+      const deepMode = (params.get('mode') || '').toLowerCase();
+      if (deepMode === 'msg')   setTimeout(() => { try { gotoMessages(); } catch(_) {} }, 50);
+      if (deepMode === 'photo') setTimeout(() => { try { gotoPhoto();    } catch(_) {} }, 50);
+      if (deepMode === 'ai')    setTimeout(() => { try { gotoAi();       } catch(_) {} }, 50);
+      // ?mode=wc without a specific slug — existing ?wc=<slug> param already
+      // handles the targeted case; bare ?mode=wc waits for the first WC
+      // activity to appear (via _handleActivities) and we nudge into it:
+      if (deepMode === 'wc' && !pendingWcAutoTap) {
+        // Flag to enter first wc activity when it appears.
+        pendingWcAutoTap = '*'; // sentinel — match any slug
+      }
+
+      // If we were offline at load, the online event will trigger flush;
+      // otherwise try once to drain anything leftover from a previous visit.
+      setTimeout(() => { try { flushOfflineQueue(); } catch(_) {} }, 2000);
     });
 
     // ── AI Prompt tab ────────────────────────────────────────────────────────
@@ -2531,9 +2969,11 @@
 
     async function sendAiPrompt() {
       const promptText = document.getElementById('ai-prompt-text')?.value.trim();
-      const name = (aiNameEl?.value || '').trim();
+      const rawName = (aiNameEl?.value || '').trim();
+      const name = _effectiveName('ai', rawName);
       if (!promptText || !topic) return;
-      if (name) localStorage.setItem('ai-prompt-name', name);
+      if (_isDuplicate('ai', promptText)) { showDedupeNudge(); return; }
+      if (rawName) localStorage.setItem('ai-prompt-name', rawName);
       const btn    = document.getElementById('ai-prompt-btn');
       const status = document.getElementById('ai-prompt-status');
       btn.disabled = true; btn.textContent = 'Sending…';
@@ -2551,6 +2991,8 @@
             headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: b.error || '' }); }
+        setConnState('ok');
+        _rememberSend('ai', promptText);
         status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
         status.className = 'success';
         showSendSuccess();
@@ -2570,12 +3012,21 @@
         }, 1000);
       } catch(e) {
         const isTimeout = e.name === 'AbortError';
-        status.textContent = isTimeout
-          ? '✗ Timed out — the venue screen may be unreachable. Try again in a moment.'
-          : e.noTunnel
-            ? '✗ Not connected to a venue. Scan the QR code at the venue to connect.'
-            : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
-        status.className = 'error';
+        const isNet = isTimeout || e.noTunnel || /NetworkError|Failed to fetch/i.test(e.message || '');
+        if (isNet) {
+          enqueueOffline({ path: '/ai-prompt', payload });
+          _rememberSend('ai', promptText);
+          setConnState('fail', 'Saved — will retry when online');
+          status.innerHTML = '⏳ Saved — we\u2019ll send it when you\u2019re back online.';
+          status.className = 'success';
+          document.getElementById('ai-prompt-text').value = '';
+          onAiPromptInput();
+          clearAiPhoto();
+        } else {
+          setConnState('warn');
+          status.textContent = '✗ Couldn\'t reach the venue screen — check your connection and try again.';
+          status.className = 'error';
+        }
         btn.textContent = 'Submit Prompt!'; btn.disabled = false;
       }
     }
