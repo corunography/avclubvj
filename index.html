@@ -2842,17 +2842,18 @@
       // land scoped to the contest. No text-cloud inputs shown.
       // NB: `mode` carries the preset *key* ('photocontest'), not the
       // render mode ('photos') — that's what the controls side publishes.
-      if (activity.mode === 'photocontest') {
-        document.getElementById('page-icon').textContent  = '🏆';
-        document.getElementById('page-title').textContent = activity.name || 'Photo Contest';
-        document.getElementById('page-sub').textContent   = activity.prompt ? '' : 'Submit a photo for the crowd to vote on!';
+      if (activity.mode === 'photocontest' || activity.mode === 'petcontest') {
+        const isPet = activity.mode === 'petcontest';
+        document.getElementById('page-icon').textContent  = isPet ? '🐾' : '🏆';
+        document.getElementById('page-title').textContent = activity.name || (isPet ? 'Pet Photo Contest' : 'Photo Contest');
+        document.getElementById('page-sub').textContent   = activity.prompt ? '' : (isPet ? 'Submit a photo of your pet for the crowd to vote on!' : 'Submit a photo for the crowd to vote on!');
         const promptBox2 = document.getElementById('wc-prompt-box');
         const promptText2 = document.getElementById('wc-prompt-text');
         if (promptText2) promptText2.textContent = activity.prompt || '';
         if (promptBox2) promptBox2.style.display = 'none';
         document.getElementById('photo-form').style.display = 'flex';
-        // Photo Contest has no winner caption — hide the caption input so the
-        // form isn't cluttered with a field that'll never be read.
+        // Photo Contest modes have no winner caption — hide the caption input
+        // so the form isn't cluttered with a field that'll never be read.
         const pcCap = document.getElementById('photo-caption');
         if (pcCap) { pcCap.value = ''; pcCap.style.display = 'none'; }
         const pcWrap = document.getElementById('photocontest-wrap');
