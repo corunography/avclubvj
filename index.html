@@ -2796,20 +2796,39 @@
     async function _pcVote(photoId) {
       if (!_pcSlug || !photoId || !tunnelBase) return;
       const key = `${_pcSlug}|${photoId}`;
-      if (_pcVotedIds.has(key)) return;
-      _pcVotedIds.add(key); _pcSaveVoted();
-      // Optimistic bump — server will reconcile via photo-vote SSE.
       const e = _pcEntries.find(x => String(x.id) === String(photoId));
-      if (e) e.votes = (e.votes || 0) + 1;
+      const wasVoted = _pcVotedIds.has(key);
+      // Optimistic toggle. Server is authoritative — the fetch response
+      // below (and the SSE photo-vote broadcast) will reconcile count +
+      // voted-state if local storage drifted from the server's voter set.
+      if (wasVoted) {
+        _pcVotedIds.delete(key);
+        if (e) e.votes = Math.max(0, (e.votes || 0) - 1);
+      } else {
+        _pcVotedIds.add(key);
+        if (e) e.votes = (e.votes || 0) + 1;
+      }
+      _pcSaveVoted();
       _pcRender();
       try {
         let voterId = '';
         try { voterId = _wcGetVoterId(); } catch (_) {}
-        await fetchWithTimeout(`${tunnelBase}/photo-vote`, {
+        const r = await fetchWithTimeout(`${tunnelBase}/photo-vote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug: _pcSlug, photoId, voterId }),
         }, 5000);
+        if (!r || !r.ok) return;
+        const j = await r.json().catch(() => null);
+        if (!j) return;
+        if (typeof j.count === 'number' && e) e.votes = j.count;
+        // Reconcile voted-state with the server's view. `unvoted: true`
+        // means the server removed us from the set; a plain `ok` with no
+        // dedupe flag means the server added us.
+        if (j.unvoted) _pcVotedIds.delete(key);
+        else if (!j.deduped) _pcVotedIds.add(key);
+        _pcSaveVoted();
+        _pcRender();
       } catch (_) {}
     }
 
