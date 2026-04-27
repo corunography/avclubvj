@@ -84,6 +84,16 @@
        gotoAi inline display:none on #page-icon so the hero brand shows on
        every compose tab. The watermark stays hidden in this state. */
     body.brand-active #page-icon { display: block !important; }
+    /* Lock the icon box height to the logo image only. Tab switches
+       (gotoMessages/gotoPhoto/gotoAi) reset textContent to 🎶/📸/✨
+       for a frame before the MutationObserver re-injects the logo —
+       at font-size:44px that briefly collapses the box and shifts the
+       logo vertically when the user toggles tabs. font-size:0 makes the
+       emoji flash invisible so the rendered box height stays pinned to
+       the <img> alone, no matter which tab is active. line-height:0 is
+       belt-and-suspenders for browsers that retain a leading even at 0px. */
+    body.brand-active #page-icon { font-size: 0; line-height: 0; }
+    body.brand-active #page-icon img.brand-logo-img { line-height: normal; }
     /* When Live Now cards are active they need the vertical space — hand
        it back, hide the hero, and surface the watermark instead. */
     body.brand-active.live-now-active #page-icon { display: none !important; }
