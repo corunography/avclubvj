@@ -47,10 +47,15 @@
 
     /* ── Venue branding ── */
     /* Logo replacement inside the .icon slot (compose-hero + splash states).
-       Sizes are generous because most uploaded logos have transparent
-       padding around the mark — we cap the canvas, not the visible art. */
+       Height is the primary constraint so logos of every aspect ratio
+       (square, landscape wordmarks, vertical stacks) all render at a
+       consistent vertical scale and the width simply follows.
+       max-width caps prevent ultra-wide logos from blowing out the page. */
     .icon img.brand-logo-img {
-      max-height: 110px; max-width: 280px;
+      height: auto;
+      max-height: 140px;
+      max-width: 88vw;
+      width: auto;
       object-fit: contain;
       display: inline-block;
       filter: drop-shadow(0 2px 12px rgba(0,0,0,0.4));
@@ -58,30 +63,34 @@
     /* Splash-state ramps the logo larger to fill the empty space the
        splash emoji used to occupy. Activated by .splash-state on .icon. */
     .icon.splash-state img.brand-logo-img {
-      max-height: 180px; max-width: 320px;
+      max-height: 240px;
+      max-width: 90vw;
     }
-    /* Always-on top-right watermark — appears whenever a venue logo is
-       configured, regardless of whether the in-flow .icon is visible.
-       Guarantees the brand survives the photo-tab / Live-Now-active states
-       where #page-icon gets display:none. */
+    /* Top-right watermark — only visible when the in-flow hero logo is
+       hidden (photo tab / Live-Now-active). Sized as a rectangle so wide
+       wordmarks fit, not just square marks. */
     #brand-watermark {
       position: fixed;
       top: max(env(safe-area-inset-top), 10px);
       right: 12px;
-      width: 56px; height: 56px;
+      max-width: 110px;
+      max-height: 56px;
       z-index: 50;
       opacity: 0.9;
       pointer-events: none;
       display: none;       /* shown by applyBranding when logoUrl is set */
     }
     #brand-watermark img {
-      width: 100%; height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
       object-fit: contain;
       filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
     }
     /* Small logo chip preceding the "Powered by …" text in the footer. */
     .powered-by-link img.powered-by-logo {
-      height: 28px; width: auto; vertical-align: -8px;
+      height: 32px; width: auto; vertical-align: -10px;
       margin-right: 6px;
       filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
     }
@@ -1277,8 +1286,37 @@
         if (venueBranding.logoUrl && !iconEl.querySelector('img.brand-logo-img')) {
           _applyLogoToPageIcon();
         }
+        // Whenever the icon mutates, re-evaluate watermark visibility so
+        // it appears the moment the hero logo is hidden, and disappears
+        // the moment the hero comes back.
+        _updateWatermarkVisibility();
       });
       _logoObserver.observe(iconEl, { childList: true, characterData: true, subtree: true });
+    }
+
+    let _watermarkObserver = null;
+    function _ensureWatermarkObserver() {
+      if (_watermarkObserver) return;
+      const iconEl = document.getElementById('page-icon');
+      if (!iconEl) return;
+      // Watch style/class mutations on #page-icon — most state transitions
+      // (photo tab, Live Now active, splash mode) toggle display:none here,
+      // and that's our cue to flip the watermark on/off.
+      _watermarkObserver = new MutationObserver(_updateWatermarkVisibility);
+      _watermarkObserver.observe(iconEl, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+    function _updateWatermarkVisibility() {
+      const wm = document.getElementById('brand-watermark');
+      if (!wm) return;
+      // No logo configured → watermark hidden, no further checks.
+      if (!venueBranding.logoUrl) { wm.style.display = 'none'; return; }
+      const iconEl = document.getElementById('page-icon');
+      const heroVisible = !!(iconEl
+        && getComputedStyle(iconEl).display !== 'none'
+        && iconEl.querySelector('img.brand-logo-img'));
+      // Show watermark only when the in-flow hero is NOT carrying the brand.
+      wm.style.display = heroVisible ? 'none' : 'block';
     }
 
     function applyBranding(cfg) {
@@ -1295,7 +1333,7 @@
         }
       }
 
-      // 2. Header logo swap + always-on watermark.
+      // 2. Header logo swap + auto-toggling watermark.
       //    Strategy: leave the existing emoji-as-textContent behavior alone
       //    (lots of places reset .textContent='🎶' / '📸' / '🧠' etc.) and
       //    instead transparently turn any text-only emoji into the venue
@@ -1303,18 +1341,19 @@
       //    state transition without us having to chase 20+ call sites.
       _applyLogoToPageIcon();
       _ensureLogoObserver();
-      // Always-on top-right watermark — the failsafe surface that's visible
-      // even when #page-icon gets display:none (photo tab, Live Now active).
+      // Watermark — failsafe brand surface for the states where #page-icon
+      // is display:none (photo tab, Live Now active). When the in-flow hero
+      // logo IS visible we hide the watermark to avoid double-branding.
       const wm = document.getElementById('brand-watermark');
       if (wm) {
         if (venueBranding.logoUrl) {
           wm.innerHTML = `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName || ''}">`;
-          wm.style.display = 'block';
         } else {
           wm.innerHTML = '';
-          wm.style.display = 'none';
         }
       }
+      _updateWatermarkVisibility();
+      _ensureWatermarkObserver();
 
       // 3. Inject the brand band under every primary send button. Each
       //    compose form's main-btn is direct child of #msg-form / #photo-form /
