@@ -1439,7 +1439,17 @@
       // Capture whatever emoji is currently in the icon (excluding any
       // previously-injected <img>) to decide splash vs hero sizing.
       const currentEmoji = (iconEl.textContent || '').trim();
-      const isSplash = _SPLASH_EMOJIS.has(currentEmoji);
+      // Splash-state means "no compose form, just a centered hero" — but
+      // the AI tab sets page-icon to ✨ while #ai-prompt-form is visible,
+      // which would inflate the logo to splash size. Only apply splash
+      // sizing when no compose form is actually on screen.
+      const composeVisible =
+        ['msg-form','photo-form','ai-prompt-form','trivia-form','poll-wrap','wc-wrap']
+          .some(id => {
+            const el = document.getElementById(id);
+            return el && getComputedStyle(el).display !== 'none';
+          });
+      const isSplash = _SPLASH_EMOJIS.has(currentEmoji) && !composeVisible;
       iconEl.classList.toggle('splash-state', isSplash);
 
       // Replace whatever's inside with the logo image. Wrap in <a> if the
