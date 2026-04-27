@@ -288,7 +288,16 @@
       line-height: 1.4; margin-top: 4px; letter-spacing: 0.02em;
     }
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
-    .legal-fineprint a.powered-by-link { color: var(--text); text-decoration: none; font-weight: 600; }
+    /* Match both the bare anchor (default Phasion poweredByHtml) AND the
+       span wrapper that gets generated when operators embed links via the
+       [label](url) markdown shorthand — e.g. <span class="powered-by-link">
+       Powered by <a>OnlyJams</a> + Phasion Live</span>. Inner anchors
+       inherit so the whole line reads as one bright element. */
+    .legal-fineprint a.powered-by-link,
+    .legal-fineprint .powered-by-link {
+      color: var(--text); text-decoration: none; font-weight: 600;
+    }
+    .legal-fineprint .powered-by-link a { color: inherit; text-decoration: underline; }
     /* Shared fineprint: the body uses flex-column with the compose-active
        layout pinned to flex-start. margin-top:auto makes the fineprint
        eat any leftover vertical space, so it sits at a stable position
