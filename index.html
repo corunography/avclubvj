@@ -3520,6 +3520,16 @@
           }
           currentQ = null;
         }
+        // Audience may also be parked on the team-register screen (tapped
+        // a trivia Live Now card but never joined). When trivia ends, that
+        // screen is meaningless — bounce them back to messages so they
+        // can interact with whatever activity took its place. Without
+        // this they're stuck staring at "Enter your team name" forever.
+        const regWrap = document.getElementById('trivia-register-wrap');
+        if (regWrap && getComputedStyle(regWrap).display !== 'none') {
+          userManualNav = false;
+          try { showMessageMode(); } catch (_) {}
+        }
       } else if (data.question) {
         if (!currentQ || currentQ.id !== data.id) {
           showTriviaMode({ id: data.id, question: data.question, options: data.options, category: data.category || '', timeLimit: data.timeLimit || 30, startTime: data.startTime || 0 });
