@@ -157,6 +157,13 @@
        primary send button sits on the same vertical line across all three
        modes — frees up predictable space below for a venue-branding band. */
     #msg-form, #photo-form, #ai-prompt-form { min-height: 340px; }
+    /* Body uses justify-content:center, so any height variance between the
+       three compose forms re-centers the entire column and visibly shifts
+       the brand logo at the top. justify-content:flex-start (with the
+       existing 32px body padding) pins the logo to a fixed offset from the
+       top so tab switches feel locked. Only applied when a compose form is
+       on screen — activity views keep the original centered layout. */
+    body.compose-active { justify-content: flex-start !important; }
     #msg-form > .main-btn,
     #photo-form > .main-btn,
     #ai-prompt-form > .main-btn { margin-top: auto; }
@@ -936,7 +943,7 @@
     @keyframes reactPop { 0% { transform: scale(.7); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
   </style>
 </head>
-<body>
+<body class="compose-active">
   <!-- Send-success checkmark overlay (fires on successful submit in any compose mode) -->
   <div id="send-success-overlay"><div class="check">✓</div></div>
 
@@ -2268,12 +2275,16 @@
       document.getElementById('page-icon').style.display  = 'none';
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
+      // Activity views (trivia/poll/WC) keep the centered layout.
+      document.body.classList.remove('compose-active');
     }
     function hideModeNav() {
       document.getElementById('mode-nav').style.display   = 'none';
       document.getElementById('page-icon').style.display  = '';
       document.getElementById('page-title').style.display = '';
       document.getElementById('page-sub').style.display   = '';
+      // Compose tabs (msg/photo/ai) pin to top so tab swaps don't bounce.
+      document.body.classList.add('compose-active');
     }
     function gotoMessages() {
       userManualNav = true; hideContentBanner();
