@@ -254,9 +254,14 @@
        top so tab switches feel locked. Only applied when a compose form is
        on screen — activity views keep the original centered layout. */
     body.compose-active { justify-content: flex-start !important; }
-    /* Send button sits naturally below the textarea/preview — no margin-top
-       auto, no min-height. The body.compose-active flex-start rule above is
-       what now keeps the logo locked across tab switches. */
+    /* Lock all three compose forms to the same min-height so the total body
+       content height is identical across tabs. Without this, the photo form
+       (file picker + preview + caption + progress bar) is taller than the
+       message form, which shifts the fineprint position when toggling tabs.
+       The send button sits naturally below content; the rest is just empty
+       space below the button — visually invisible but keeps body height
+       constant so #shared-fineprint (margin-top:auto) doesn't move. */
+    #msg-form, #photo-form, #ai-prompt-form { min-height: 420px; }
 
     /* ── Legal fine print (shared across tabs) ── */
     .legal-fineprint {
