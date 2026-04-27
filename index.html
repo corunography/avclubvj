@@ -295,7 +295,7 @@
        inherit so the whole line reads as one bright element. */
     .legal-fineprint a.powered-by-link,
     .legal-fineprint .powered-by-link {
-      color: var(--text); text-decoration: none; font-weight: 600;
+      color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 600;
     }
     .legal-fineprint .powered-by-link a { color: inherit; text-decoration: underline; }
     /* Shared fineprint: the body uses flex-column with the compose-active
@@ -1070,19 +1070,43 @@
       font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
       margin-bottom: 8px;
     }
+    /* Wrapper that holds the scroll row + an absolutely-positioned arrow
+       hint on the right edge. The arrow fades out once the user scrolls
+       (toggled in JS via .scrolled class on the wrapper). */
+    .react-row-wrap {
+      position: relative;
+    }
     .react-row {
       display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
       scrollbar-width: none; -webkit-overflow-scrolling: touch;
-      /* Fade the right edge so the last button visibly trails off — a
-         soft hint that more emojis exist past the viewport. The fade is
-         a no-op when content fits (last button is just inside the
-         transparent zone but full-opacity since the gradient is mostly
-         opaque). 28px feels like a natural taper without obscuring. */
-      -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 28px), transparent 100%);
-              mask-image: linear-gradient(to right, black 0, black calc(100% - 28px), transparent 100%);
+      /* Stronger right-edge fade so the trailing button visibly tapers —
+         signals "there's more if you swipe." Fade zone is 60px so it's
+         unmistakable on devices where 5+ emojis fit edge-to-edge. */
+      -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 60px), transparent 100%);
+              mask-image: linear-gradient(to right, black 0, black calc(100% - 60px), transparent 100%);
       scroll-padding-right: 28px;
     }
     .react-row::-webkit-scrollbar { display: none; }
+    /* Right-edge chevron hint — shown above the fade so it stays opaque.
+       Pulses gently to draw the eye. Fades out once the user has
+       scrolled (.scrolled class added by JS on first scroll event). */
+    .react-row-hint {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 18px; color: rgba(255,255,255,0.85);
+      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+      animation: react-row-hint-pulse 1.4s ease-in-out infinite;
+      transition: opacity 0.3s ease;
+    }
+    .react-row-wrap.scrolled .react-row-hint { opacity: 0; }
+    .react-row-wrap.scrolled .react-row {
+      -webkit-mask-image: none;
+              mask-image: none;
+    }
+    @keyframes react-row-hint-pulse {
+      0%, 100% { transform: translate(0, -50%); opacity: 0.7; }
+      50%      { transform: translate(4px, -50%); opacity: 1; }
+    }
     .react-btn {
       flex-shrink: 0; width: 72px;
       background: var(--glass-bg);
@@ -1336,7 +1360,10 @@
   <!-- Emoji Applause bar (fixed bottom) -->
   <div id="emoji-bar">
     <div id="emoji-bar-label">React</div>
-    <div class="react-row" id="react-row"></div>
+    <div class="react-row-wrap" id="react-row-wrap">
+      <div class="react-row" id="react-row"></div>
+      <span class="react-row-hint" id="react-row-hint" aria-hidden="true">›</span>
+    </div>
   </div>
 
   <script>
@@ -1596,6 +1623,12 @@
               if (overrideLogo)   cfg.logoUrl     = overrideLogo;
               if (overrideAccent) cfg.accentColor = overrideAccent;
               if (overrideName)   cfg.brandName   = overrideName;
+            } else {
+              // Operator turned branding OFF — invalidate the stale cache
+              // so future visits don't keep flashing the old logo via the
+              // prepaint <head> script.
+              try { localStorage.removeItem(_BRANDING_CACHE_KEY + ':' + venueId); } catch (_) {}
+              cfg = { ...DEFAULT_BRANDING };
             }
           }
         }
@@ -1612,6 +1645,14 @@
         if (!r || !r.ok) return;
         const payload = await r.json();
         if (!payload) return;
+        // If operator disabled branding, drop the cache so prepaint stops
+        // flashing the old logo on subsequent loads, and apply defaults.
+        if (!payload.enabled) {
+          try { localStorage.removeItem(_BRANDING_CACHE_KEY + ':' + topic); } catch (_) {}
+          venueBranding = { ...DEFAULT_BRANDING };
+          applyBranding(venueBranding);
+          return;
+        }
         _writeBrandingCache(topic, { payload, base: tunnelBase });
         const sp = new URLSearchParams(location.search);
         const testKey = (sp.get('testBrand') || '').toLowerCase();
@@ -1781,6 +1822,15 @@
     function applyBranding(cfg) {
       if (!cfg) return;
       venueBranding = { ...DEFAULT_BRANDING, ...cfg };
+
+      // If branding is disabled (no logo configured), strip the prepaint
+      // <style> tag the head-script injected on first paint. Otherwise its
+      // !important rules keep the venue accent + bg gradient pinned even
+      // after the operator turns branding OFF.
+      if (!venueBranding.logoUrl) {
+        const pre = document.getElementById('pre-paint-branding');
+        if (pre) pre.remove();
+      }
 
       // 1. Accent color — a single CSS var swap cascades through buttons,
       //    links, focus rings, the connection dot's "ok" state, etc.
@@ -2578,6 +2628,7 @@
       bar.style.display = show ? 'block' : 'none';
       if (show) {
         const row = document.getElementById('react-row');
+        const wrap = document.getElementById('react-row-wrap');
         if (row) {
           const fp = ap.emojis.join(',');
           if (row.dataset.emojis !== fp) {
@@ -2585,7 +2636,25 @@
             row.innerHTML = ap.emojis.map(e =>
               `<button class="react-btn" onclick="sendReact('${e}',this)">${e}</button>`
             ).join('');
+            // Reset the scroll-hint state when emoji set changes.
+            if (wrap) wrap.classList.remove('scrolled');
           }
+        }
+        // Hook scroll listener once: drop the chevron + edge fade after
+        // the user has scrolled — they've discovered the affordance, no
+        // need to keep nudging them.
+        if (row && wrap && !row.dataset.scrollHooked) {
+          row.dataset.scrollHooked = '1';
+          row.addEventListener('scroll', () => {
+            if (row.scrollLeft > 8) wrap.classList.add('scrolled');
+          }, { passive: true });
+          // Also drop the hint if there's no overflow to begin with —
+          // pulsing chevron on a fully-visible row is misleading.
+          requestAnimationFrame(() => {
+            if (row.scrollWidth <= row.clientWidth + 4) {
+              wrap.classList.add('scrolled');
+            }
+          });
         }
       }
       // Offset body so the form/button can't extend behind the fixed
