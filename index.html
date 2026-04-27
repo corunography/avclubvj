@@ -1335,15 +1335,18 @@
     }
 
     // Activity-mode observer — when the user enters trivia / poll / WC,
-    // #tabs gets display:none. We mirror that into body.in-activity so the
-    // CSS rules can suppress every venue-logo surface during gameplay.
+    // showModeNav() flips #mode-nav to display:flex. We mirror that into
+    // body.in-activity so the CSS rules can suppress every venue-logo
+    // surface during gameplay. (Earlier we watched #tabs display:none, but
+    // #tabs is the compose tab bar — it isn't hidden in trivia. #mode-nav
+    // visibility is the actual "user is inside an activity" signal.)
     let _activityModeObserver = null;
     function _ensureActivityModeObserver() {
       if (_activityModeObserver) return;
-      const tabsEl = document.getElementById('tabs');
-      if (!tabsEl) return;
+      const navEl = document.getElementById('mode-nav');
+      if (!navEl) return;
       const sync = () => {
-        const inActivity = getComputedStyle(tabsEl).display === 'none';
+        const inActivity = getComputedStyle(navEl).display !== 'none';
         const was = document.body.classList.contains('in-activity');
         if (was !== inActivity) {
           document.body.classList.toggle('in-activity', inActivity);
@@ -1353,7 +1356,7 @@
         }
       };
       _activityModeObserver = new MutationObserver(sync);
-      _activityModeObserver.observe(tabsEl, { attributes: true, attributeFilter: ['style', 'class'] });
+      _activityModeObserver.observe(navEl, { attributes: true, attributeFilter: ['style', 'class'] });
       sync();
     }
 
