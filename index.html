@@ -1287,10 +1287,63 @@
       },
     };
 
-    // Stubbed loader. Today returns defaults immediately. The signature is
-    // ready for a future worker fetch:
-    //   const r = await fetch(`${workerBase}/v1/branding/${venueId}`);
-    //   if (r.ok) return { ...DEFAULT_BRANDING, ...await r.json() };
+    // Resolve venue branding by:
+    //   1. Honoring URL test overrides (?testBrand / ?testLogoUrl / etc)
+    //   2. Fetching /branding.json from the operator's tunnel base (set by
+    //      the time we actually need branding — see _resolvedBaseUrl below).
+    //      The operator-side schema (lib/branding.js) returns a 30s-cached
+    //      JSON payload with logoUrl, accentColor, brandName, poweredByText,
+    //      logoLinkUrl, pageTitle, welcomeMessage, activityEndedMessage.
+    //   3. Falling back to localStorage cache (last successful fetch) so a
+    //      flaky tunnel doesn't make the page suddenly look unbranded.
+    const _BRANDING_CACHE_KEY = 'venueBrandingCache_v1';
+    function _readBrandingCache(venueId) {
+      try {
+        const raw = localStorage.getItem(_BRANDING_CACHE_KEY + ':' + (venueId || ''));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch (_) { return null; }
+    }
+    function _writeBrandingCache(venueId, payload) {
+      try { localStorage.setItem(_BRANDING_CACHE_KEY + ':' + (venueId || ''), JSON.stringify(payload)); } catch (_) {}
+    }
+    function _applyOperatorBranding(cfg, payload, base) {
+      if (!payload || !payload.enabled) return cfg;
+      // Map operator-side schema → audience-page schema.
+      if (payload.brandName)      cfg.brandName   = payload.brandName;
+      if (payload.accentColor) {
+        cfg.accentColor = payload.accentColor;
+        cfg.accentGlow  = null;
+      }
+      if (payload.logoUrl) {
+        // logoUrl from server is relative to the tunnel base ("/branding/logo?v=…")
+        cfg.logoUrl = payload.logoUrl.startsWith('http')
+          ? payload.logoUrl
+          : (base ? base.replace(/\/$/, '') + payload.logoUrl : payload.logoUrl);
+      }
+      if (payload.logoLinkUrl)         cfg.logoLinkUrl         = payload.logoLinkUrl;
+      if (payload.pageTitle)           cfg.pageTitle           = payload.pageTitle;
+      if (payload.welcomeMessage)      cfg.welcomeMessage      = payload.welcomeMessage;
+      if (payload.activityEndedMessage) cfg.activityEndedMessage = payload.activityEndedMessage;
+      // Build a powered-by HTML string when the operator provided plain text,
+      // OR auto-derive from brandName if they only set a brand name.
+      if (payload.poweredByText) {
+        cfg.poweredByHtml =
+          '<span class="powered-by-link">' +
+          _esc(payload.poweredByText) +
+          '</span>';
+      } else if (payload.brandName) {
+        cfg.poweredByHtml =
+          '<span class="powered-by-link">' +
+          'Powered by ' + _esc(payload.brandName) + ' + ' +
+          '<a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>';
+      }
+      return cfg;
+    }
+    // _esc() is defined later in the script as a top-level function
+    // declaration — hoisted, so we can call it here.
+
     async function loadVenueBranding(venueId) {
       const sp = new URLSearchParams(location.search);
       // Preview hook: ?testBrand=<key> overrides any real venue config so we
@@ -1308,12 +1361,57 @@
       if (overrideLogo)   cfg.logoUrl     = overrideLogo;
       if (overrideAccent) {
         cfg.accentColor = overrideAccent;
-        cfg.accentGlow  = null; // let CSS default glow ride; can be tuned later
+        cfg.accentGlow  = null;
       }
       if (overrideName)   cfg.brandName   = overrideName;
       if (testKey || overrideLogo || overrideAccent) return cfg;
-      if (!venueId) return { ...DEFAULT_BRANDING };
-      return { ...DEFAULT_BRANDING };
+      if (!venueId) return cfg;
+
+      // Optimistic paint from cache so the page never flashes unbranded
+      // while we revalidate over the tunnel.
+      const cached = _readBrandingCache(venueId);
+      if (cached) cfg = _applyOperatorBranding(cfg, cached.payload, cached.base);
+
+      // Live fetch — non-blocking caller already has cached branding to use.
+      // We resolve later via revalidateOperatorBranding() once tunnelBase is
+      // known. Below is the immediate attempt for first paint.
+      try {
+        const base = (typeof tunnelBase !== 'undefined' && tunnelBase) ? tunnelBase : '';
+        if (base) {
+          const r = await fetchWithTimeout(`${base}/branding.json`, {}, 4000);
+          if (r && r.ok) {
+            const payload = await r.json();
+            if (payload && payload.enabled) {
+              _writeBrandingCache(venueId, { payload, base });
+              cfg = _applyOperatorBranding({ ...DEFAULT_BRANDING }, payload, base);
+              if (overrideLogo)   cfg.logoUrl     = overrideLogo;
+              if (overrideAccent) cfg.accentColor = overrideAccent;
+              if (overrideName)   cfg.brandName   = overrideName;
+            }
+          }
+        }
+      } catch (_) {}
+      return cfg;
+    }
+
+    // Once tunnelBase is resolved (after /status succeeds), refresh branding
+    // and re-apply. Called from the connect-success path.
+    async function revalidateOperatorBranding() {
+      try {
+        if (!topic || typeof tunnelBase === 'undefined' || !tunnelBase) return;
+        const r = await fetchWithTimeout(`${tunnelBase}/branding.json`, {}, 4000);
+        if (!r || !r.ok) return;
+        const payload = await r.json();
+        if (!payload) return;
+        _writeBrandingCache(topic, { payload, base: tunnelBase });
+        const sp = new URLSearchParams(location.search);
+        const testKey = (sp.get('testBrand') || '').toLowerCase();
+        if (testKey || sp.get('testLogoUrl') || sp.get('testAccent')) return; // don't overwrite test mode
+        let cfg = { ...DEFAULT_BRANDING };
+        cfg = _applyOperatorBranding(cfg, payload, tunnelBase);
+        venueBranding = cfg;
+        applyBranding(cfg);
+      } catch (_) {}
     }
 
     // Splash states (single emoji centered, no compose form) — when
@@ -1344,11 +1442,15 @@
       const isSplash = _SPLASH_EMOJIS.has(currentEmoji);
       iconEl.classList.toggle('splash-state', isSplash);
 
-      // Replace whatever's inside with the logo image.
+      // Replace whatever's inside with the logo image. Wrap in <a> if the
+      // operator configured a hyperlink target (venue site / socials).
       _logoObserverGuard = true;
-      iconEl.innerHTML =
+      const _imgTag =
         `<img class="brand-logo-img" src="${venueBranding.logoUrl}" ` +
-        `alt="${venueBranding.brandName || ''}">`;
+        `alt="${_esc(venueBranding.brandName || '')}">`;
+      iconEl.innerHTML = venueBranding.logoLinkUrl
+        ? `<a href="${_esc(venueBranding.logoLinkUrl)}" target="_blank" rel="noopener" style="display:inline-block">${_imgTag}</a>`
+        : _imgTag;
       // Hide the text title to avoid the "logo + title" double-branding.
       const titleEl = document.getElementById('page-title');
       if (titleEl) titleEl.style.display = 'none';
@@ -1466,11 +1568,19 @@
       _ensureLogoObserver();
       _ensureLiveNowObserver();
       // Populate watermark contents (visibility is CSS-driven via classes).
+      // If logoLinkUrl is set, the logo becomes a tappable link to the
+      // venue's site/socials. Pointer-events on the watermark were "none"
+      // by default — re-enable them only when there's a link.
       const wm = document.getElementById('brand-watermark');
       if (wm) {
-        wm.innerHTML = venueBranding.logoUrl
-          ? `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName || ''}">`
+        const imgTag = venueBranding.logoUrl
+          ? `<img src="${venueBranding.logoUrl}" alt="${_esc(venueBranding.brandName || '')}">`
           : '';
+        if (imgTag && venueBranding.logoLinkUrl) {
+          wm.innerHTML = `<a href="${_esc(venueBranding.logoLinkUrl)}" target="_blank" rel="noopener" style="pointer-events:auto;display:inline-block">${imgTag}</a>`;
+        } else {
+          wm.innerHTML = imgTag;
+        }
       }
       document.body.classList.toggle('brand-active', !!venueBranding.logoUrl);
 
@@ -1534,6 +1644,13 @@
           a.href = venueBranding.privacyUrl;
         });
       }
+
+      // 6. Browser tab title — operators often want the venue name to show
+      //    up in the user's tab bar instead of "Phasion Live", especially
+      //    if guests are bouncing between this and other browser tabs.
+      if (venueBranding.pageTitle) {
+        try { document.title = venueBranding.pageTitle; } catch (_) {}
+      }
     }
 
     // Worker handles R2 storage only (photos, messages, AI prompts)
@@ -1570,6 +1687,11 @@
             const sd = await sr.json();
             _handleAppState(sd || {});
           } catch(_) {}
+          // Now that the tunnel is reachable, refresh whitelabel branding
+          // from the operator's local server (lib/branding.js). On first load
+          // we may have only had cached/no-branding; this swaps in the live
+          // version without a flash.
+          revalidateOperatorBranding();
         }
       } catch(_) {}
     }
