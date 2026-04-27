@@ -80,6 +80,21 @@
       pointer-events: none;
       display: none;       /* shown by applyBranding when logoUrl is set */
     }
+    /* When a venue logo is configured, override the gotoMessages/gotoPhoto/
+       gotoAi inline display:none on #page-icon so the hero brand shows on
+       every compose tab. The watermark stays hidden in this state. */
+    body.brand-active #page-icon { display: block !important; }
+    /* When Live Now cards are active they need the vertical space — hand
+       it back, hide the hero, and surface the watermark instead. */
+    body.brand-active.live-now-active #page-icon { display: none !important; }
+    body.brand-active.live-now-active #brand-watermark { display: block !important; }
+    body.brand-active:not(.live-now-active) #brand-watermark { display: none !important; }
+    /* Activity-ended splash (Poll closed / Trivia ended / Activity ended)
+       uses its own .icon node — match the same logo treatment so the
+       splash carries the brand instead of the generic ✨. */
+    #activity-ended-splash .icon img.brand-logo-img {
+      max-height: 200px; max-width: 80vw;
+    }
     #brand-watermark img {
       max-width: 100%;
       max-height: 100%;
@@ -1275,6 +1290,22 @@
       queueMicrotask(() => { _logoObserverGuard = false; });
     }
 
+    // Mirror the page-icon logo treatment onto the activity-ended splash.
+    function _applyLogoToActivityEndedSplash() {
+      const splash = document.getElementById('activity-ended-splash');
+      if (!splash) return;
+      const iconEl = splash.querySelector('.icon');
+      if (!iconEl) return;
+      if (!venueBranding.logoUrl) {
+        // Restore the original ✨ if we previously replaced it.
+        if (iconEl.querySelector('img.brand-logo-img')) iconEl.textContent = '✨';
+        return;
+      }
+      iconEl.innerHTML =
+        `<img class="brand-logo-img" src="${venueBranding.logoUrl}" ` +
+        `alt="${venueBranding.brandName || ''}">`;
+    }
+
     function _ensureLogoObserver() {
       if (_logoObserver) return;
       const iconEl = document.getElementById('page-icon');
@@ -1294,29 +1325,26 @@
       _logoObserver.observe(iconEl, { childList: true, characterData: true, subtree: true });
     }
 
-    let _watermarkObserver = null;
-    function _ensureWatermarkObserver() {
-      if (_watermarkObserver) return;
-      const iconEl = document.getElementById('page-icon');
-      if (!iconEl) return;
-      // Watch style/class mutations on #page-icon — most state transitions
-      // (photo tab, Live Now active, splash mode) toggle display:none here,
-      // and that's our cue to flip the watermark on/off.
-      _watermarkObserver = new MutationObserver(_updateWatermarkVisibility);
-      _watermarkObserver.observe(iconEl, { attributes: true, attributeFilter: ['style', 'class'] });
-    }
-
-    function _updateWatermarkVisibility() {
-      const wm = document.getElementById('brand-watermark');
-      if (!wm) return;
-      // No logo configured → watermark hidden, no further checks.
-      if (!venueBranding.logoUrl) { wm.style.display = 'none'; return; }
-      const iconEl = document.getElementById('page-icon');
-      const heroVisible = !!(iconEl
-        && getComputedStyle(iconEl).display !== 'none'
-        && iconEl.querySelector('img.brand-logo-img'));
-      // Show watermark only when the in-flow hero is NOT carrying the brand.
-      wm.style.display = heroVisible ? 'none' : 'block';
+    // Live Now observer — toggles body.live-now-active so the CSS rules
+    // can hide the hero and surface the watermark whenever activity cards
+    // are present. (The hero gets hidden because Live Now needs the space.)
+    let _liveNowObserver = null;
+    function _ensureLiveNowObserver() {
+      if (_liveNowObserver) return;
+      const wrap = document.getElementById('live-now-wrap');
+      if (!wrap) return;
+      const sync = () => {
+        const cards = document.getElementById('live-now-cards');
+        const hasCards = !!(cards && cards.children && cards.children.length > 0);
+        const wrapVisible = getComputedStyle(wrap).display !== 'none';
+        document.body.classList.toggle('live-now-active', hasCards && wrapVisible);
+      };
+      _liveNowObserver = new MutationObserver(sync);
+      _liveNowObserver.observe(wrap, {
+        attributes: true, attributeFilter: ['style', 'class'],
+        childList: true, subtree: true,
+      });
+      sync(); // initial pass
     }
 
     function applyBranding(cfg) {
@@ -1333,27 +1361,38 @@
         }
       }
 
-      // 2. Header logo swap + auto-toggling watermark.
+      // 2. Header logo swap + class-driven hero/watermark toggling.
       //    Strategy: leave the existing emoji-as-textContent behavior alone
       //    (lots of places reset .textContent='🎶' / '📸' / '🧠' etc.) and
       //    instead transparently turn any text-only emoji into the venue
-      //    logo via a MutationObserver. This way the brand survives every
-      //    state transition without us having to chase 20+ call sites.
+      //    logo via a MutationObserver. CSS rules keyed off body classes
+      //    (.brand-active, .live-now-active) decide which surface shows.
       _applyLogoToPageIcon();
+      _applyLogoToActivityEndedSplash();
       _ensureLogoObserver();
-      // Watermark — failsafe brand surface for the states where #page-icon
-      // is display:none (photo tab, Live Now active). When the in-flow hero
-      // logo IS visible we hide the watermark to avoid double-branding.
+      _ensureLiveNowObserver();
+      // Populate watermark contents (visibility is CSS-driven via classes).
       const wm = document.getElementById('brand-watermark');
       if (wm) {
-        if (venueBranding.logoUrl) {
-          wm.innerHTML = `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName || ''}">`;
-        } else {
-          wm.innerHTML = '';
-        }
+        wm.innerHTML = venueBranding.logoUrl
+          ? `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName || ''}">`
+          : '';
       }
-      _updateWatermarkVisibility();
-      _ensureWatermarkObserver();
+      document.body.classList.toggle('brand-active', !!venueBranding.logoUrl);
+
+      // 2b. Powered-by chip auto-build — if a logo + brandName were given
+      //     (e.g. via ?testLogoUrl & ?testBrandName) but poweredByHtml was
+      //     left at the default Phasion-only string, build a co-brand chip
+      //     for them so the brand surfaces in the footer too.
+      const _defaultPoweredBy = DEFAULT_BRANDING.poweredByHtml;
+      const customBrandName = venueBranding.brandName && venueBranding.brandName !== DEFAULT_BRANDING.brandName;
+      if (venueBranding.logoUrl && customBrandName && venueBranding.poweredByHtml === _defaultPoweredBy) {
+        venueBranding.poweredByHtml =
+          '<span class="powered-by-link">' +
+          `<img src="${venueBranding.logoUrl}" class="powered-by-logo" alt="${venueBranding.brandName}">` +
+          `${venueBranding.brandName} × ` +
+          '<a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>';
+      }
 
       // 3. Inject the brand band under every primary send button. Each
       //    compose form's main-btn is direct child of #msg-form / #photo-form /
