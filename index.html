@@ -42,7 +42,8 @@
             'radial-gradient(1200px 600px at 50% -10%, rgba(255,59,48,0.09), transparent 60%),' +
             'radial-gradient(900px 500px at 100% 110%, rgba(255,59,48,0.04), transparent 60%),' +
             'linear-gradient(180deg, ' + p.bgGradientFrom + ' 0%, ' + p.bgGradientTo + ' 100%) !important;' +
-            'background-attachment:fixed !important;}'
+            // No background-attachment:fixed — iOS Safari renders blank.
+            'background-attachment:scroll !important;}'
         );
       }
       // Hide the default 🎶 emoji and swap in the cached logo immediately so
@@ -1857,7 +1858,11 @@
           'radial-gradient(1200px 600px at 50% -10%, rgba(255,59,48,0.09), transparent 60%),' +
           'radial-gradient(900px 500px at 100% 110%, rgba(255,59,48,0.04), transparent 60%),' +
           `linear-gradient(180deg, ${bgFrom} 0%, ${bgTo} 100%)`;
-        document.body.style.backgroundAttachment = 'fixed';
+        // background-attachment:fixed is dropped here — iOS Safari has
+        // long-standing rendering bugs with fixed backgrounds on scrolling
+        // bodies (often renders blank). The body is min-height:100dvh so
+        // the gradient still covers the visible area without it.
+        document.body.style.backgroundAttachment = 'scroll';
       } else {
         // Restore the stylesheet default (clearing the inline override).
         document.body.style.background = '';
