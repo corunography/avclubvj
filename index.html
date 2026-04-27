@@ -1138,6 +1138,21 @@
         </svg>`
       );
 
+    // Horizontal wordmark — wider, more like a real venue logo. Useful for
+    // sanity-checking how a 3:1 logo lays out at hero/splash sizes.
+    const _svgWordmark = (bg, fg, accent, top, bottom) =>
+      'data:image/svg+xml;utf8,' + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120">
+          <rect width="360" height="120" rx="14" fill="${bg}"/>
+          <circle cx="40" cy="60" r="22" fill="${accent}"/>
+          <circle cx="40" cy="60" r="10" fill="${bg}"/>
+          <text x="80" y="54" font-family="-apple-system,Helvetica" font-weight="800"
+                font-size="32" letter-spacing="2" fill="${fg}">${top}</text>
+          <text x="80" y="88" font-family="-apple-system,Helvetica" font-weight="500"
+                font-size="18" letter-spacing="6" fill="${accent}">${bottom}</text>
+        </svg>`
+      );
+
     const TEST_BRANDS = {
       echo: {
         brandName:   'The Echo Lounge',
@@ -1169,6 +1184,18 @@
           '<img src="' + _svgLogo('#2a1500', '#ffb732', 'D') + '" class="powered-by-logo" alt="Disco">' +
           'Disco Inferno × <a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>',
       },
+      // Horizontal wordmark preset — shows how a 3:1 logo lays out at hero
+      // (56px tall, ~170px wide) and splash (96px tall, ~290px wide) sizes.
+      wordmark: {
+        brandName:   'The Echo Lounge',
+        logoUrl:     _svgWordmark('#0a1f1a', '#ffffff', '#1FE3A8', 'ECHO', 'LOUNGE'),
+        accentColor: '#1FE3A8',
+        accentGlow:  'rgba(31,227,168,0.45)',
+        poweredByHtml:
+          '<span class="powered-by-link">' +
+          '<img src="' + _svgWordmark('#0a1f1a', '#ffffff', '#1FE3A8', 'ECHO', 'LOUNGE') + '" class="powered-by-logo" alt="Echo Lounge" style="height:14px">' +
+          ' × <a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>',
+      },
     };
 
     // Stubbed loader. Today returns defaults immediately. The signature is
@@ -1176,12 +1203,26 @@
     //   const r = await fetch(`${workerBase}/v1/branding/${venueId}`);
     //   if (r.ok) return { ...DEFAULT_BRANDING, ...await r.json() };
     async function loadVenueBranding(venueId) {
+      const sp = new URLSearchParams(location.search);
       // Preview hook: ?testBrand=<key> overrides any real venue config so we
       // can demo the branded look on a phone without a worker endpoint.
-      const testKey = (new URLSearchParams(location.search).get('testBrand') || '').toLowerCase();
-      if (testKey && TEST_BRANDS[testKey]) {
-        return { ...DEFAULT_BRANDING, ...TEST_BRANDS[testKey] };
+      const testKey = (sp.get('testBrand') || '').toLowerCase();
+      let cfg = (testKey && TEST_BRANDS[testKey])
+        ? { ...DEFAULT_BRANDING, ...TEST_BRANDS[testKey] }
+        : { ...DEFAULT_BRANDING };
+      // Per-field URL overrides — handy for testing a real logo without
+      // having to commit it. Append ?testLogoUrl=https://... to any link.
+      // ?testAccent=#hex also supported. Both stack on top of testBrand.
+      const overrideLogo   = sp.get('testLogoUrl');
+      const overrideAccent = sp.get('testAccent');
+      const overrideName   = sp.get('testBrandName');
+      if (overrideLogo)   cfg.logoUrl     = overrideLogo;
+      if (overrideAccent) {
+        cfg.accentColor = overrideAccent;
+        cfg.accentGlow  = null; // let CSS default glow ride; can be tuned later
       }
+      if (overrideName)   cfg.brandName   = overrideName;
+      if (testKey || overrideLogo || overrideAccent) return cfg;
       if (!venueId) return { ...DEFAULT_BRANDING };
       return { ...DEFAULT_BRANDING };
     }
