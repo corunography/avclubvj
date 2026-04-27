@@ -4047,7 +4047,13 @@
     });
 
     // ── AI Prompt tab ────────────────────────────────────────────────────────
+    // Two flags drive prompt-tab visibility — kept as top-level vars so
+    // partial state pushes don't reset them. Both must be true for the tab
+    // to appear. Default aiAudienceAllowed to FALSE (fail-closed): it's
+    // safer to hide prompts until the operator explicitly opts in than to
+    // show them on stale/missing state.
     let aiActive = false;
+    let aiAudienceAllowed = false;
     let aiPromptCooldownTimer = null;
 
     // Restore saved name for AI prompts
@@ -4275,18 +4281,23 @@
     }
 
     function _handleAppState(d) {
-      // Each audience-submission channel has its own "Accept audience submissions"
-      // toggle on the DJ side. Only react to fields that are EXPLICITLY in the
-      // payload — partial state updates (e.g. an applause-only push) used to
-      // flip aiActive from undefined→false and hide the prompt tab, then the
-      // next full-state message would show it again, causing visible flicker.
-      // Reading 'X' in d guards against that.
-      if ('aiAudienceAllowed' in d || 'aiActive' in d) {
-        const aiAllowed   = ('aiAudienceAllowed' in d) ? (d.aiAudienceAllowed !== false) : (typeof aiAudienceAllowed !== 'undefined' ? aiAudienceAllowed : true);
-        const aiActiveNow = ('aiActive' in d) ? !!d.aiActive : aiActive;
-        const aiNowActive = aiActiveNow && aiAllowed;
-        if (aiNowActive !== aiActive) { aiActive = aiNowActive; setAiTabVisible(aiActive); }
-      }
+      // Update each flag only when its key is explicitly in the payload.
+      // Partial state pushes (e.g. an applause-only update) used to flip
+      // aiActive from undefined→false and hide the prompt tab, then the
+      // next full-state push would show it again, causing visible flicker.
+      // Top-level let bindings persist across messages so partial updates
+      // don't disturb fields they didn't touch. The tab is shown only
+      // when BOTH flags are true — fail-closed if either is unknown.
+      if ('aiActive' in d)           aiActive          = !!d.aiActive;
+      if ('aiAudienceAllowed' in d)  aiAudienceAllowed = d.aiAudienceAllowed !== false;
+      const aiNowActive = aiActive && aiAudienceAllowed;
+      // Only flip the tab if the visibility decision actually changed —
+      // setAiTabVisible is idempotent but writing display every tick is
+      // noise; this also keeps the focus reset behaviour clean.
+      const tabEl = document.getElementById('tab-ai');
+      const currentlyVisible = tabEl && tabEl.style.display !== 'none';
+      if (aiNowActive !== !!currentlyVisible) setAiTabVisible(aiNowActive);
+
       if ('msgAudienceAllowed' in d) {
         const msgAllowed = d.msgAudienceAllowed !== false;
         if (msgAllowed !== msgAudienceAllowed) { msgAudienceAllowed = msgAllowed; setMsgTabVisible(msgAllowed); }
