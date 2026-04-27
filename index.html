@@ -2284,20 +2284,27 @@
         if (capEl) capEl.style.display = '';
       }
       document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
-      // Keep the big header hidden in compose mode — tab bar is self-labeling.
-      document.getElementById('page-icon').style.display  = 'none';
+      // Keep the music-note icon visible across compose tabs so the layout
+      // doesn't shift when the user toggles between Message/Photo/Prompt.
+      // Only activity views (trivia/poll/WC) hide the icon, which they do
+      // separately via showModeNav(). Title + sub stay hidden — the tab
+      // bar is self-labeling.
+      (function _setIcon() {
+        const _ic = document.getElementById('page-icon');
+        _ic.style.display = '';
+        // Don't trample a branded <img> with text — only set the emoji when
+        // there's no logo currently rendered in the icon.
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+      })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
       if (tab === 'msg') {
-        document.getElementById('page-icon').textContent  = '🎶';
         document.getElementById('page-title').textContent = 'Send a Message';
         document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
       } else if (tab === 'photo') {
-        document.getElementById('page-icon').textContent  = '📸';
         document.getElementById('page-title').textContent = 'Share a Photo';
         document.getElementById('page-sub').textContent   = 'Your photo could appear on screen!';
       } else {
-        document.getElementById('page-icon').textContent  = '✨';
         document.getElementById('page-title').textContent = 'AI Prompt';
         document.getElementById('page-sub').textContent   = 'Suggest visuals for the AI to generate!';
       }
@@ -2576,13 +2583,18 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display    = 'flex';
       document.getElementById('msg-form').style.display = 'flex';
-      // In compose mode the tab bar is its own label — reclaim vertical space
-      // by hiding the icon/title/sub header. Trivia/poll/WC modes re-show them
-      // via hideModeNav() resetting display:''.
-      document.getElementById('page-icon').style.display  = 'none';
+      // Keep the music-note icon visible (anchors layout); hide title+sub
+      // since the tab bar is self-labeling. Activity entry (trivia/poll/WC)
+      // hides the icon separately via showModeNav.
+      (function _setIcon() {
+        const _ic = document.getElementById('page-icon');
+        _ic.style.display = '';
+        // Don't trample a branded <img> with text — only set the emoji when
+        // there's no logo currently rendered in the icon.
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+      })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
-      document.getElementById('page-icon').textContent  = '🎶';
       document.getElementById('page-title').textContent = 'Send a Message';
       document.getElementById('page-sub').textContent   = 'Your message may appear on the big screen!';
       activeTab = 'msg';
@@ -2599,10 +2611,15 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display      = 'flex';
       document.getElementById('photo-form').style.display = 'flex';
-      document.getElementById('page-icon').style.display  = 'none';
+      (function _setIcon() {
+        const _ic = document.getElementById('page-icon');
+        _ic.style.display = '';
+        // Don't trample a branded <img> with text — only set the emoji when
+        // there's no logo currently rendered in the icon.
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+      })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
-      document.getElementById('page-icon').textContent   = '📸';
       document.getElementById('page-title').textContent  = 'Share a Photo';
       document.getElementById('page-sub').textContent    = 'Your photo could appear on screen!';
       activeTab = 'photo';
@@ -2619,10 +2636,10 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display        = 'flex';
       document.getElementById('ai-prompt-form').style.display = 'flex';
-      document.getElementById('page-icon').style.display   = 'none';
+      document.getElementById('page-icon').style.display   = '';
+      document.getElementById('page-icon').textContent     = '🎶';
       document.getElementById('page-title').style.display  = 'none';
       document.getElementById('page-sub').style.display    = 'none';
-      document.getElementById('page-icon').textContent     = '✨';
       document.getElementById('page-title').textContent    = 'Submit a Prompt';
       document.getElementById('page-sub').textContent      = 'Describe the visuals you want to see!';
       activeTab = 'ai';
@@ -4254,16 +4271,25 @@
 
     function _handleAppState(d) {
       // Each audience-submission channel has its own "Accept audience submissions"
-      // toggle on the DJ side. Absent flags default to true so older app builds
-      // (which don't broadcast these) keep working unchanged.
-      const aiAllowed    = d.aiAudienceAllowed    !== false;
-      const msgAllowed   = d.msgAudienceAllowed   !== false;
-      const photoAllowed = d.photoAudienceAllowed !== false;
-      const aiNowActive  = !!d.aiActive && aiAllowed;
-
-      if (aiNowActive !== aiActive) { aiActive = aiNowActive; setAiTabVisible(aiActive); }
-      if (msgAllowed   !== msgAudienceAllowed)   { msgAudienceAllowed   = msgAllowed;   setMsgTabVisible(msgAllowed); }
-      if (photoAllowed !== photoAudienceAllowed) { photoAudienceAllowed = photoAllowed; setPhotoTabVisible(photoAllowed); }
+      // toggle on the DJ side. Only react to fields that are EXPLICITLY in the
+      // payload — partial state updates (e.g. an applause-only push) used to
+      // flip aiActive from undefined→false and hide the prompt tab, then the
+      // next full-state message would show it again, causing visible flicker.
+      // Reading 'X' in d guards against that.
+      if ('aiAudienceAllowed' in d || 'aiActive' in d) {
+        const aiAllowed   = ('aiAudienceAllowed' in d) ? (d.aiAudienceAllowed !== false) : (typeof aiAudienceAllowed !== 'undefined' ? aiAudienceAllowed : true);
+        const aiActiveNow = ('aiActive' in d) ? !!d.aiActive : aiActive;
+        const aiNowActive = aiActiveNow && aiAllowed;
+        if (aiNowActive !== aiActive) { aiActive = aiNowActive; setAiTabVisible(aiActive); }
+      }
+      if ('msgAudienceAllowed' in d) {
+        const msgAllowed = d.msgAudienceAllowed !== false;
+        if (msgAllowed !== msgAudienceAllowed) { msgAudienceAllowed = msgAllowed; setMsgTabVisible(msgAllowed); }
+      }
+      if ('photoAudienceAllowed' in d) {
+        const photoAllowed = d.photoAudienceAllowed !== false;
+        if (photoAllowed !== photoAudienceAllowed) { photoAudienceAllowed = photoAllowed; setPhotoTabVisible(photoAllowed); }
+      }
       updateSubmissionsOffState();
     }
 
