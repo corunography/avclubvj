@@ -176,6 +176,15 @@
     }
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
     .legal-fineprint a.powered-by-link { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+    /* Full white-label: hide the "Powered by …" line plus the spacer <br>
+       and height-shim that precede it. Targeting the powered-by anchor
+       and its three immediate previous siblings (spacer-span, <br>, <br>)
+       via :has() / + walks keeps the fineprint clean — no orphan blank
+       lines or trailing breaks. */
+    body.hide-powered-by .legal-fineprint a.powered-by-link { display: none; }
+    body.hide-powered-by .legal-fineprint span[style*="height:6px"],
+    body.hide-powered-by .legal-fineprint span[style*="height: 6px"] { display: none; }
+    body.hide-powered-by .legal-fineprint br:nth-last-of-type(-n+2) { display: none; }
 
     /* ── Brand band (below each compose send button) ──
        Consistent venue-branding strip beneath Send It! / Send Photo! /
@@ -1224,6 +1233,11 @@
       buttonBandHtml: '',
       // HTML injected into the "Powered by…" slot of each legal-fineprint.
       poweredByHtml: '<a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a>',
+      // Tier-1 white-label switches ────────────────────────────────────────
+      hidePoweredBy:   false, // when true, drop the "Powered by …" line entirely
+      bgGradientFrom:  '',    // hex; pair with bgGradientTo to override --bg layers
+      bgGradientTo:    '',    // hex
+      // ────────────────────────────────────────────────────────────────────
       faviconUrl:  null,
       ogImageUrl:  null,
       privacyUrl:  'https://corunography.github.io/avclubvj/privacy.html',
@@ -1333,16 +1347,21 @@
         cfg.accentColor = payload.accentColor;
         cfg.accentGlow  = null;
       }
-      if (payload.logoUrl) {
-        // logoUrl from server is relative to the tunnel base ("/branding/logo?v=…")
-        cfg.logoUrl = payload.logoUrl.startsWith('http')
-          ? payload.logoUrl
-          : (base ? base.replace(/\/$/, '') + payload.logoUrl : payload.logoUrl);
-      }
+      // Same relativize-to-tunnel-base treatment for the logo URL, and
+      // mirror it onto the favicon URL so the browser tab gets the venue's
+      // mark too.
+      const _abs = u => u.startsWith('http')
+        ? u
+        : (base ? base.replace(/\/$/, '') + u : u);
+      if (payload.logoUrl)    cfg.logoUrl    = _abs(payload.logoUrl);
+      if (payload.faviconUrl) cfg.faviconUrl = _abs(payload.faviconUrl);
       if (payload.logoLinkUrl)         cfg.logoLinkUrl         = payload.logoLinkUrl;
       if (payload.pageTitle)           cfg.pageTitle           = payload.pageTitle;
       if (payload.welcomeMessage)      cfg.welcomeMessage      = payload.welcomeMessage;
       if (payload.activityEndedMessage) cfg.activityEndedMessage = payload.activityEndedMessage;
+      if (typeof payload.hidePoweredBy === 'boolean') cfg.hidePoweredBy = payload.hidePoweredBy;
+      if (payload.bgGradientFrom) cfg.bgGradientFrom = payload.bgGradientFrom;
+      if (payload.bgGradientTo)   cfg.bgGradientTo   = payload.bgGradientTo;
       // Build a powered-by HTML string when the operator provided plain text,
       // OR auto-derive from brandName if they only set a brand name.
       // The text supports markdown-style hyperlinks: [label](https://url) so
@@ -1665,8 +1684,12 @@
         btn.insertAdjacentElement('afterend', band);
       });
 
-      // 4. "Powered by" line in each fineprint footer.
-      if (venueBranding.poweredByHtml) {
+      // 4. "Powered by" line in each fineprint footer. White-label venues
+      //    can hide the line entirely; we toggle a body class instead of
+      //    removing nodes so a later config update (operator un-checks
+      //    "hide") can reverse it on the next revalidation cycle.
+      document.body.classList.toggle('hide-powered-by', !!venueBranding.hidePoweredBy);
+      if (!venueBranding.hidePoweredBy && venueBranding.poweredByHtml) {
         document.querySelectorAll('.legal-fineprint a.powered-by-link').forEach(a => {
           // Replace the anchor with the configured HTML (preserve the
           // surrounding <br> spacing).
@@ -1697,6 +1720,27 @@
       //    if guests are bouncing between this and other browser tabs.
       if (venueBranding.pageTitle) {
         try { document.title = venueBranding.pageTitle; } catch (_) {}
+      }
+
+      // 7. Background gradient — operators set both stops together. We
+      //    layer the venue gradient *under* the existing accent radials
+      //    so the accent glow still reads, but the underlying base color
+      //    is the venue's choice. If only one stop is set we ignore both
+      //    and stay on the default --bg.
+      const bgFrom = venueBranding.bgGradientFrom;
+      const bgTo   = venueBranding.bgGradientTo;
+      if (bgFrom && bgTo) {
+        document.body.style.background =
+          // Two accent-tinted radial hotspots (preserved from default) +
+          // the venue's vertical gradient as the base layer.
+          'radial-gradient(1200px 600px at 50% -10%, rgba(255,59,48,0.09), transparent 60%),' +
+          'radial-gradient(900px 500px at 100% 110%, rgba(255,59,48,0.04), transparent 60%),' +
+          `linear-gradient(180deg, ${bgFrom} 0%, ${bgTo} 100%)`;
+        document.body.style.backgroundAttachment = 'fixed';
+      } else {
+        // Restore the stylesheet default (clearing the inline override).
+        document.body.style.background = '';
+        document.body.style.backgroundAttachment = '';
       }
     }
 
