@@ -131,12 +131,7 @@
       color: var(--text);
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      /* Reserve bottom space for the fixed emoji applause bar by default —
-         the bar shows on most venues, and reserving the space up front
-         means the fineprint never lands behind it on first paint. JS in
-         applyApplause() shrinks this back to 32px when the operator has
-         turned applause off. */
-      padding: 32px 24px 168px;
+      padding: 32px 24px 32px;
       -webkit-font-smoothing: antialiased;
       font-variant-numeric: tabular-nums;
     }
@@ -282,10 +277,15 @@
        form is msg (short), photo (taller), or ai (tallest). The 18px top
        margin keeps it clear of any status text. Bottom padding clears
        the fixed emoji bar so the link is always tappable. */
+    /* padding-bottom here lifts the visible fineprint text up away from
+       the fixed emoji applause bar without pushing the submit button
+       down — because margin-top:auto pins this box to the bottom of the
+       body's flex column, growing its internal padding shifts the text
+       upward while the box's bottom edge stays put. */
     #shared-fineprint {
       margin-top: auto;
       padding-top: 18px;
-      padding-bottom: 12px;
+      padding-bottom: 48px;
     }
     /* Full white-label: hide the "Powered by …" line plus the spacer <br>
        and height-shim that precede it. Targeting the powered-by anchor
@@ -2528,11 +2528,11 @@
           }
         }
       }
-      // Offset body so content clears the fixed emoji bar (1 row ≈ 130px).
-      // 168px (matching CSS default) when shown gives the fineprint clear
-      // breathing room above the bar; 32px collapses back to normal margin
-      // when the operator has applause disabled.
-      document.body.style.paddingBottom = show ? '168px' : '32px';
+      // Offset body so the form/button can't extend behind the fixed
+      // emoji bar (1 row ≈ 130px). The fineprint's own padding-bottom
+      // takes care of pushing the visible "Powered by …" text further
+      // above the bar — see #shared-fineprint padding-bottom in CSS.
+      document.body.style.paddingBottom = show ? '140px' : '32px';
     }
 
     function sendReact(emoji, btn) {
