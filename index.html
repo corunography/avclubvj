@@ -810,6 +810,45 @@
       font-size: 14px; color: var(--text-muted); max-width: 320px;
     }
 
+    /* ── Trivia answer reveal splash ──
+       Full-screen overlay that pops over trivia for ~2.2s after the host
+       reveals the answer, so users see Correct/Wrong without scrolling. */
+    #trivia-answer-splash {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.86);
+      backdrop-filter: var(--glass-blur-hi); -webkit-backdrop-filter: var(--glass-blur-hi);
+      z-index: 9998;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; padding: 24px; text-align: center;
+      animation: triviaSplashIn 0.28s var(--ease-out);
+    }
+    #trivia-answer-splash.correct { background: rgba(20,40,20,0.86); }
+    #trivia-answer-splash.wrong   { background: rgba(40,20,20,0.86); }
+    #trivia-answer-splash .ts-icon {
+      font-size: 96px; line-height: 1;
+      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+    }
+    #trivia-answer-splash.correct .ts-icon { color: var(--hig-green); }
+    #trivia-answer-splash.wrong   .ts-icon { color: var(--hig-red); }
+    #trivia-answer-splash .ts-title {
+      font-size: 36px; font-weight: 800; letter-spacing: -0.02em; color: var(--text);
+    }
+    #trivia-answer-splash.correct .ts-title { color: var(--hig-green); }
+    #trivia-answer-splash.wrong   .ts-title { color: var(--hig-red); }
+    #trivia-answer-splash .ts-sub {
+      font-size: 15px; color: var(--text-muted); max-width: 320px; line-height: 1.5;
+    }
+    @keyframes triviaSplashIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* In-activity layout: top-align content + tighten vertical spacing so
+       the submit button is visible without scrolling on small phones. */
+    body.in-activity { justify-content: flex-start !important; padding-top: 14px !important; }
+    body.in-activity #live-now-wrap { margin-bottom: 8px; }
+    body.in-activity #mode-nav { margin-bottom: 10px; }
+
     /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
     #mode-nav { display: none; width: 100%; max-width: 440px; gap: 8px; margin-bottom: 16px; }
     .mode-nav-btn {
@@ -909,6 +948,13 @@
   <div id="live-now-wrap">
     <div class="live-now-title">Live now</div>
     <div id="live-now-cards"></div>
+  </div>
+
+  <!-- Trivia answer reveal splash (briefly overlays Correct/Wrong) -->
+  <div id="trivia-answer-splash">
+    <div class="ts-icon" id="trivia-answer-splash-icon">✓</div>
+    <div class="ts-title" id="trivia-answer-splash-title">Correct!</div>
+    <div class="ts-sub" id="trivia-answer-splash-sub"></div>
   </div>
 
   <!-- Activity-ended splash (2s overlay when a user's current activity stops) -->
@@ -2632,8 +2678,43 @@
       const btn = document.getElementById('trivia-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
       stopTriviaCountdown(); // hide timer on reveal
-      // Scroll the result into view so it's not hidden below the fold
-      if (statusEl) setTimeout(() => statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+
+      // Pop a full-screen splash so the user doesn't have to scroll to
+      // discover whether they were right. Auto-dismisses after ~2.2s.
+      const splash = document.getElementById('trivia-answer-splash');
+      const splashIcon  = document.getElementById('trivia-answer-splash-icon');
+      const splashTitle = document.getElementById('trivia-answer-splash-title');
+      const splashSub   = document.getElementById('trivia-answer-splash-sub');
+      if (splash && splashIcon && splashTitle && splashSub) {
+        const answered = selectedAnswer >= 0;
+        splash.classList.remove('correct', 'wrong');
+        if (!answered) {
+          splash.classList.add('wrong');
+          splashIcon.textContent  = '⏱';
+          splashTitle.textContent = 'No answer';
+          splashSub.textContent   = 'Better luck on the next one!';
+        } else if (isCorrect) {
+          splash.classList.add('correct');
+          splashIcon.textContent  = '✓';
+          splashTitle.textContent = 'Correct!';
+          splashSub.textContent   = 'Nice work — points on the board.';
+        } else {
+          splash.classList.add('wrong');
+          splashIcon.textContent  = '✗';
+          splashTitle.textContent = 'Wrong!';
+          splashSub.textContent   = 'No worries — next round.';
+        }
+        splash.style.display = 'flex';
+        clearTimeout(showReveal._splashTimer);
+        showReveal._splashTimer = setTimeout(() => {
+          splash.style.display = 'none';
+          // After dismiss, scroll the inline result into view as a backup.
+          if (statusEl) statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 2200);
+      } else if (statusEl) {
+        // Splash missing for any reason — fall back to inline scroll.
+        setTimeout(() => statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+      }
     }
 
     // ── Trivia countdown ──────────────────────────────────────────────────────
