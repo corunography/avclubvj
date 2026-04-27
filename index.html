@@ -849,6 +849,16 @@
        the submit button is visible without scrolling on small phones. */
     body.in-activity { justify-content: flex-start !important; padding-top: 14px !important; }
     body.in-activity #live-now-wrap { margin-bottom: 8px; }
+    /* In-activity: the user is already inside this activity, so the card
+       only needs to be a compact "You're here" pill — drop the redundant
+       question text + answer count and shrink padding/icon. */
+    body.in-activity .live-card.current {
+      padding: 8px 12px;
+      gap: 10px;
+    }
+    body.in-activity .live-card.current .live-card-icon { font-size: 18px; width: 24px; }
+    body.in-activity .live-card.current .live-card-sub,
+    body.in-activity .live-card.current .live-card-meta { display: none; }
     body.in-activity #mode-nav { margin-bottom: 10px; }
 
     /* ── Mode switcher nav (replaces big header during trivia/poll) ── */
