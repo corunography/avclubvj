@@ -93,7 +93,9 @@
        game — hide every venue-logo surface so the brand doesn't compete
        with the question/options. The activity-ended splash still gets the
        big logo to bookend the experience. */
-    body.in-activity #brand-watermark { display: none !important; }
+    /* Must out-specify the live-now-active rule above (2 classes) —
+       chain brand-active so this rule also has 2 classes and wins. */
+    body.brand-active.in-activity #brand-watermark { display: none !important; }
     /* Activity-ended splash (Poll closed / Trivia ended / Activity ended)
        uses its own .icon node — match the same logo treatment so the
        splash carries the brand instead of the generic ✨. */
