@@ -131,7 +131,12 @@
       color: var(--text);
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 32px 24px 32px;
+      /* Reserve bottom space for the fixed emoji applause bar by default —
+         the bar shows on most venues, and reserving the space up front
+         means the fineprint never lands behind it on first paint. JS in
+         applyApplause() shrinks this back to 32px when the operator has
+         turned applause off. */
+      padding: 32px 24px 168px;
       -webkit-font-smoothing: antialiased;
       font-variant-numeric: tabular-nums;
     }
@@ -2523,8 +2528,11 @@
           }
         }
       }
-      // Offset body so content clears the fixed emoji bar (1 row ≈ 130px)
-      document.body.style.paddingBottom = show ? '140px' : '32px';
+      // Offset body so content clears the fixed emoji bar (1 row ≈ 130px).
+      // 168px (matching CSS default) when shown gives the fineprint clear
+      // breathing room above the bar; 32px collapses back to normal margin
+      // when the operator has applause disabled.
+      document.body.style.paddingBottom = show ? '168px' : '32px';
     }
 
     function sendReact(emoji, btn) {
