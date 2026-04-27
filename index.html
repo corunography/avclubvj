@@ -8,6 +8,100 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Phasion Live</title>
+  <!-- ── Synchronous pre-paint from cached branding ──────────────────────
+       Avoids the "default Phasion → branded" flash on return visits. We
+       read localStorage *before* the body renders and write CSS vars +
+       body classes + tab title + favicon directly into the document so
+       the very first paint is already branded. The async revalidation
+       in the main script still runs to catch fresh changes — at worst
+       the first paint shows slightly stale branding for one cycle.
+       First-ever visit (no cache) still flashes Phasion → branded; that
+       can't be avoided without a synchronous network call.
+  -->
+  <script>
+  (function () {
+    try {
+      var sp = new URLSearchParams(location.search);
+      var t  = sp.get('t');
+      if (!t) return;
+      var raw = localStorage.getItem('venueBrandingCache_v1:' + t);
+      if (!raw) return;
+      var cached = JSON.parse(raw);
+      var p = (cached && cached.payload) || null;
+      if (!p || !p.enabled) return;
+
+      var styleParts = [];
+      // Accent color cascade — matches what the JS-side applyBranding does.
+      if (p.accentColor) {
+        styleParts.push(':root{--accent:' + p.accentColor + ' !important;}');
+      }
+      // Two-stop background gradient.
+      if (p.bgGradientFrom && p.bgGradientTo) {
+        styleParts.push(
+          'body{background:' +
+            'radial-gradient(1200px 600px at 50% -10%, rgba(255,59,48,0.09), transparent 60%),' +
+            'radial-gradient(900px 500px at 100% 110%, rgba(255,59,48,0.04), transparent 60%),' +
+            'linear-gradient(180deg, ' + p.bgGradientFrom + ' 0%, ' + p.bgGradientTo + ' 100%) !important;' +
+            'background-attachment:fixed !important;}'
+        );
+      }
+      // Hide the default 🎶 emoji and swap in the cached logo immediately so
+      // the icon slot doesn't flash text → image. The .icon's text inside
+      // gets a 0-size font; the <img> we inject below carries its own size.
+      if (p.logoUrl) {
+        styleParts.push('#page-icon{font-size:0 !important;line-height:0 !important;}');
+        styleParts.push('#page-icon img.brand-logo-img{line-height:normal;}');
+      }
+      if (styleParts.length) {
+        var s = document.createElement('style');
+        s.id = 'pre-paint-branding';
+        s.textContent = styleParts.join('\n');
+        document.head.appendChild(s);
+      }
+
+      // Body classes (body doesn't exist yet in <head>, so defer to as soon as
+      // it's parsed via a one-shot DOMContentLoaded listener — fires before
+      // the main script's branding logic kicks in).
+      document.addEventListener('DOMContentLoaded', function () {
+        if (p.logoUrl)       document.body.classList.add('brand-active');
+        if (p.hidePoweredBy) document.body.classList.add('hide-powered-by');
+
+        // Resolve relative logo URL against the cached tunnel base, then
+        // inject the <img> directly into #page-icon so the first visible
+        // paint of the icon is already the venue logo, not the emoji.
+        if (p.logoUrl) {
+          var base = (cached.base || '').replace(/\/$/, '');
+          var url  = p.logoUrl.charAt(0) === '/' ? base + p.logoUrl : p.logoUrl;
+          var icon = document.getElementById('page-icon');
+          if (icon) {
+            var imgHtml = '<img class="brand-logo-img" src="' + url +
+                          '" alt="' + (p.brandName || '').replace(/"/g, '&quot;') + '">';
+            icon.innerHTML = p.logoLinkUrl
+              ? '<a href="' + p.logoLinkUrl.replace(/"/g, '&quot;') +
+                '" target="_blank" rel="noopener" style="display:inline-block">' + imgHtml + '</a>'
+              : imgHtml;
+          }
+        }
+      }, { once: true });
+
+      // Tab title + favicon (head is already available — apply right now).
+      if (p.pageTitle) {
+        try { document.title = p.pageTitle; } catch (_) {}
+      }
+      if (p.faviconUrl) {
+        var base = (cached.base || '').replace(/\/$/, '');
+        var furl = p.faviconUrl.charAt(0) === '/' ? base + p.faviconUrl : p.faviconUrl;
+        var link = document.querySelector('link[rel="icon"]');
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = furl;
+      }
+    } catch (_) { /* localStorage disabled, malformed cache — fall through */ }
+  })();
+  </script>
   <style>
     :root {
       --accent:#FF3B30; --accent-light:#FFB8B2;
