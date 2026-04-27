@@ -2510,12 +2510,15 @@
       document.getElementById('page-sub').textContent            = 'Pick your answer and submit before time runs out.';
       document.getElementById('trivia-category').textContent     = q.category || '';
       document.getElementById('trivia-q').textContent            = q.question || '';
-      document.getElementById('trivia-status').textContent       = '';
+      const _statusEl = document.getElementById('trivia-status');
+      if (_statusEl) { _statusEl.textContent = ''; _statusEl.style.cssText = ''; }
       const triviaFormEl = document.getElementById('trivia-form');
       if (triviaFormEl) triviaFormEl.style.display = 'flex';
       // Render options
       const btn = document.getElementById('trivia-btn');
       btn.disabled = false; btn.textContent = 'Submit Answer';
+      // Reset any reveal-state styles from the previous question.
+      btn.style.color = ''; btn.style.fontWeight = ''; btn.style.opacity = '';
       const optsEl = document.getElementById('trivia-opts');
       optsEl.innerHTML = q.options.map((opt, i) => `
         <button class="trivia-opt-btn" onclick="selectAnswer(${i})" id="trivia-opt-${i}">
@@ -2667,18 +2670,30 @@
         }
       });
 
+      // Collapse "Answer Revealed" + inline status into a single line —
+      // put the result right inside the (disabled) button so the layout
+      // stays one row shorter and the submit button no longer pushes the
+      // status off-screen.
       const statusEl = document.getElementById('trivia-status');
       if (statusEl) {
-        statusEl.textContent  = isCorrect ? '✓ Correct!' : '✗ Wrong!';
-        statusEl.style.color  = isCorrect ? 'var(--hig-green)' : 'var(--hig-red)';
-        statusEl.style.fontSize   = '22px';
-        statusEl.style.fontWeight = '700';
-        statusEl.style.letterSpacing = '-0.01em';
-        statusEl.style.marginTop  = '12px';
+        statusEl.textContent = '';
+        statusEl.style.cssText = '';
+        statusEl.style.display = 'none';
       }
 
       const btn = document.getElementById('trivia-btn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Answer Revealed'; }
+      if (btn) {
+        btn.disabled = true;
+        const answered = selectedAnswer >= 0;
+        btn.textContent = answered
+          ? (isCorrect ? '✓ Correct!' : '✗ Wrong!')
+          : '⏱ No answer';
+        btn.style.color = answered
+          ? (isCorrect ? 'var(--hig-green)' : 'var(--hig-red)')
+          : 'var(--hig-red)';
+        btn.style.fontWeight = '700';
+        btn.style.opacity = '1';
+      }
       stopTriviaCountdown(); // hide timer on reveal
 
       // Pop a full-screen splash so the user doesn't have to scroll to
