@@ -89,6 +89,11 @@
     body.brand-active.live-now-active #page-icon { display: none !important; }
     body.brand-active.live-now-active #brand-watermark { display: block !important; }
     body.brand-active:not(.live-now-active) #brand-watermark { display: none !important; }
+    /* Inside an activity (trivia / poll / WC) the user is focused on the
+       game — hide every venue-logo surface so the brand doesn't compete
+       with the question/options. The activity-ended splash still gets the
+       big logo to bookend the experience. */
+    body.in-activity #brand-watermark { display: none !important; }
     /* Activity-ended splash (Poll closed / Trivia ended / Activity ended)
        uses its own .icon node — match the same logo treatment so the
        splash carries the brand instead of the generic ✨. */
@@ -1263,9 +1268,13 @@
     function _applyLogoToPageIcon() {
       const iconEl = document.getElementById('page-icon');
       if (!iconEl) return;
-      // No logo configured → make sure any previous <img> is removed
-      // and the original emoji-as-text behavior is restored.
-      if (!venueBranding.logoUrl) {
+      // Inside an activity (trivia / poll / WC), let the contextual emoji
+      // (🧠, etc.) come through instead of the venue logo — keeps the user
+      // focused on the game.
+      const inActivity = document.body.classList.contains('in-activity');
+      // No logo configured (or in-activity) → remove any previously injected
+      // logo and let whatever textContent is set show through.
+      if (!venueBranding.logoUrl || inActivity) {
         const existing = iconEl.querySelector('img.brand-logo-img');
         if (existing) existing.remove();
         iconEl.classList.remove('splash-state');
@@ -1325,6 +1334,29 @@
       _logoObserver.observe(iconEl, { childList: true, characterData: true, subtree: true });
     }
 
+    // Activity-mode observer — when the user enters trivia / poll / WC,
+    // #tabs gets display:none. We mirror that into body.in-activity so the
+    // CSS rules can suppress every venue-logo surface during gameplay.
+    let _activityModeObserver = null;
+    function _ensureActivityModeObserver() {
+      if (_activityModeObserver) return;
+      const tabsEl = document.getElementById('tabs');
+      if (!tabsEl) return;
+      const sync = () => {
+        const inActivity = getComputedStyle(tabsEl).display === 'none';
+        const was = document.body.classList.contains('in-activity');
+        if (was !== inActivity) {
+          document.body.classList.toggle('in-activity', inActivity);
+          // Re-run the logo apply since its branching depends on this class:
+          // entering activity strips the logo (let 🧠 show); leaving restores.
+          _applyLogoToPageIcon();
+        }
+      };
+      _activityModeObserver = new MutationObserver(sync);
+      _activityModeObserver.observe(tabsEl, { attributes: true, attributeFilter: ['style', 'class'] });
+      sync();
+    }
+
     // Live Now observer — toggles body.live-now-active so the CSS rules
     // can hide the hero and surface the watermark whenever activity cards
     // are present. (The hero gets hidden because Live Now needs the space.)
@@ -1367,6 +1399,7 @@
       //    instead transparently turn any text-only emoji into the venue
       //    logo via a MutationObserver. CSS rules keyed off body classes
       //    (.brand-active, .live-now-active) decide which surface shows.
+      _ensureActivityModeObserver();    // sets in-activity before logo applies
       _applyLogoToPageIcon();
       _applyLogoToActivityEndedSplash();
       _ensureLogoObserver();
