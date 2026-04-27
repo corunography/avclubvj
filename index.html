@@ -1027,7 +1027,7 @@
       <span class="username-at">@</span>
       <input type="text" id="username" placeholder="username — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <textarea id="msg" placeholder="Type your message here…" maxlength="240" oninput="onInput()"></textarea>
+    <textarea id="msg" placeholder="Type your message — it may appear on the big screen!" maxlength="240" oninput="onInput()"></textarea>
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
@@ -1049,7 +1049,7 @@
       <span class="username-at">@</span>
       <input type="text" id="photo-username" placeholder="name — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption (optional)" maxlength="100">
+    <input type="text" class="caption-input" id="photo-caption" placeholder="Add a caption — your photo could appear on screen!" maxlength="100">
     <!-- Progress bar -->
     <div id="photo-progress-wrap" style="display:none;width:100%;background:var(--surface);border:1px solid var(--hairline);border-radius:99px;height:8px;overflow:hidden">
       <div id="photo-progress-bar" style="height:100%;width:0%;background:var(--accent);box-shadow:0 0 12px var(--accent-glow);border-radius:99px;transition:width 0.2s ease"></div>
@@ -1072,7 +1072,7 @@
       <span class="username-at" style="color:var(--accent)">✨</span>
       <input type="text" id="ai-name" placeholder="name — leave blank to stay anonymous" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see…" maxlength="200" oninput="onAiPromptInput()"></textarea>
+    <textarea id="ai-prompt-text" placeholder="Describe the visuals you want to see on screen!" maxlength="200" oninput="onAiPromptInput()"></textarea>
     <div class="char-count" id="ai-char-count" style="margin-bottom:2px">0 / 200</div>
     <div class="ai-photo-section">
       <span class="ai-photo-label">📷 Reference photo <span style="color:var(--text-dim);text-transform:none;letter-spacing:0;font-weight:400">(optional — influences the style)</span></span>
