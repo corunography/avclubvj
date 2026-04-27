@@ -1061,7 +1061,18 @@
       font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
       margin-bottom: 8px;
     }
-    .react-row { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .react-row {
+      display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      /* Fade the right edge so the last button visibly trails off — a
+         soft hint that more emojis exist past the viewport. The fade is
+         a no-op when content fits (last button is just inside the
+         transparent zone but full-opacity since the gradient is mostly
+         opaque). 28px feels like a natural taper without obscuring. */
+      -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 28px), transparent 100%);
+              mask-image: linear-gradient(to right, black 0, black calc(100% - 28px), transparent 100%);
+      scroll-padding-right: 28px;
+    }
     .react-row::-webkit-scrollbar { display: none; }
     .react-btn {
       flex-shrink: 0; width: 72px;
