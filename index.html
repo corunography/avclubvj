@@ -131,7 +131,12 @@
       color: var(--text);
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding: 32px 24px 32px;
+      /* Bottom padding reserves space for the fixed emoji applause bar
+         (~130px tall). Setting it as the default — instead of waiting for
+         applyApplause() to bump it from 32→140 after first paint — keeps
+         the fineprint from briefly sitting behind the bar on first load.
+         applyApplause() drops it back to 32px when the bar is OFF. */
+      padding: 32px 24px 140px;
       -webkit-font-smoothing: antialiased;
       font-variant-numeric: tabular-nums;
     }
@@ -286,7 +291,7 @@
     #shared-fineprint {
       margin-top: auto;
       padding-top: 18px;
-      padding-bottom: 48px;
+      padding-bottom: 32px;
     }
     /* Full white-label: hide the "Powered by …" line plus the spacer <br>
        and height-shim that precede it. Targeting the powered-by anchor
