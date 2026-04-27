@@ -45,6 +45,9 @@
             // No background-attachment:fixed — iOS Safari renders blank.
             'background-attachment:scroll !important;}'
         );
+        // Match html background to the gradient's top color so iOS
+        // overscroll at the top doesn't reveal a white seam.
+        styleParts.push('html{background:' + p.bgGradientFrom + ' !important;}');
       }
       // Hide the default 🎶 emoji and swap in the cached logo immediately so
       // the icon slot doesn't flash text → image. The .icon's text inside
@@ -122,6 +125,12 @@
       --ease-out:cubic-bezier(0.2,0.8,0.2,1);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Dark fallback so iOS Safari's rubber-band overscroll doesn't reveal
+       the default white html background behind a scrolling body. With the
+       venue gradient using background-attachment:scroll (required for iOS
+       reliability), the body's background scrolls with content — the html
+       layer is what shows on overscroll, so it needs to match. */
+    html { background: #0B0B0D; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
       background:
@@ -1961,10 +1970,14 @@
         // bodies (often renders blank). The body is min-height:100dvh so
         // the gradient still covers the visible area without it.
         document.body.style.backgroundAttachment = 'scroll';
+        // Match html background to the top of the gradient so iOS
+        // overscroll at the top doesn't reveal a white seam.
+        document.documentElement.style.background = bgFrom;
       } else {
         // Restore the stylesheet default (clearing the inline override).
         document.body.style.background = '';
         document.body.style.backgroundAttachment = '';
+        document.documentElement.style.background = '';
       }
     }
 
