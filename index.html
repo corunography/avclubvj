@@ -1328,11 +1328,11 @@
       if (payload.activityEndedMessage) cfg.activityEndedMessage = payload.activityEndedMessage;
       // Build a powered-by HTML string when the operator provided plain text,
       // OR auto-derive from brandName if they only set a brand name.
+      // The text supports markdown-style hyperlinks: [label](https://url) so
+      // the operator can write `Powered by [OnlyJams](https://onlyjams.com)`
+      // and have just "OnlyJams" be tappable. Multiple links allowed.
       if (payload.poweredByText) {
-        cfg.poweredByHtml =
-          '<span class="powered-by-link">' +
-          _esc(payload.poweredByText) +
-          '</span>';
+        cfg.poweredByHtml = _renderPoweredByMarkdown(payload.poweredByText);
       } else if (payload.brandName) {
         cfg.poweredByHtml =
           '<span class="powered-by-link">' +
@@ -1343,6 +1343,26 @@
     }
     // _esc() is defined later in the script as a top-level function
     // declaration — hoisted, so we can call it here.
+
+    // Convert markdown-style [label](url) links inside the operator's
+    // poweredByText into <a> tags. Everything outside the link syntax is
+    // HTML-escaped, so the operator can't inject markup. Only http/https
+    // URLs are honored — anything else falls through as escaped text.
+    function _renderPoweredByMarkdown(text) {
+      const linkRe = /\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g;
+      const out = [];
+      let last = 0, m;
+      while ((m = linkRe.exec(text)) !== null) {
+        out.push(_esc(text.slice(last, m.index)));
+        out.push(
+          '<a href="' + _esc(m[2]) + '" target="_blank" rel="noopener">' +
+          _esc(m[1]) + '</a>'
+        );
+        last = m.index + m[0].length;
+      }
+      out.push(_esc(text.slice(last)));
+      return '<span class="powered-by-link">' + out.join('') + '</span>';
+    }
 
     async function loadVenueBranding(venueId) {
       const sp = new URLSearchParams(location.search);
