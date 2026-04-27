@@ -85,6 +85,19 @@
                 '" target="_blank" rel="noopener" style="display:inline-block">' + imgHtml + '</a>'
               : imgHtml;
           }
+          // Loading splash: swap default 🎤 for the venue logo so the
+          // first thing returning visitors see is their venue brand.
+          var splashLogo = document.getElementById('loading-splash-logo');
+          if (splashLogo) {
+            splashLogo.innerHTML = '<img src="' + url +
+              '" alt="' + (p.brandName || '').replace(/"/g, '&quot;') + '">';
+          }
+        }
+        // Loading splash: swap default "Getting things ready…" for the
+        // operator's welcome message if one is configured.
+        if (p.welcomeMessage) {
+          var splashMsg = document.getElementById('loading-splash-msg');
+          if (splashMsg) splashMsg.textContent = p.welcomeMessage;
         }
       }, { once: true });
 
@@ -131,6 +144,46 @@
        reliability), the body's background scrolls with content — the html
        layer is what shows on overscroll, so it needs to match. */
     html { background: #0B0B0D; }
+    /* Branded loading splash — shown full-screen until the page boot is
+       complete. Hides transitional UI flicker behind a smooth fade.
+       Default styling is the Phasion accent + emoji; prepaint swaps in
+       cached venue logo + welcome message so returning visitors see
+       their venue brand immediately. Removed by JS once page is ready
+       (minimum 600ms display so the splash doesn't blink on fast loads). */
+    #loading-splash {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg, #0B0B0D);
+      transition: opacity 0.35s ease;
+      pointer-events: auto;
+    }
+    #loading-splash.fading { opacity: 0; pointer-events: none; }
+    .loading-splash-card {
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+      padding: 32px; text-align: center;
+    }
+    .loading-splash-logo {
+      font-size: 64px; line-height: 1;
+      filter: drop-shadow(0 4px 18px rgba(0,0,0,0.45));
+    }
+    .loading-splash-logo img {
+      max-height: 110px; max-width: 88vw; width: auto; height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 18px rgba(0,0,0,0.45));
+    }
+    .loading-splash-msg {
+      font-size: 15px; color: var(--text, #fff);
+      max-width: 320px; line-height: 1.4;
+      font-weight: 500;
+    }
+    .loading-splash-spinner {
+      width: 22px; height: 22px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: var(--accent, #FF3B30);
+      border-radius: 50%;
+      animation: loading-splash-spin 0.8s linear infinite;
+    }
+    @keyframes loading-splash-spin { to { transform: rotate(360deg); } }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
       background:
@@ -1168,6 +1221,22 @@
   <!-- Dedupe + queue toasts -->
   <div id="dedupe-toast"></div>
   <div id="queue-toast"></div>
+
+  <!-- Branded loading splash — shown over the rest of the page until we've
+       resolved the tunnel + deep-link target. Hides whatever transitional
+       UI would otherwise flicker (e.g. default Message tab visible for a
+       moment before the audience routes into a Caption Contest). The
+       overlay is also a natural place for venue branding: the prepaint
+       <head> script swaps in the cached logo + welcome message before
+       first paint, so returning visitors see their venue's identity
+       immediately, not the generic Phasion default. -->
+  <div id="loading-splash">
+    <div class="loading-splash-card">
+      <div class="loading-splash-logo" id="loading-splash-logo">🎤</div>
+      <div class="loading-splash-msg" id="loading-splash-msg">Getting things ready…</div>
+      <div class="loading-splash-spinner" aria-hidden="true"></div>
+    </div>
+  </div>
 
   <!-- Live Now card stack — one card per active trivia / poll / WC activity.
        Tapping a card enters that activity's mode. Pinned at top across all
@@ -4044,6 +4113,20 @@
       // If we were offline at load, the online event will trigger flush;
       // otherwise try once to drain anything leftover from a previous visit.
       setTimeout(() => { try { flushOfflineQueue(); } catch(_) {} }, 2000);
+
+      // Hide the loading splash once we've had a moment to route into the
+      // right mode. Minimum 700ms so the splash doesn't blink on fast
+      // loads — long enough to feel intentional, short enough to not feel
+      // sluggish. Deep-link routes (gotoMessages/Photo/Ai, pendingWcAutoTap)
+      // happen at 50ms via the setTimeouts above, so by 700ms the page is
+      // settled into its final state and the fade is over a stable scene.
+      setTimeout(() => {
+        const splash = document.getElementById('loading-splash');
+        if (splash) {
+          splash.classList.add('fading');
+          setTimeout(() => { try { splash.remove(); } catch(_) {} }, 400);
+        }
+      }, 700);
     });
 
     // ── AI Prompt tab ────────────────────────────────────────────────────────
