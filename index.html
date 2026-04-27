@@ -45,6 +45,45 @@
     h1     { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; text-align: center; color: var(--text); }
     .sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; text-align: center; line-height: 1.5; max-width: 420px; }
 
+    /* ── Venue branding ── */
+    /* Logo replacement inside the .icon slot (compose-hero + splash states). */
+    .icon img.brand-logo-img {
+      max-height: 56px; max-width: 200px;
+      object-fit: contain;
+      display: inline-block;
+      filter: drop-shadow(0 2px 12px rgba(0,0,0,0.4));
+    }
+    /* Splash-state ramps the logo larger to fill the empty space the
+       splash emoji used to occupy. Activated by .splash-state on .icon. */
+    .icon.splash-state img.brand-logo-img {
+      max-height: 96px; max-width: 240px;
+    }
+    /* Always-on top-right watermark — appears whenever a venue logo is
+       configured, regardless of whether the in-flow .icon is visible.
+       Guarantees the brand survives the photo-tab / Live-Now-active states
+       where #page-icon gets display:none. */
+    #brand-watermark {
+      position: fixed;
+      top: max(env(safe-area-inset-top), 12px);
+      right: 14px;
+      width: 36px; height: 36px;
+      z-index: 50;
+      opacity: 0.85;
+      pointer-events: none;
+      display: none;       /* shown by applyBranding when logoUrl is set */
+    }
+    #brand-watermark img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+    }
+    /* Small logo chip preceding the "Powered by …" text in the footer. */
+    .powered-by-link img.powered-by-logo {
+      height: 18px; width: auto; vertical-align: -4px;
+      margin-right: 5px;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    }
+
     /* ── Tab switcher ── */
     .tabs {
       display: flex; gap: 2px; margin-bottom: 14px;
@@ -855,6 +894,9 @@
     <button class="mode-nav-btn" id="nav-ai"    onclick="gotoAi()" style="display:none">✨ Prompt</button>
   </div>
 
+  <!-- Venue-logo watermark (hidden by default; revealed by applyBranding). -->
+  <div id="brand-watermark"></div>
+
   <div class="icon" id="page-icon">🎶</div>
   <h1 id="page-title">Send a Message</h1>
   <p class="sub" id="page-sub">Your message may appear on the big screen!</p>
@@ -1082,13 +1124,118 @@
     };
     let venueBranding = { ...DEFAULT_BRANDING };
 
+    // ── Test brands (?testBrand=<key>) ───────────────────────────────────────
+    // Hardcoded venue presets so we can A/B the branded look on a phone before
+    // the operator-side upload form / worker endpoint exists. Each preset uses
+    // an inline-SVG data URI so nothing depends on external image hosting.
+    // Append ?testBrand=echo (or neon, disco) to the URL to preview.
+    const _svgLogo = (bg, fg, glyph) =>
+      'data:image/svg+xml;utf8,' + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+          <rect width="120" height="120" rx="22" fill="${bg}"/>
+          <text x="60" y="78" font-family="-apple-system,Helvetica" font-weight="800"
+                font-size="58" text-anchor="middle" fill="${fg}">${glyph}</text>
+        </svg>`
+      );
+
+    const TEST_BRANDS = {
+      echo: {
+        brandName:   'The Echo Lounge',
+        logoUrl:     _svgLogo('#0a1f1a', '#1FE3A8', 'E'),
+        accentColor: '#1FE3A8',
+        accentGlow:  'rgba(31,227,168,0.45)',
+        poweredByHtml:
+          '<span class="powered-by-link">' +
+          '<img src="' + _svgLogo('#0a1f1a', '#1FE3A8', 'E') + '" class="powered-by-logo" alt="Echo">' +
+          'The Echo Lounge × <a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>',
+      },
+      neon: {
+        brandName:   'Neon Room',
+        logoUrl:     _svgLogo('#1a0a2a', '#ff3df0', 'N'),
+        accentColor: '#ff3df0',
+        accentGlow:  'rgba(255,61,240,0.45)',
+        poweredByHtml:
+          '<span class="powered-by-link">' +
+          '<img src="' + _svgLogo('#1a0a2a', '#ff3df0', 'N') + '" class="powered-by-logo" alt="Neon">' +
+          'Neon Room × <a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>',
+      },
+      disco: {
+        brandName:   'Disco Inferno',
+        logoUrl:     _svgLogo('#2a1500', '#ffb732', 'D'),
+        accentColor: '#ffb732',
+        accentGlow:  'rgba(255,183,50,0.45)',
+        poweredByHtml:
+          '<span class="powered-by-link">' +
+          '<img src="' + _svgLogo('#2a1500', '#ffb732', 'D') + '" class="powered-by-logo" alt="Disco">' +
+          'Disco Inferno × <a href="https://avclubvisuals.com" target="_blank">Phasion Live</a></span>',
+      },
+    };
+
     // Stubbed loader. Today returns defaults immediately. The signature is
     // ready for a future worker fetch:
     //   const r = await fetch(`${workerBase}/v1/branding/${venueId}`);
     //   if (r.ok) return { ...DEFAULT_BRANDING, ...await r.json() };
     async function loadVenueBranding(venueId) {
+      // Preview hook: ?testBrand=<key> overrides any real venue config so we
+      // can demo the branded look on a phone without a worker endpoint.
+      const testKey = (new URLSearchParams(location.search).get('testBrand') || '').toLowerCase();
+      if (testKey && TEST_BRANDS[testKey]) {
+        return { ...DEFAULT_BRANDING, ...TEST_BRANDS[testKey] };
+      }
       if (!venueId) return { ...DEFAULT_BRANDING };
       return { ...DEFAULT_BRANDING };
+    }
+
+    // Splash states (single emoji centered, no compose form) — when
+    // page-icon shows one of these, the logo renders larger to fill the
+    // empty space. Treat ⏳ ✨ as splash; 🎶 📸 🧠 as compose-hero.
+    const _SPLASH_EMOJIS = new Set(['⏳', '✨']);
+    let _logoObserver = null;
+    let _logoObserverGuard = false;       // re-entrancy guard
+
+    function _applyLogoToPageIcon() {
+      const iconEl = document.getElementById('page-icon');
+      if (!iconEl) return;
+      // No logo configured → make sure any previous <img> is removed
+      // and the original emoji-as-text behavior is restored.
+      if (!venueBranding.logoUrl) {
+        const existing = iconEl.querySelector('img.brand-logo-img');
+        if (existing) existing.remove();
+        iconEl.classList.remove('splash-state');
+        return;
+      }
+      // Capture whatever emoji is currently in the icon (excluding any
+      // previously-injected <img>) to decide splash vs hero sizing.
+      const currentEmoji = (iconEl.textContent || '').trim();
+      const isSplash = _SPLASH_EMOJIS.has(currentEmoji);
+      iconEl.classList.toggle('splash-state', isSplash);
+
+      // Replace whatever's inside with the logo image.
+      _logoObserverGuard = true;
+      iconEl.innerHTML =
+        `<img class="brand-logo-img" src="${venueBranding.logoUrl}" ` +
+        `alt="${venueBranding.brandName || ''}">`;
+      // Hide the text title to avoid the "logo + title" double-branding.
+      const titleEl = document.getElementById('page-title');
+      if (titleEl) titleEl.style.display = 'none';
+      // Release guard on next microtask so the mutation we just caused
+      // doesn't re-trigger us.
+      queueMicrotask(() => { _logoObserverGuard = false; });
+    }
+
+    function _ensureLogoObserver() {
+      if (_logoObserver) return;
+      const iconEl = document.getElementById('page-icon');
+      if (!iconEl) return;
+      _logoObserver = new MutationObserver(() => {
+        if (_logoObserverGuard) return;
+        // Some other code path reset the icon (likely textContent='🎶' etc.)
+        // — re-apply the logo so the brand is preserved.
+        if (venueBranding.logoUrl && !iconEl.querySelector('img.brand-logo-img')) {
+          _applyLogoToPageIcon();
+        }
+      });
+      _logoObserver.observe(iconEl, { childList: true, characterData: true, subtree: true });
     }
 
     function applyBranding(cfg) {
@@ -1105,13 +1252,25 @@
         }
       }
 
-      // 2. Header logo / title swap
-      const iconEl  = document.getElementById('page-icon');
-      const titleEl = document.getElementById('page-title');
-      if (venueBranding.logoUrl && iconEl && titleEl) {
-        iconEl.innerHTML = `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName}" style="max-height:48px;max-width:180px;object-fit:contain">`;
-        // Hide the text title when a logo is present to avoid double-branding.
-        titleEl.style.display = 'none';
+      // 2. Header logo swap + always-on watermark.
+      //    Strategy: leave the existing emoji-as-textContent behavior alone
+      //    (lots of places reset .textContent='🎶' / '📸' / '🧠' etc.) and
+      //    instead transparently turn any text-only emoji into the venue
+      //    logo via a MutationObserver. This way the brand survives every
+      //    state transition without us having to chase 20+ call sites.
+      _applyLogoToPageIcon();
+      _ensureLogoObserver();
+      // Always-on top-right watermark — the failsafe surface that's visible
+      // even when #page-icon gets display:none (photo tab, Live Now active).
+      const wm = document.getElementById('brand-watermark');
+      if (wm) {
+        if (venueBranding.logoUrl) {
+          wm.innerHTML = `<img src="${venueBranding.logoUrl}" alt="${venueBranding.brandName || ''}">`;
+          wm.style.display = 'block';
+        } else {
+          wm.innerHTML = '';
+          wm.style.display = 'none';
+        }
       }
 
       // 3. Inject the brand band under every primary send button. Each
