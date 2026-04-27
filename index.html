@@ -270,6 +270,18 @@
     }
     .legal-fineprint a { color: var(--text-dim); text-decoration: underline; }
     .legal-fineprint a.powered-by-link { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+    /* Shared fineprint: the body uses flex-column with the compose-active
+       layout pinned to flex-start. margin-top:auto makes the fineprint
+       eat any leftover vertical space, so it sits at a stable position
+       at/near the bottom of the body — regardless of whether the active
+       form is msg (short), photo (taller), or ai (tallest). The 18px top
+       margin keeps it clear of any status text. Bottom padding clears
+       the fixed emoji bar so the link is always tappable. */
+    #shared-fineprint {
+      margin-top: auto;
+      padding-top: 18px;
+      padding-bottom: 12px;
+    }
     /* Full white-label: hide the "Powered by …" line plus the spacer <br>
        and height-shim that precede it. Targeting the powered-by anchor
        and its three immediate previous siblings (spacer-span, <br>, <br>)
@@ -1134,7 +1146,6 @@
     <div class="char-count" id="char-count">0 / 240</div>
     <button class="main-btn" id="btn" onclick="sendMsg()">Send It!</button>
     <div id="status"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Photo form -->
@@ -1159,7 +1170,6 @@
     </div>
     <button class="main-btn" id="photo-btn" onclick="sendPhoto()" disabled style="width:100%">Send Photo!</button>
     <div id="photo-status"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Photo Contest entries list — shown only in photocontest mode. -->
@@ -1193,7 +1203,6 @@
     </div>
     <button class="main-btn ai-main-btn" id="ai-prompt-btn" onclick="sendAiPrompt()">Submit Prompt!</button>
     <div id="ai-prompt-status" style="margin-top:18px;font-size:14px;text-align:center;min-height:20px;max-width:440px;line-height:1.5"></div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
 
   <!-- Trivia: registration -->
@@ -1265,8 +1274,14 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;margin:0 2px 6px">Recent submissions · tap to upvote</div>
       <div id="wc-recent-list" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
-    <div class="legal-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
   </div>
+
+  <!-- Shared submission fineprint — one element keeps the legal copy
+       pinned to a consistent position regardless of which form (msg /
+       photo / ai / wc) is currently active. margin-top:auto pushes it
+       to the bottom of the body's flex column on shorter screens; on
+       taller content it sits naturally below the form. -->
+  <div class="legal-fineprint" id="shared-fineprint" onclick="countDebugTap(event)">By submitting, you agree your content may be displayed publicly.<br><a href="https://corunography.github.io/avclubvj/privacy.html" target="_blank">Privacy Policy</a><br><span style="display:inline-block;height:6px"></span><br><a href="https://avclubvisuals.com" target="_blank" class="powered-by-link">Powered by Phasion Live</a></div>
 
   <!-- Photo lightbox (top-level so it overlays regardless of which view is active) -->
   <div id="wc-contest-lightbox" onclick="_wcClosePhotoLightbox(event)" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;padding:20px;-webkit-tap-highlight-color:transparent">
