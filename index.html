@@ -192,6 +192,10 @@
        the title shows for a frame and tabs jump up when JS catches up. */
     body.brand-active #page-title,
     body.brand-active #page-sub { display: none !important; }
+    /* Reclaim about half the space the hidden title used to occupy so the
+       tabs don't sit jammed under the logo. ~25px feels balanced — close
+       enough that logo + tabs read as one unit, but not cramped. */
+    body.brand-active .tabs { margin-top: 11px; }
     /* Lock the icon box height to the logo image only. Tab switches
        (gotoMessages/gotoPhoto/gotoAi) reset textContent to 🎶/📸/✨
        for a frame before the MutationObserver re-injects the logo —
