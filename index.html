@@ -529,7 +529,7 @@
       box-shadow: inset 0 1px 0 var(--hairline-top), 0 0 0 3px var(--accent-dim);
     }
     textarea::placeholder { color: var(--text-dim); }
-    .char-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 100%; margin-top: 6px; margin-bottom: 14px; letter-spacing: 0.02em; transition: color 0.15s ease; }
+    .char-count { font-size: 11px; color: var(--text-dim); text-align: right; width: 100%; margin-top: 4px; margin-bottom: 0; letter-spacing: 0.02em; transition: color 0.15s ease; }
     .char-count.warn { color: var(--hig-amber); }
     .char-count.crit { color: var(--hig-red); font-weight: 700; }
 
@@ -1419,7 +1419,7 @@
       <span aria-hidden="true" style="flex:0 0 auto;color:var(--text-dim);font-size:18px;line-height:1">⤢</span>
     </button>
     <textarea id="wc-text" placeholder="Drop a word or short phrase…" maxlength="140" style="width:100%"></textarea>
-    <div class="char-count" id="wc-char-count">0 / 140</div>
+    <div class="char-count" id="wc-char-count" style="margin-top:-6px;margin-bottom:-6px">0 / 140</div>
     <button class="main-btn" id="wc-btn" onclick="sendWcSubmission()">Send It!</button>
     <div id="wc-status"></div>
     <div id="wc-recent-wrap" style="display:none;width:100%;margin-top:6px">
