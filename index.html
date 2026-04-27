@@ -3917,7 +3917,11 @@
           clearAiPhoto();
         } else {
           setConnState('warn');
-          status.textContent = '✗ Couldn\'t reach the venue screen — check your connection and try again.';
+          // Surface the server's reason when present (e.g. AI Visuals not running,
+          // submissions turned off) so the audience knows it's not a connection issue.
+          status.textContent = e.serverMsg
+            ? '✗ ' + e.serverMsg
+            : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
           status.className = 'error';
         }
         btn.textContent = 'Submit Prompt!'; btn.disabled = false;
