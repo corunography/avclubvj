@@ -201,10 +201,16 @@
        the title shows for a frame and tabs jump up when JS catches up. */
     body.brand-active #page-title,
     body.brand-active #page-sub { display: none !important; }
+    /* Compose mode also keeps title + sub hidden so tab switches don't
+       cause the layout to shift. The tab bar is self-labeling — the
+       per-tab page-icon emoji acts as the visual header instead. */
+    body.compose-active #page-title,
+    body.compose-active #page-sub { display: none !important; }
     /* Reclaim about half the space the hidden title used to occupy so the
        tabs don't sit jammed under the logo. ~25px feels balanced — close
        enough that logo + tabs read as one unit, but not cramped. */
-    body.brand-active .tabs { margin-top: 11px; }
+    body.brand-active .tabs,
+    body.compose-active .tabs { margin-top: 11px; }
     /* Lock the icon box height to the logo image only. Tab switches
        (gotoMessages/gotoPhoto/gotoAi) reset textContent to 🎶/📸/✨
        for a frame before the MutationObserver re-injects the logo —
@@ -2284,17 +2290,18 @@
         if (capEl) capEl.style.display = '';
       }
       document.getElementById('ai-prompt-form').style.display  = tab === 'ai'    ? 'flex' : 'none';
-      // Keep the music-note icon visible across compose tabs so the layout
-      // doesn't shift when the user toggles between Message/Photo/Prompt.
-      // Only activity views (trivia/poll/WC) hide the icon, which they do
-      // separately via showModeNav(). Title + sub stay hidden — the tab
-      // bar is self-labeling.
+      // Keep the page-icon visible across compose tabs so the layout
+      // doesn't shift; per-tab emoji acts as the visual header instead
+      // of the (now-hidden) page title. Activity views hide the icon
+      // separately via showModeNav. Branded venues are preserved by
+      // skipping the textContent write when a logo <img> is already in
+      // the icon.
       (function _setIcon() {
         const _ic = document.getElementById('page-icon');
         _ic.style.display = '';
-        // Don't trample a branded <img> with text — only set the emoji when
-        // there's no logo currently rendered in the icon.
-        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+        if (!_ic.querySelector('img.brand-logo-img')) {
+          _ic.textContent = tab === 'photo' ? '📸' : tab === 'ai' ? '✨' : '💬';
+        }
       })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
@@ -2583,15 +2590,12 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display    = 'flex';
       document.getElementById('msg-form').style.display = 'flex';
-      // Keep the music-note icon visible (anchors layout); hide title+sub
-      // since the tab bar is self-labeling. Activity entry (trivia/poll/WC)
-      // hides the icon separately via showModeNav.
+      // Per-tab icon (💬 here); layout stays anchored. Title + sub
+      // stay hidden — tab bar is self-labeling.
       (function _setIcon() {
         const _ic = document.getElementById('page-icon');
         _ic.style.display = '';
-        // Don't trample a branded <img> with text — only set the emoji when
-        // there's no logo currently rendered in the icon.
-        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '💬';
       })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
@@ -2614,9 +2618,7 @@
       (function _setIcon() {
         const _ic = document.getElementById('page-icon');
         _ic.style.display = '';
-        // Don't trample a branded <img> with text — only set the emoji when
-        // there's no logo currently rendered in the icon.
-        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '🎶';
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '📸';
       })();
       document.getElementById('page-title').style.display = 'none';
       document.getElementById('page-sub').style.display   = 'none';
@@ -2636,8 +2638,11 @@
       hideAllForms(); hideModeNav();
       document.getElementById('tabs').style.display        = 'flex';
       document.getElementById('ai-prompt-form').style.display = 'flex';
-      document.getElementById('page-icon').style.display   = '';
-      document.getElementById('page-icon').textContent     = '🎶';
+      (function _setIcon() {
+        const _ic = document.getElementById('page-icon');
+        _ic.style.display = '';
+        if (!_ic.querySelector('img.brand-logo-img')) _ic.textContent = '✨';
+      })();
       document.getElementById('page-title').style.display  = 'none';
       document.getElementById('page-sub').style.display    = 'none';
       document.getElementById('page-title').textContent    = 'Submit a Prompt';
