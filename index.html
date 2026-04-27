@@ -1630,14 +1630,31 @@
       const isSplash = _SPLASH_EMOJIS.has(currentEmoji) && !composeVisible;
       iconEl.classList.toggle('splash-state', isSplash);
 
+      // Skip the innerHTML rewrite if the correct logo is already in place
+      // (the prepaint <head> script may have already injected it). Tearing
+      // down + re-inserting the same <img> causes a visible one-frame
+      // flicker even when the URL is cached.
+      const existing = iconEl.querySelector('img.brand-logo-img');
+      const wantedSrc = venueBranding.logoUrl;
+      const wantedHref = venueBranding.logoLinkUrl || '';
+      const existingHref = existing && existing.parentElement && existing.parentElement.tagName === 'A'
+        ? existing.parentElement.getAttribute('href') || ''
+        : '';
+      if (existing && existing.getAttribute('src') === wantedSrc && existingHref === wantedHref) {
+        // Already correct — leave the live <img> alone.
+        const titleEl = document.getElementById('page-title');
+        if (titleEl) titleEl.style.display = 'none';
+        return;
+      }
+
       // Replace whatever's inside with the logo image. Wrap in <a> if the
       // operator configured a hyperlink target (venue site / socials).
       _logoObserverGuard = true;
       const _imgTag =
-        `<img class="brand-logo-img" src="${venueBranding.logoUrl}" ` +
+        `<img class="brand-logo-img" src="${wantedSrc}" ` +
         `alt="${_esc(venueBranding.brandName || '')}">`;
-      iconEl.innerHTML = venueBranding.logoLinkUrl
-        ? `<a href="${_esc(venueBranding.logoLinkUrl)}" target="_blank" rel="noopener" style="display:inline-block">${_imgTag}</a>`
+      iconEl.innerHTML = wantedHref
+        ? `<a href="${_esc(wantedHref)}" target="_blank" rel="noopener" style="display:inline-block">${_imgTag}</a>`
         : _imgTag;
       // Hide the text title to avoid the "logo + title" double-branding.
       const titleEl = document.getElementById('page-title');
