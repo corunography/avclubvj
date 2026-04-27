@@ -132,11 +132,12 @@
       min-height: 100dvh; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       /* Bottom padding reserves space for the fixed emoji applause bar
-         (~130px tall). Setting it as the default — instead of waiting for
-         applyApplause() to bump it from 32→140 after first paint — keeps
-         the fineprint from briefly sitting behind the bar on first load.
-         applyApplause() drops it back to 32px when the bar is OFF. */
-      padding: 32px 24px 140px;
+         (~190px including REACT label, button row, and iOS safe-area)
+         plus ~40px breathing room above it. Setting as the default
+         instead of waiting for applyApplause() to bump it post-fetch
+         keeps the fineprint from briefly sitting behind the bar on
+         first load. applyApplause() drops it to 32px when bar is OFF. */
+      padding: 32px 24px 230px;
       -webkit-font-smoothing: antialiased;
       font-variant-numeric: tabular-nums;
     }
@@ -2538,7 +2539,7 @@
       // emoji bar (1 row ≈ 130px). The fineprint's own padding-bottom
       // takes care of pushing the visible "Powered by …" text further
       // above the bar — see #shared-fineprint padding-bottom in CSS.
-      document.body.style.paddingBottom = show ? '140px' : '32px';
+      document.body.style.paddingBottom = show ? '230px' : '32px';
     }
 
     function sendReact(emoji, btn) {
