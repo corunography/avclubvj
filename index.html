@@ -2248,10 +2248,9 @@
             6000
           );
           if (r.ok) { flushed++; continue; }
-          // 422 = content rejected, 429 = rate-limited. Neither should be
-          // retried — the message will never be accepted, or the user is
-          // sending too fast. Drop it silently rather than looping forever.
-          if (r.status === 422 || r.status === 429) continue;
+          // 422 = content rejected, 429 = rate-limited, 403 = banned.
+          // None of these should be retried — drop silently.
+          if (r.status === 403 || r.status === 422 || r.status === 429) continue;
           remaining.push(entry);
         } catch(_) {
           remaining.push(entry);
@@ -2599,7 +2598,10 @@
         };
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) return done(true);
-          onFail('error ' + xhr.status);
+          // Parse server error body for a friendly message.
+          let serverMsg = '';
+          try { serverMsg = JSON.parse(xhr.responseText).error || ''; } catch (_) {}
+          onFail(serverMsg || ('error ' + xhr.status), xhr.status);
         };
         xhr.onerror = xhr.ontimeout = () => onFail('network');
         xhr.send(payload);
@@ -2607,7 +2609,20 @@
 
       const tryTunnel = () => {
         if (!tunnelBase) { tryWorker(); return; }
-        postTo(`${tunnelBase}/photo`, () => { setConnState('warn'); tryWorker(); });
+        postTo(`${tunnelBase}/photo`, (errText, status) => {
+          // 403 = banned, 422 = flagged — don't fall back to R2 worker,
+          // just surface the server's message directly to the user.
+          if (status === 403 || status === 422) {
+            progressBar.style.width = '100%';
+            setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
+            setConnState('warn');
+            photoStatus.innerHTML = '<span class="error">✗ ' + (errText || 'Submission not allowed.') + '</span>';
+            photoBtn.disabled = false;
+            return;
+          }
+          setConnState('warn');
+          tryWorker();
+        });
       };
       const tryWorker = () => {
         if (!workerBase) return done(false, 'no server');
