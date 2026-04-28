@@ -2484,14 +2484,15 @@
           onInput();
         } else {
           setConnState('warn');
-          // 422 = severe content auto-reject (profanity / slurs). Surface
-          // the venue's reason so the submitter understands why their
-          // message didn't post — and so they don't keep retrying with
-          // the same content.
-          status.textContent = e.status === 422
-            ? '✗ ' + (e.serverMsg || 'Your message contained content not allowed at this venue.')
+          // Show the server's reason first (covers 422 content rejection,
+          // 403 disabled, any other reason string). Fall back to generic
+          // messages keyed on status only when the server sent no body.
+          status.textContent = e.serverMsg
+            ? '✗ ' + e.serverMsg
             : e.status === 429
-            ? '✗ Queue is full — please wait a moment and try again.'
+            ? '✗ Sending too fast — wait a moment and try again.'
+            : e.status >= 400 && e.status < 500
+            ? '✗ Your message was not allowed at this venue.'
             : '✗ Couldn\'t reach the venue screen — check your connection and try again.';
           status.className = 'error';
         }
@@ -4023,18 +4024,20 @@
         // reason so we surface "your content was blocked" instead of a
         // generic "couldn't send" — submitter learns the content was the
         // issue, not the network, and stops retrying with the same text.
-        let rejectMsg = '';
-        if (r.status === 422) {
-          try { const j = await r.clone().json(); rejectMsg = j.error || ''; } catch (_) {}
+        let serverMsg = '';
+        if (!ok) {
+          try { const j = await r.clone().json(); serverMsg = j.error || ''; } catch (_) {}
         }
         if (ok) { setConnState('ok'); _rememberSend('wc', text); }
         else    { setConnState('warn'); }
         if (status) {
           status.textContent = ok
             ? 'Sent! 💭'
-            : (r.status === 422
-                ? '✗ ' + (rejectMsg || 'Your submission contained content not allowed at this venue.')
-                : 'Couldn\u2019t send — try again in a sec.');
+            : serverMsg
+            ? '✗ ' + serverMsg
+            : r.status >= 400 && r.status < 500
+            ? '✗ Your submission was not allowed at this venue.'
+            : 'Couldn\u2019t send — try again in a sec.';
           status.className = ok ? 'success' : 'error';
         }
         if (ok) {
