@@ -2451,7 +2451,7 @@
       const status = document.getElementById('status');
       btn.disabled = true; btn.textContent = 'Sending…';
       status.textContent = ''; status.className = '';
-      const payload = { text: rawText, username: username || '' };
+      const payload = { text: rawText, username: username || '', voterId: _wcGetVoterId() };
       try {
         if (!tunnelBase) throw Object.assign(new Error('No venue connection'), { noTunnel: true });
         const res = await fetchWithTimeout(
