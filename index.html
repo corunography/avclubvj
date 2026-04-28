@@ -3143,15 +3143,21 @@
       currentQ = null; selectedAnswer = -1;
       hideAllForms();
       // Pick a valid tab. If the active tab is disallowed, fall back in order.
+      // AI tab requires BOTH aiActive (engine alive) AND aiAudienceAllowed
+      // (operator opted audience prompts in). The _handleAppState handler
+      // gates on both flags too — keep this fallback path consistent so a
+      // late tab-restore can't flash the AI tab when audience prompts are
+      // turned off.
+      const aiTabReady = aiActive && aiAudienceAllowed;
       let restoreTab = activeTab;
       const tabAllowed = t =>
         (t === 'msg'   && msgAudienceAllowed) ||
         (t === 'photo' && photoAudienceAllowed) ||
-        (t === 'ai'    && aiActive);
+        (t === 'ai'    && aiTabReady);
       if (!tabAllowed(restoreTab)) {
         if (msgAudienceAllowed)        restoreTab = 'msg';
         else if (photoAudienceAllowed) restoreTab = 'photo';
-        else if (aiActive)             restoreTab = 'ai';
+        else if (aiTabReady)           restoreTab = 'ai';
         else                           restoreTab = null; // all off — empty state handles UI
       }
       if (restoreTab) activeTab = restoreTab;
@@ -3178,7 +3184,10 @@
       // Re-sync tab visibility + empty state (handles "all off" case).
       setMsgTabVisible(msgAudienceAllowed);
       setPhotoTabVisible(photoAudienceAllowed);
-      setAiTabVisible(aiActive);
+      // Same gate as _handleAppState — AI tab needs BOTH the engine-alive
+      // flag AND the audience-allowed flag, otherwise a stale transient
+      // aiActive would flash the tab before the next state event corrects it.
+      setAiTabVisible(aiActive && aiAudienceAllowed);
       updateSubmissionsOffState();
     }
 
@@ -4252,11 +4261,14 @@
     }
 
     // Pick the first still-visible tab, in order: msg → photo → ai.
-    // If none are visible, the empty-state handles the UI.
+    // If none are visible, the empty-state handles the UI. AI tab needs
+    // both flags (engine alive + audience prompts allowed) — same gate
+    // as setAiTabVisible's caller to avoid switching to a tab whose
+    // visibility check would immediately hide it.
     function _pickFallbackTab() {
-      if (msgAudienceAllowed)        switchTab('msg');
-      else if (photoAudienceAllowed) switchTab('photo');
-      else if (aiActive)             switchTab('ai');
+      if (msgAudienceAllowed)            switchTab('msg');
+      else if (photoAudienceAllowed)     switchTab('photo');
+      else if (aiActive && aiAudienceAllowed) switchTab('ai');
       // Otherwise leave activeTab alone — updateSubmissionsOffState() hides forms.
     }
 
