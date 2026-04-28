@@ -2248,6 +2248,10 @@
             6000
           );
           if (r.ok) { flushed++; continue; }
+          // 422 = content rejected, 429 = rate-limited. Neither should be
+          // retried — the message will never be accepted, or the user is
+          // sending too fast. Drop it silently rather than looping forever.
+          if (r.status === 422 || r.status === 429) continue;
           remaining.push(entry);
         } catch(_) {
           remaining.push(entry);
