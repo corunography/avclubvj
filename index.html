@@ -3516,6 +3516,20 @@
             _pcOnLiveEntry(d);
           } else if (d.type === 'photo-vote') {
             _pcOnLiveVote(d);
+          } else if (d.type === 'photocontest-cleared') {
+            // Server wiped photo entries for this slug (autoplay round
+            // change, operator reset, etc.). Drop our local cache so the
+            // grid empties immediately instead of showing stale photos.
+            if (!d.slug || d.slug === _pcSlug) {
+              _pcEntries = [];
+              try { _pcRender(); } catch (_) {}
+            }
+          } else if (d.type === 'wordcloud-cleared') {
+            // Same idea for word-cloud submissions: drop local cache.
+            if (!d.slug || (currentWcActivity && d.slug === currentWcActivity.slug)) {
+              wcLocalRecent = [];
+              try { _wcRenderRecent(); } catch (_) {}
+            }
           }
         } catch(_) {}
       };
