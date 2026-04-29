@@ -2885,13 +2885,36 @@
         if (!nowKeys.includes(k)) _knownActivityKeys.delete(k);
       }
       nowKeys.forEach(k => _knownActivityKeys.add(k));
-      // If the user is currently viewing a WC activity, sync its photo from
-      // the latest activity descriptor (handles mid-contest photo swaps).
+      // If the user is currently viewing a WC activity, sync changes from
+      // the latest activity descriptor. Three signals to watch:
+      //   - Mode changed (eg crowdcaption phase transition, autoplay
+      //     switching from text preset to photocontest) → full re-render.
+      //   - Prompt changed (eg autoplay rolling between phrase presets
+      //     where mode is unchanged) → update prompt + refresh recent.
+      //   - Photo changed only → update the on-page photo.
       if (currentWcActivity && currentActivity && currentActivity.kind === 'wc') {
         const fresh = liveActivities.find(a => a.kind === 'wc' && a.slug === currentWcActivity.slug);
         if (fresh) {
+          const prevMode   = currentWcActivity.mode;
+          const prevPrompt = currentWcActivity.prompt;
           currentWcActivity = fresh;
-          _wcApplyContestPhoto(fresh);
+          if (fresh.mode !== prevMode) {
+            showWordCloudMode(fresh);
+          } else if (fresh.prompt !== prevPrompt) {
+            // Update displayed prompt text in the active form.
+            const wcPromptText = document.getElementById('wc-prompt-text');
+            const wcPromptBox  = document.getElementById('wc-prompt-box');
+            const pageSub      = document.getElementById('page-sub');
+            if (wcPromptText) wcPromptText.textContent = fresh.prompt || '';
+            if (wcPromptBox)  wcPromptBox.style.display = fresh.prompt ? 'block' : 'none';
+            if (pageSub && fresh.prompt) pageSub.textContent = '';
+            // The submissions list is stale — autoplay clears the slug
+            // between presets, so a fresh recent fetch will be empty.
+            _wcApplyContestPhoto(fresh);
+            try { _wcRefreshRecent(); } catch (_) {}
+          } else {
+            _wcApplyContestPhoto(fresh);
+          }
         }
       }
       // Deep-link: if the page was loaded with ?wc=<slug>, auto-tap into that
