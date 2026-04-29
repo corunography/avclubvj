@@ -1849,8 +1849,9 @@
         }
         // Whenever the icon mutates, re-evaluate watermark visibility so
         // it appears the moment the hero logo is hidden, and disappears
-        // the moment the hero comes back.
-        _updateWatermarkVisibility();
+        // the moment the hero comes back. Defensive: function may not be
+        // defined in all builds (placeholder branding feature).
+        try { if (typeof _updateWatermarkVisibility === 'function') _updateWatermarkVisibility(); } catch (_) {}
       });
       _logoObserver.observe(iconEl, { childList: true, characterData: true, subtree: true });
     }
