@@ -3450,6 +3450,42 @@
     let _sseFailCount = 0;
     let _resolveAttempt = 0; // drives backoff when the tunnel isn't registered yet
 
+    // ── End-of-night takeover ───────────────────────────────────────────
+    // Full-screen overlay shown when the operator wraps the night via the
+    // End-the-night flow. Audience taps the big button to jump to the
+    // recap page. Auto-dismisses when the operator reopens submissions.
+    function showNightEndedSplash(recapUrl){
+      let overlay = document.getElementById('night-ended-splash');
+      if (overlay) {
+        // Already shown — just refresh the recap URL on the CTA in case
+        // the tunnel changed between connections.
+        const cta = overlay.querySelector('a');
+        if (cta && recapUrl) cta.href = recapUrl;
+        return;
+      }
+      overlay = document.createElement('div');
+      overlay.id = 'night-ended-splash';
+      overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(160deg,#1a1233 0%,#2a1a4a 50%,#0a0a14 100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;color:#fff;opacity:0;transition:opacity 0.35s ease';
+      const ctaHtml = recapUrl
+        ? '<a href="' + recapUrl + '" style="display:inline-block;margin-top:20px;padding:14px 28px;background:#ffffff;color:#1a1233;text-decoration:none;border-radius:999px;font-weight:700;font-size:15px;box-shadow:0 4px 18px rgba(0,0,0,0.3)">📸 See the recap</a>'
+        : '';
+      overlay.innerHTML =
+        '<div style="font-size:64px;margin-bottom:18px">🌙</div>' +
+        '<div style="font-size:26px;font-weight:800;margin-bottom:10px;letter-spacing:-0.01em">That\'s a wrap</div>' +
+        '<div style="font-size:15px;color:rgba(255,255,255,0.75);line-height:1.5;max-width:320px;margin:0 auto 8px">Submissions are closed for tonight. Thanks for being part of it.</div>' +
+        ctaHtml +
+        (recapUrl ? '<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:18px;line-height:1.5">View tonight\'s photos, top phrases, and highlights.</div>' : '');
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+    }
+    function hideNightEndedSplash(){
+      const overlay = document.getElementById('night-ended-splash');
+      if (!overlay) return;
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.remove(); document.body.style.overflow = ''; }, 350);
+    }
+
     function _connectSSE() {
       if (!tunnelBase) {
         // No tunnel — try to resolve one, then retry.  On first-page-load
@@ -3481,6 +3517,15 @@
           .then(r => r.ok ? r.json() : null)
           .then(d => {
             if (!d) return;
+            // End-of-night state — if the operator wrapped the night,
+            // /status reports nightEnded:true with the recap URL. Show
+            // the splash on first paint so a late-arriving scanner doesn't
+            // see a submission UI they can't actually use.
+            if (d.nightEnded) {
+              showNightEndedSplash(d.recapUrl || '');
+            } else {
+              hideNightEndedSplash();
+            }
             _handleTriviaState(d);
             _handlePollState(d);
             _handleAppState(d);
@@ -3497,7 +3542,30 @@
         _sseFailCount = 0; // data received = connection healthy
         try {
           const d = JSON.parse(ev.data);
+          // End-of-night takeover. Operator wrapped the night via the
+          // End-the-night flow on their end → submissions are closed,
+          // recap is the right destination. We show a full-screen
+          // overlay with a button to /recap. Operator can reopen
+          // submissions later, in which case 'night-resumed' fires
+          // (or the same `state` message arrives with nightEnded=false)
+          // and the overlay dismisses.
+          if (d.type === 'night-ended') {
+            showNightEndedSplash(d.recapUrl || '');
+            return;
+          }
+          if (d.type === 'night-resumed') {
+            hideNightEndedSplash();
+            return;
+          }
           if (d.type === 'state') {
+            // Same flag may come embedded in the canonical state event —
+            // honor it so a fresh-connect AFTER wrap shows the splash.
+            if (d.nightEnded) {
+              showNightEndedSplash(d.recapUrl || '');
+            } else if (typeof d.nightEnded === 'boolean') {
+              // Explicit false → operator reopened submissions.
+              hideNightEndedSplash();
+            }
             _handleTriviaState(d);
             _handlePollState(d);
             _handleAppState(d);
