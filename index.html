@@ -2462,9 +2462,12 @@
           const body = await res.json().catch(() => ({}));
           throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: body.error || '' });
         }
+        const okBody = await res.json().catch(() => ({}));
         setConnState('ok');
         _rememberSend('msg', rawText);
-        status.innerHTML = '✓ Sent! It may appear on screen shortly.';
+        status.innerHTML = okBody.queued
+          ? '✓ Sent — waiting on host approval before it shows on screen.'
+          : '✓ Sent! It may appear on screen shortly.';
         status.className = 'success';
         document.getElementById('msg').value = '';
         onInput();
@@ -2566,12 +2569,14 @@
       try { voterId = _wcGetVoterId(); } catch (_) {}
       const payload = JSON.stringify({ dataUrl: resizedDataUrl, caption, username: photoName, slug, voterId });
 
-      function done(success, errText) {
+      function done(success, errText, queued) {
         progressBar.style.width = '100%';
         setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 600);
         if (success) {
           setConnState('ok');
-          photoStatus.innerHTML = '<span class="success">✓ Photo submitted — watch the screen!</span>';
+          photoStatus.innerHTML = queued
+            ? '<span class="success">✓ Photo submitted — waiting on host approval.</span>'
+            : '<span class="success">✓ Photo submitted — watch the screen!</span>';
           showSendSuccess();
           resizedDataUrl = null;
           previewImg.src = '';
@@ -2598,7 +2603,11 @@
           }
         };
         xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) return done(true);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            let queued = false;
+            try { queued = !!JSON.parse(xhr.responseText).queued; } catch (_) {}
+            return done(true, '', queued);
+          }
           // Parse server error body for a friendly message.
           let serverMsg = '';
           try { serverMsg = JSON.parse(xhr.responseText).error || ''; } catch (_) {}
@@ -4487,9 +4496,12 @@
             headers: { 'Content-Type': 'application/json' } }
         );
         if (!res.ok) { const b = await res.json().catch(() => ({})); throw Object.assign(new Error('HTTP ' + res.status), { status: res.status, serverMsg: b.error || '' }); }
+        const okBody = await res.json().catch(() => ({}));
         setConnState('ok');
         _rememberSend('ai', promptText);
-        status.innerHTML = '✓ Prompt submitted! It may influence the visuals shortly.';
+        status.innerHTML = okBody.queued
+          ? '✓ Prompt submitted — waiting on host approval.'
+          : '✓ Prompt submitted! It may influence the visuals shortly.';
         status.className = 'success';
         showSendSuccess();
         document.getElementById('ai-prompt-text').value = '';
